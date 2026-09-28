@@ -21,13 +21,13 @@ extension on MainPlugin {
           "desc": {"de": "Antwortet mit pong!", "fr": "Répond avec pong!"},
         },
       },
-      ping,
+      testWithAutocomplete,
       [
         (
           info: {
-            "type": null,
+            "type": 4,
             "name": "ID",
-            "description": "ID.",
+            "description": "An ID.",
             "localizations": {"name": null, "desc": null},
             "integration": null,
             "contexts": null,

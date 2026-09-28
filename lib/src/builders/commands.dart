@@ -53,11 +53,11 @@ final class CommandOptionInfo {
 }
 
 final class CommandGenerator extends GeneratorForSuperclass<DiscordPlugin> {
-  DartObject? getFieldRecursive(DartObject object, String name) {
-    final value = object.getField(name);
+  DartObject? getFieldRecursive(DartObject? object, String name) {
+    final value = object?.getField(name);
     if (value != null && !value.isNull) return value;
 
-    final superObject = object.getField('(super)');
+    final superObject = object?.getField('(super)');
     if (superObject != null) return getFieldRecursive(superObject, name);
     return null;
   }
@@ -157,7 +157,7 @@ final class CommandGenerator extends GeneratorForSuperclass<DiscordPlugin> {
           });
         }
 
-        final type = field("type")?.getField("value")?.toIntValue();
+        final type = getFieldRecursive(field("type"), "value")?.toIntValue();
         final name = field("name")?.toStringValue();
         final description = field("description")?.toStringValue();
 

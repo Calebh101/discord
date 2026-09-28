@@ -5,6 +5,10 @@ final class CommandChoice<T> {
 
   const new(this.name, this.value, {this.nameLocalizations});
 
+  factory parse(Map data) {
+    return .new(data["name"], data["value"], nameLocalizations: data["localizations"]);
+  }
+
   Map<String, Object?> build() {
     return {
       "name": name,

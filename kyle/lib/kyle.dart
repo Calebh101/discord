@@ -31,11 +31,14 @@ class MainPlugin extends DiscordPlugin {
       .privateChannel,
     ],
   )
-  void ping(DiscordContext context, @IntOption("ID", description: "ID.", autocomplete: AutocompleteInfo<PingAutocomplete>()) int id) {}
-
-  Future<String> pingAutocomplete(AutocompleteContext context) async {
-    return "";
-  }
+  void testWithAutocomplete(
+    DiscordContext context,
+    @IntOption(
+      "ID",
+      description: "An ID.",
+      autocomplete: AutocompleteInfo<PingAutocomplete>(),
+    ) int id,
+  ) {}
 }
 
 class PingAutocomplete extends AutocompleteHandler {}
