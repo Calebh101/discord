@@ -1,7 +1,10 @@
+import 'package:collection/collection.dart';
 import 'package:discord/discord.dart';
 import 'package:localpkg/localpkg.dart';
 
 final class CommandsStore {
+  static const Pattern separator = "/";
+
   final Map<String, CommandData> commands = {};
 
   T? ifInt<T>(int? value, T Function(int x) callback) {
@@ -23,9 +26,11 @@ final class CommandsStore {
       });
     }
 
+    final path = data["name"] as String;
+
     commands[data["name"]] = .new(
-      path: data["name"],
-      name: data["name"].split("/").last,
+      path: path,
+      name: path.split(separator).last,
       description: data["description"],
       defaultMemberPermissions: ifInt(data["dmp"], (x) => .new(x)),
       integrationTypes: ifListInt(data["integration"], (x) => .new(x)),
@@ -45,12 +50,122 @@ final class CommandsStore {
       }),
     );
   }
+
+  List<CommandOptionBuilder> processOptions(List<CommandOptionData> options) {}
+
+  List<ApplicationCommandBuilder> build() {
+    final List<ApplicationCommandBuilder> results = [];
+
+    for (final (_, path, command) in commands.entriesAsRecords) {
+      final pieces = path.split(separator);
+
+      if (pieces.length == 1) {
+        // Just a top-level command!
+        final name = pieces.first;
+
+        results.add(.chatInput(
+          name: name,
+          description: command.description,
+          options: processOptions(command.options),
+          nameLocalizations: command.nameLocalizations,
+          descriptionLocalizations: command.descriptionLocalizations,
+          defaultMemberPermissions: command.defaultMemberPermissions,
+          isNsfw: command.isNsfw,
+          integrationTypes: command.integrationTypes,
+          contexts: command.contexts,
+        ));
+      } else if (pieces.length == 2) {
+        // Command with top-level parent, and a child.
+
+        final parentName = results.first.name;
+        final name = pieces[1];
+
+        late ApplicationCommandBuilder parent;
+        final p = results.firstWhereOrNull((x) => x.name == parentName);
+
+        if (p != null) {
+          parent = p;
+        } else {
+          parent = .chatInput(
+            name: parentName,
+            description: "",
+            options: [],
+            defaultMemberPermissions: command.defaultMemberPermissions,
+            isNsfw: command.isNsfw,
+            integrationTypes: command.integrationTypes,
+            contexts: command.contexts,
+          );
+
+          results.add(parent);
+        }
+
+        parent.options!.add(.subCommand(
+          name: name,
+          description: "",
+          options: processOptions(command.options),
+          nameLocalizations: command.nameLocalizations,
+          descriptionLocalizations: command.descriptionLocalizations,
+        ));
+      } else if (pieces.length == 3) {
+        // Fully-fledged command! Has 2 parents.
+
+        final parentName = results.first.name;
+        final groupName = results[1].name;
+        final name = pieces[2];
+
+        late ApplicationCommandBuilder parent;
+        late CommandOptionBuilder group;
+
+        final p = results.firstWhereOrNull((x) => x.name == parentName);
+
+        if (p != null) {
+          parent = p;
+        } else {
+          parent = .chatInput(
+            name: parentName,
+            description: "",
+            options: [],
+            defaultMemberPermissions: command.defaultMemberPermissions,
+            isNsfw: command.isNsfw,
+            integrationTypes: command.integrationTypes,
+            contexts: command.contexts,
+          );
+
+          results.add(parent);
+        }
+
+        final g = parent.options!.firstWhereOrNull((x) => x.name == groupName);
+
+        if (g != null) {
+          group = g;
+        } else {
+          group = .subCommandGroup(
+            name: groupName,
+            description: "",
+            options: [],
+          );
+
+          parent.options!.add(group);
+        }
+
+        group.options!.add(.subCommand(
+          name: name,
+          description: "",
+          options: processOptions(command.options),
+          nameLocalizations: command.nameLocalizations,
+          descriptionLocalizations: command.descriptionLocalizations,
+        ));
+      }
+    }
+
+    return results;
+  }
 }
 
 final class CommandData<F extends Function> {
   final String path;
   final String name;
-  final String? description;
+  final String description;
   final Map<Locale, String>? nameLocalizations;
   final Map<Locale, String>? descriptionLocalizations;
   final Flags<Permissions>? defaultMemberPermissions;
@@ -58,7 +173,7 @@ final class CommandData<F extends Function> {
   final List<ApplicationIntegrationType>? integrationTypes;
   final List<InteractionContextType>? contexts;
   final F function;
-  final List<CommandOptionData>? options;
+  final List<CommandOptionData> options;
 
   const new({required this.path, required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.defaultMemberPermissions, required this.isNsfw, required this.integrationTypes, required this.contexts, required this.function, required this.options});
 }

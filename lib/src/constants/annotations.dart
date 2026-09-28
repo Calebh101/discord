@@ -1,9 +1,8 @@
 import 'package:discord/discord.dart';
-import 'package:discord/src/commands/autocomplete.dart';
 
 final class Command {
   final String name;
-  final String? description;
+  final String description;
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
   final Flags<Permissions>? defaultMemberPermissions;
@@ -11,8 +10,7 @@ final class Command {
   final List<ApplicationIntegrationType>? integrationTypes;
   final List<InteractionContextType>? contexts;
 
-  const new(this.name, {
-    this.description,
+  const new(this.name, this.description, {
     this.nameLocalizations,
     this.descriptionLocalizations,
     this.defaultMemberPermissions,
@@ -26,7 +24,7 @@ sealed class Option<T> {
   final CommandOptionType type;
 
   final String name;
-  final String? description;
+  final String description;
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
   final bool? isRequired;
@@ -43,9 +41,8 @@ sealed class Option<T> {
   final num? minValue;
   final num? maxValue;
 
-  const new(this.name, {
+  const new(this.name, this.description, {
     required this.type,
-    this.description,
     this.nameLocalizations,
     this.descriptionLocalizations,
     this.isRequired,
@@ -62,8 +59,7 @@ sealed class Option<T> {
 }
 
 final class StringOption extends Option<String> {
-  const new(super.name, {
-    required super.description,
+  const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
     super.isRequired,
@@ -75,8 +71,7 @@ final class StringOption extends Option<String> {
 }
 
 final class IntOption extends Option<int> {
-  const new(super.name, {
-    required super.description,
+  const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
     super.isRequired,
@@ -88,8 +83,7 @@ final class IntOption extends Option<int> {
 }
 
 final class NumOption extends Option<double> {
-  const new(super.name, {
-    required super.description,
+  const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
     super.isRequired,
@@ -101,8 +95,7 @@ final class NumOption extends Option<double> {
 }
 
 final class BoolOption extends Option<bool> {
-  const new(super.name, {
-    required super.description,
+  const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
     super.isRequired,
@@ -110,8 +103,7 @@ final class BoolOption extends Option<bool> {
 }
 
 final class UserOption extends Option<User> {
-  const new(super.name, {
-    required super.description,
+  const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
     super.isRequired,
@@ -119,8 +111,7 @@ final class UserOption extends Option<User> {
 }
 
 final class ChannelOption extends Option<Channel> {
-  const new(super.name, {
-    required super.description,
+  const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
     super.isRequired,
@@ -129,8 +120,7 @@ final class ChannelOption extends Option<Channel> {
 }
 
 final class RoleOption extends Option<Role> {
-  const new(super.name, {
-    required super.description,
+  const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
     super.isRequired,
@@ -138,8 +128,7 @@ final class RoleOption extends Option<Role> {
 }
 
 final class MentionableOption extends Option<CommandOptionMentionable> {
-  const new(super.name, {
-    required super.description,
+  const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
     super.isRequired,
@@ -147,8 +136,7 @@ final class MentionableOption extends Option<CommandOptionMentionable> {
 }
 
 final class AttachmentOption extends Option<Attachment> {
-  const new(super.name, {
-    required super.description,
+  const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
     super.isRequired,
