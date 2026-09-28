@@ -1,0 +1,18 @@
+targets:
+  $default:
+    builders:
+      discord:commands:
+        enabled: true
+
+builders:
+  commands:
+    import: "package:discord/src/builders/commands.dart"
+    builder_factories:
+      - commandBuilder
+    build_extensions:
+      .dart:
+        - .discord.g.part
+    auto_apply: root_package
+    build_to: cache
+    applies_builders:
+      - source_gen:combining_builder
