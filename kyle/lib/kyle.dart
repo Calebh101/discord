@@ -2,43 +2,18 @@ import 'package:discord/discord.dart';
 
 part "kyle.g.dart";
 
-class MainPlugin extends DiscordPlugin {
+class BotCommands extends TopLevelParentCommand {
   @override
-  void register(CommandsStore store) {
-    registerCommands(store);
+  TopLevelCommandInfo get info => .new(
+    name: "bot",
+    description: "Bot utilities.",
+  );
+
+  @override
+  ApplicationCommandBuilder build(CommandsStore store) {
+    return buildCommand(store, options);
   }
 
-  @Command(
-    "ping",
-    description: "Replies with pong!",
-    nameLocalizations: {
-      "de": "ping",
-      "fr": "ping",
-    },
-    descriptionLocalizations: {
-      "de": "Antwortet mit pong!",
-      "fr": "Répond avec pong!",
-    },
-    defaultMemberPermissions: Permissions.sendMessages,
-    isNsfw: false,
-    integrationTypes: [
-      .guildInstall,
-      .userInstall,
-    ],
-    contexts: [
-      .guild,
-      .botDm,
-      .privateChannel,
-    ],
-  )
-  void testWithAutocomplete(
-    DiscordContext context,
-    @IntOption(
-      "ID",
-      description: "An ID.",
-      autocomplete: AutocompleteInfo<PingAutocomplete>(),
-    ) int id,
-  ) {}
+  @Subcommand("ping", "Pong!")
+  void ping(DiscordContext context) async {}
 }
-
-class PingAutocomplete extends AutocompleteHandler {}

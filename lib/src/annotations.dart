@@ -1,19 +1,23 @@
 import 'package:discord/discord.dart';
 
-final class Subcommand {
+final class Command {
   final String name;
   final String description;
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
+  final Flags<Permissions>? defaultMemberPermissions;
+  final bool? isNsfw;
+  final List<ApplicationIntegrationType>? integrationTypes;
+  final List<InteractionContextType>? contexts;
 
   const new(this.name, this.description, {
     this.nameLocalizations,
     this.descriptionLocalizations,
+    this.defaultMemberPermissions,
+    this.isNsfw,
+    this.integrationTypes,
+    this.contexts,
   });
-}
-
-final class SubcommandGroup {
-  const new();
 }
 
 sealed class Option<T> {

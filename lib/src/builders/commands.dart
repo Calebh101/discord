@@ -52,7 +52,7 @@ final class CommandOptionInfo {
   new({required this.info, required this.autocompleteName});
 }
 
-final class CommandGenerator extends GeneratorForSuperclass<DiscordPlugin> {
+final class CommandGenerator extends GeneratorForSuperclass<TopLevelCommand> {
   DartObject? getFieldRecursive(DartObject? object, String name) {
     final value = object?.getField(name);
     if (value != null && !value.isNull) return value;
