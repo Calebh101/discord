@@ -182,10 +182,7 @@ abstract class EntitySettings {
   }
 
   static String? ask(String key) {
-    isStdinLocked = true;
-    stdin.echoMode = true;
-    stdin.lineMode = true;
-
+    TerminalHandler.claim();
     stdout.write('Enter value for $key: >> ');
     final input = stdin.readLineSync();
 
@@ -194,9 +191,7 @@ abstract class EntitySettings {
       return null;
     }
 
-    stdin.echoMode = false;
-    stdin.lineMode = false;
-    isStdinLocked = false;
+    TerminalHandler.unclaim();
     return input;
   }
 

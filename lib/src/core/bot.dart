@@ -56,7 +56,11 @@ abstract class DiscordBot {
     terminal = .new(clients);
     await terminal.init();
 
-    Logger.print("Commands", "Ready with ${clients.count} clients!");
+    for (final client in clients.allClients) {
+      commands.listen(client);
+    }
+
+    Logger.print("Bot", "Ready with ${clients.count} clients!");
     await onReady();
   }
 

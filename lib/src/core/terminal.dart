@@ -24,8 +24,13 @@ final class TerminalHandler {
   final ClientStore<NyxxGateway> clients;
   new(this.clients);
 
+  static bool isStdinLocked = false;
   final List<TerminalCommand> commands = [];
-  late Future<Never> Function([int code]) close;
+  late Future<void> Function([int code]) close;
+
+  void addCommand(TerminalCommand command) {
+    commands.add(command);
+  }
 
   Future<void> init() async {
     commands.addAll([
@@ -46,20 +51,20 @@ final class TerminalHandler {
       }),
     ]);
 
-    late List<StreamSubscription<ProcessSignal>> subscriptions;
+    final List<StreamSubscription> subscriptions = [];
+    bool closing = false;
 
-    void onClose(ProcessSignal? signal) {
-      Logger.print("Close", "Received ${signal?.name ?? "generic signal"}, closing...");
-
-      stdin.echoMode = true;
-      stdin.lineMode = true;
-
-      for (var x in subscriptions) {
-        x.cancel();
-      }
+    void restoreTerminal() {
+      try {
+        stdin.echoMode = true;
+        stdin.lineMode = true;
+      } catch (_) {}
     }
 
     close = ([int code = ExitCode.success]) async {
+      if (closing) return;
+      closing = true;
+
       try {
         Logger.print("Close", "Closing client...");
         await Future.wait(clients.run((client) => client.close()));
@@ -67,25 +72,46 @@ final class TerminalHandler {
         Logger.warn("Close", "Unable to close client: $e");
       }
 
-      onClose(null);
+      for (final x in subscriptions) {
+        await x.cancel();
+      }
+
+      restoreTerminal();
       exit(code);
     };
 
     stdin.echoMode = false;
     stdin.lineMode = false;
 
-    subscriptions = [
-      ProcessSignal.sigint.watch().listen(onClose),
-      if (!Platform.isWindows) ProcessSignal.sigterm.watch().listen(onClose),
-    ];
+    void onSignal(ProcessSignal signal) {
+      Logger.print("Close", "Received ${signal.name}, closing...");
+      close();
+    }
 
-    stdin.listen((List<int> data) {
-      for (final x in commands) {
-        if (x.key.code == data[0]) {
-          x.callback.call();
+    subscriptions.addAll([
+      ProcessSignal.sigint.watch().listen(onSignal),
+      if (!Platform.isWindows) ProcessSignal.sigterm.watch().listen(onSignal),
+      stdin.listen((List<int> data) {
+        if (isStdinLocked || data.isEmpty) return;
+        for (final x in commands) {
+          if (x.key.code == data[0]) {
+            x.callback();
+          }
         }
-      }
-    });
+      }),
+    ]);
+  }
+
+  static void claim() {
+    isStdinLocked = true;
+    stdin.echoMode = true;
+    stdin.lineMode = true;
+  }
+
+  static void unclaim() {
+    stdin.echoMode = false;
+    stdin.lineMode = false;
+    isStdinLocked = false;
   }
 
   static String formatLatency(Duration latency) {
