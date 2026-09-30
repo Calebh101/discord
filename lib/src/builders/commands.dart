@@ -17,6 +17,11 @@ Builder commandBuilder(BuilderOptions options) {
   );
 }
 
+Map<Locale, String>? localizations(Map<String, String>? input) {
+  if (input == null) return null;
+  return input.map((k, v) => .new(.parse(k), v));
+}
+
 enum OptionType {
   string("StringOption"),
   int("IntOption"),
@@ -37,22 +42,81 @@ enum OptionType {
   }
 }
 
-final class CommandInfo {
-  final Map<String, Object?> info;
+sealed class CommandInfo {
+  String build();
+}
+
+final class SubcommandGroupInfo extends CommandInfo {
+  final String className;
+
+  new({required this.className});
+
+  @override
+  String build() {
+    return """
+return $className().build();
+""".trim();
+  }
+}
+
+final class SubcommandInfo extends CommandInfo {
+  final String name;
+  final String description;
+  final Map<String, String>? nameLocalizations;
+  final Map<String, String>? descriptionLocalizations;
   final String functionName;
   final List<CommandOptionInfo> options = [];
 
-  new({required this.info, required this.functionName});
+  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.functionName});
+
+  @override
+  String build() {
+    return """
+return CommandOptionBuilder.subCommand(name: "$name", description: "$description", options: [${options.map((x) => '() {${x.build()}}()').join(", ")}], nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))});
+""".trim();
+  }
 }
 
-final class CommandOptionInfo {
-  final Map<String, Object?> info;
+final class CommandOptionInfo<T> {
+  final CommandOptionType type;
+
+  final String name;
+  final String description;
+  final bool? isRequired;
+
+  final Map<String, String>? nameLocalizations;
+  final Map<String, String>? descriptionLocalizations;
+
+  final List<CommandChoice<T>>? choices;
+  final List<ChannelType>? channelTypes;
+
+  final int? minLength;
+  final int? maxLength;
+
+  final num? minValue;
+  final num? maxValue;
+
   final String? autocompleteName;
 
-  new({required this.info, required this.autocompleteName});
+  new({required this.type, required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.choices, required this.channelTypes, required this.minLength, required this.maxLength, required this.minValue, required this.maxValue, required this.autocompleteName});
+
+  String build() {
+    final channelTypesString = channelTypes?.map((x) => ".new(${x.value})");
+
+    return """
+return CommandOptionBuilder(type: .new(${type.value}), name: "$name", description: "$description", isRequired: $isRequired, choices: ${choices?.mapToList((x) => '.new(name: "${x.name}", value: ${x.value}, nameLocalizations: ${jsonEncode(localizations(nameLocalizations))})')}, hasAutocomplete: ${autocompleteName != null}, channelTypes: ${channelTypesString != null ? "[$channelTypesString]" : null}, minLength: $minLength, maxLength: $maxLength, minValue: $minValue, maxValue: $maxValue);
+""".trim();
+  }
 }
 
-final class CommandGenerator extends GeneratorForSuperclass<TopLevelCommand> {
+final class AutocompleteInfo {
+  final String id;
+  final String className;
+
+  new({required this.id, required this.className});
+}
+
+final class CommandGenerator extends GeneratorForSuperclass<TopLevelParentCommand> {
   DartObject? getFieldRecursive(DartObject? object, String name) {
     final value = object?.getField(name);
     if (value != null && !value.isNull) return value;
@@ -65,12 +129,24 @@ final class CommandGenerator extends GeneratorForSuperclass<TopLevelCommand> {
   @override
   generateForClass(ClassElement element, BuildStep buildStep) {
     final List<CommandInfo> commands = [];
+    final List<AutocompleteInfo> autocomplete = [];
+
+    for (final field in element.fields) {
+      final annotation = field.metadata.annotations.firstWhereOrNull((x) {
+        final value = x.computeConstantValue();
+        final name = value?.type?.element?.name;
+        return name == "SubcommandGroup";
+      })?.computeConstantValue();
+
+      if (annotation == null) continue;
+      commands.add(SubcommandGroupInfo(className: field.type.getDisplayString(withNullability: false)));
+    }
 
     for (final method in element.methods) {
       final annotation = method.metadata.annotations.firstWhereOrNull((x) {
         final value = x.computeConstantValue();
         final name = value?.type?.element?.name;
-        return name == "Command";
+        return name == "Subcommand";
       })?.computeConstantValue();
 
       if (annotation == null) continue;
@@ -92,28 +168,15 @@ final class CommandGenerator extends GeneratorForSuperclass<TopLevelCommand> {
 
       final name = field("name")?.toStringValue();
       final description = field("description")?.toStringValue();
-      final isNsfw = field("isNsfw")?.toBoolValue();
 
       final nameL = localizations("nameLocalizations");
       final descL = localizations("descriptionLocalizations");
 
-      final defaultMemberPermissions = field("defaultMemberPermissions")?.getField("value")?.toIntValue();
-      final integrationTypes = field("integrationTypes")?.toListValue()?.map((x) => x.getField("value")?.toIntValue()).whereType<int>().toList();
-      final contexts = field("contexts")?.getField("value")?.toListValue()?.map((x) => x.getField("value")?.toIntValue()).whereType<int>().toList();
-
-      final command = CommandInfo(
-        info: {
-          "name": name,
-          "description": description,
-          "nsfw": isNsfw,
-          "dmp": defaultMemberPermissions,
-          "integration": integrationTypes,
-          "contexts": contexts,
-          "localizations": {
-            "name": nameL,
-            "desc": descL,
-          },
-        },
+      final command = SubcommandInfo(
+        name: name!,
+        description: description!,
+        nameLocalizations: nameL,
+        descriptionLocalizations: descL,
         functionName: method.displayName,
       );
 
@@ -160,12 +223,11 @@ final class CommandGenerator extends GeneratorForSuperclass<TopLevelCommand> {
         final type = getFieldRecursive(field("type"), "value")?.toIntValue();
         final name = field("name")?.toStringValue();
         final description = field("description")?.toStringValue();
+        final isRequired = field("isRequired")?.toBoolValue();
 
         final nameL = localizations("nameLocalizations");
         final descL = localizations("descriptionLocalizations");
 
-        final integrationTypes = field("integrationTypes")?.toListValue()?.map((x) => x.getField("value")?.toIntValue()).whereType<int>().toList();
-        final contexts = field("contexts")?.getField("value")?.toListValue()?.map((x) => x.getField("value")?.toIntValue()).whereType<int>().toList();
         final channelTypes = field("channelTypes")?.getField("value")?.toListValue()?.map((x) => x.getField("value")?.toIntValue()).whereType<int>().toList();
 
         final minLength = field("minLength")?.toIntValue();
@@ -196,41 +258,40 @@ final class CommandGenerator extends GeneratorForSuperclass<TopLevelCommand> {
         }
 
         command.options.add(.new(
-          info: {
-            "type": type,
-            "name": name,
-            "description": description,
-            "localizations": {
-              "name": nameL,
-              "desc": descL,
-            },
-            "integration": integrationTypes,
-            "contexts": contexts,
-            "channels": channelTypes,
-            "minLength": minLength,
-            "maxLength": maxLength,
-            "minValue": minValue,
-            "maxValue": maxValue,
-            "choices": choices?.mapToList((choice) {
-              return choice.build();
-            }),
-          },
+          type: .new(type!),
+          name: name!,
+          description: description!,
+          isRequired: isRequired,
+          nameLocalizations: nameL,
+          descriptionLocalizations: descL,
+          channelTypes: channelTypes?.mapToList((x) => .new(x)),
+          minLength: minLength,
+          maxLength: maxLength,
+          minValue: minValue,
+          maxValue: maxValue,
+          choices: choices,
           autocompleteName: autocompleteClassName,
         ));
+
+        if (autocompleteClassName != null) {
+          autocomplete.add(.new(id: [command.name, name].join("."), className: autocompleteClassName));
+        }
       }
     }
 
     return """
-extension on ${element.displayName} {
-  void registerCommands(CommandsStore store) {
-${commands.map((x) => """
-store.register(${jsonEncode(x.info)}, ${x.functionName}, [
-  ${x.options.map((option) {
-    return "(info: ${jsonEncode(option.info)}, autocomplete: ${option.autocompleteName != null ? '() => ${option.autocompleteName}()' : null})";
-  }).join(", ")}
-]);
-""".trim()).join("\n")}
-  }
+extension on ${element.name} {
+  List<CommandOptionBuilder> get commandOptions => [
+    ${commands.map((x) {
+      return "() {${x.build()}}()";
+    }).join(", ")}
+  ];
+
+  Map<String, AutocompleteHandler Function()> get commandAutocomplete => {
+    ${autocomplete.map((x) {
+      return '"${x.id}": () => ${x.className}()';
+    }).join(", ")}
+  };
 }
 """.trim();
   }

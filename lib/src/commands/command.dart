@@ -1,19 +1,19 @@
 import 'package:discord/discord.dart';
 import 'package:meta/meta.dart';
 
-sealed class Command<T> {
+sealed class CommandEntity<T extends CreateBuilder> {
   CommandInfo get info;
 
-  T build(CommandsStore store);
+  T build(BuilderContext context);
 }
 
-sealed class TopLevelCommand extends Command<ApplicationCommandBuilder> {
+sealed class TopLevelCommand extends CommandEntity<ApplicationCommandBuilder> {
   @override
   TopLevelCommandInfo get info;
 
   @protected
   @nonVirtual
-  ApplicationCommandBuilder buildCommand(CommandsStore store, List<CommandOptionBuilder>? options) {
+  ApplicationCommandBuilder buildCommand(List<CommandOptionBuilder>? options) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
@@ -21,14 +21,17 @@ sealed class TopLevelCommand extends Command<ApplicationCommandBuilder> {
   }
 }
 
-abstract class TopLevelSingleCommand extends TopLevelCommand {}
+abstract class TopLevelSingleCommand extends TopLevelCommand {
+  @override
+  TopLevelCommandInfo get info;
+}
 
 abstract class TopLevelParentCommand extends TopLevelCommand {}
 
-abstract class SubcommandGroupCommand extends Command<CommandOptionBuilder> {
+abstract class SubcommandGroupCommand extends CommandEntity<CommandOptionBuilder> {
   @protected
   @nonVirtual
-  CommandOptionBuilder buildCommand(CommandsStore store, List<CommandOptionBuilder> options) {
+  CommandOptionBuilder buildCommand(List<CommandOptionBuilder> options) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 

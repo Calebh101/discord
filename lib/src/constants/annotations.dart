@@ -24,11 +24,9 @@ sealed class Option<T> {
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
   final bool? isRequired;
-  final List<ApplicationIntegrationType>? integrationTypes;
-  final List<InteractionContextType>? contexts;
 
   final List<CommandChoice<T>>? choices;
-  final AutocompleteInfo? autocomplete;
+  final Autocomplete<AutocompleteHandler<T>>? autocomplete;
   final List<ChannelType>? channelTypes;
 
   final int? minLength;
@@ -42,8 +40,6 @@ sealed class Option<T> {
     this.nameLocalizations,
     this.descriptionLocalizations,
     this.isRequired,
-    this.integrationTypes,
-    this.contexts,
     this.choices,
     this.autocomplete,
     this.channelTypes,

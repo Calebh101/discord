@@ -32,7 +32,7 @@ sealed class Option<T> {
   final List<InteractionContextType>? contexts;
 
   final List<CommandChoice<T>>? choices;
-  final AutocompleteInfo? autocomplete;
+  final Autocomplete? autocomplete;
   final List<ChannelType>? channelTypes;
 
   final int? minLength;

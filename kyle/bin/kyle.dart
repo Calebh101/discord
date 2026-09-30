@@ -1,5 +1,6 @@
-import 'package:kyle/kyle.dart' as kyle;
+import 'package:kyle/kyle.dart';
 
-void main(List<String> arguments) {
-  print('Hello world: ${kyle.calculate()}!');
+void main(List<String> arguments) async {
+  final bot = Kyle();
+  await bot.start();
 }
