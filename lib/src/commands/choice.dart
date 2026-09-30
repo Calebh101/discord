@@ -1,4 +1,4 @@
-final class CommandChoice<T> {
+class CommandChoice<T> {
   final String name;
   final Map<String, String>? nameLocalizations;
   final T value;

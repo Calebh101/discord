@@ -4,31 +4,71 @@ import 'package:discord/discord.dart';
 import 'package:meta/meta.dart';
 
 abstract class DiscordBot {
-  final List<TopLevelCommand> commands = [];
-  final store = CommandsStore();
+  final bool dev;
+  final List<TopLevelCommand> commandData = [];
+
+  late final KVStore store;
+  late final TerminalHandler terminal;
+
+  final commands = CommandsStore();
+  final clients = ClientStore<NyxxGateway>();
+
+  new({this.dev = false}) {
+    store = .new(dbFilePath);
+  }
+
+  String get tokenFilePath;
+  String get dbFilePath;
 
   FutureOr<void> onAboutToLoad() {}
+  FutureOr<void> onTimeToLoadClients() {}
   FutureOr<void> onReady() {}
 
   @nonVirtual
-  Future<void> start() async {
+  Future<void> start({Snowflake? devGuild}) async {
     await onAboutToLoad();
     final List<ApplicationCommandBuilder> results = [];
 
     final context = BuilderContext(path: [], onAutocompleteHandlerAdd: (path, handler) {
-      store.addAutocompleteHandler(path.join("/"), handler);
+      commands.addAutocompleteHandler(path.join("/"), handler);
     });
 
-    for (final c in commands) {
+    for (final c in commandData) {
       results.add(c.build(context));
     }
 
-    store.commands = results;
+    commands.commands = results;
+    Logger.print("Commands", "Generated ${results.length} top-level commands!");
+
+    await clients.loadWithTokens(tokenFilePath);
+    await onTimeToLoadClients();
+
+    for (final client in clients.allClients) {
+      if (devGuild != null) {
+        await client.guilds[devGuild].commands.bulkOverride(commands.commands);
+      } else {
+        await client.commands.bulkOverride(commands.commands);
+      }
+
+      Logger.print("Commands", "Registered ${commands.commands.length} commands for client ${client.user.id} and guild $devGuild!");
+    }
+
+    terminal = .new(clients);
+    await terminal.init();
+
+    Logger.print("Commands", "Ready with ${clients.count} clients!");
     await onReady();
-    print("Generated ${results.length} commands: ${results.map((x) => "${x.name} (${x.options?.map((x) => "${x.name} x=${x.options?.length} (${x.options?.map((x) => x.name).join(", ")})").join(", ")})").join(", ")}");
   }
 
-  void addCommands(TopLevelCommand command) {
-    commands.add(command);
+  void addCommand(TopLevelCommand command) {
+    commandData.add(command);
+  }
+
+  void addCommands(List<TopLevelCommand> commands) {
+    commandData.addAll(commands);
+  }
+
+  void addClient(String name, NyxxGateway client) {
+    clients.clients[name] = client;
   }
 }

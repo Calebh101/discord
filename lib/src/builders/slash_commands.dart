@@ -5,15 +5,18 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:collection/collection.dart';
-import 'package:discord/discord.dart' hide Builder;
+import 'package:discord/src/commands/choice.dart';
+import 'package:discord/src/commands/command.dart';
+import 'package:discord/src/commands/context.dart';
 import 'package:discord/src/other/generator_for_superclass.dart';
 import 'package:localpkg/localpkg.dart';
+import 'package:nyxx/nyxx.dart' hide Builder;
 import 'package:source_gen/source_gen.dart';
 
 Builder commandBuilder(BuilderOptions options) {
   return SharedPartBuilder(
     [CommandGenerator()],
-    'commands',
+    'slash_commands',
   );
 }
 

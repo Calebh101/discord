@@ -1,6 +1,6 @@
 import 'package:discord/discord.dart';
 
-final class CommandsStore {
+class CommandsStore {
   final Map<String, AutocompleteHandler> autocomplete = {};
   late final List<ApplicationCommandBuilder> commands;
 

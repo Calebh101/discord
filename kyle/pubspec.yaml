@@ -8,6 +8,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
+  commanded: ^0.1.0
   discord:
     path: ..
 

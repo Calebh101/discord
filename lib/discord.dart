@@ -5,6 +5,14 @@ export 'src/constants/constants.dart';
 export 'src/constants/annotations.dart';
 
 export 'src/core/bot.dart';
+export 'src/core/logger.dart';
+export 'src/core/data.dart';
+export 'src/core/terminal.dart';
+
+export 'src/util/stringify.dart';
+
+export 'src/clients/store.dart';
+export 'src/clients/tokens.dart';
 
 export 'src/commands/command.dart';
 export 'src/commands/autocomplete.dart';
@@ -12,4 +20,6 @@ export 'src/commands/choice.dart';
 export 'src/commands/context.dart';
 export 'src/commands/store.dart';
 
-export 'package:nyxx/nyxx.dart';
+export 'package:nyxx/nyxx.dart' hide Logger;
+
+bool isStdinLocked = false;

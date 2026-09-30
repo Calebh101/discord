@@ -1,12 +1,12 @@
 targets:
   $default:
     builders:
-      discord:commands:
+      discord:slash_commands:
         enabled: true
 
 builders:
-  commands:
-    import: "package:discord/src/builders/commands.dart"
+  slash_commands:
+    import: "package:discord/src/builders/slash_commands.dart"
     builder_factories:
       - commandBuilder
     build_extensions:
