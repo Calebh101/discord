@@ -1,5 +1,8 @@
+import 'package:nyxx/nyxx.dart';
+
 import './run.dart' as runner;
 
 void main(List<String> arguments) {
-  runner.main([...arguments, "--dev"]);
+  final devGuild = Snowflake.parse(arguments.first);
+  runner.main([...arguments, "--dev", "--dev-guild"]);
 }

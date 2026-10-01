@@ -75,7 +75,7 @@ final class SubcommandInfo extends CommandInfo {
   @override
   String build() {
     return """
-return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: [${options.map((x) => '() {${x.buildBuilder()}}()').join(", ")}], nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))}), autocomplete: null);
+return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: [${options.map((x) => '() {${x.buildBuilder()}}()').join(", ")}], nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))}), autocomplete: null, options: [${options.map((x) => '() {${x.build()}}()').join(", ")}]);
 """.trim();
   }
 }
@@ -105,7 +105,7 @@ final class CommandOptionInfo<T> {
 
   String build() {
     return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}, autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null});
+return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}, function: null, options: null);
 """.trim();
   }
 

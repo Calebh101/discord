@@ -61,7 +61,7 @@ class BotCommands extends TopLevelParentCommand {
   );
 
   @override
-  ApplicationCommandBuilder build(BuilderContext context) {
+  CommandData build(BuilderContext context) {
     return buildCommand(commandOptions);
   }
 

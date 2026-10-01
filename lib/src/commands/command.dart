@@ -2,23 +2,23 @@ import 'package:discord/discord.dart';
 import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
 
-sealed class CommandEntity<T extends CreateBuilder> {
+sealed class CommandEntity<T> {
   CommandInfo get info;
 
   T build(BuilderContext context);
 }
 
-sealed class TopLevelCommand extends CommandEntity<ApplicationCommandBuilder> {
+sealed class TopLevelCommand extends CommandEntity<CommandData> {
   @override
   TopLevelCommandInfo get info;
 
   @protected
   @nonVirtual
-  ApplicationCommandBuilder buildCommand(List<OptionData>? options) {
+  CommandData buildCommand(List<OptionData>? options) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts);
+    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: options, function: null);
   }
 }
 
@@ -29,14 +29,14 @@ abstract class TopLevelSingleCommand extends TopLevelCommand {
 
 abstract class TopLevelParentCommand extends TopLevelCommand {}
 
-abstract class SubcommandGroupCommand extends CommandEntity<CommandOptionBuilder> {
+abstract class SubcommandGroupCommand extends CommandEntity<OptionData> {
   @protected
   @nonVirtual
-  CommandOptionBuilder buildCommand(List<CommandOptionBuilder> options) {
+  OptionData buildCommand(List<OptionData> options) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .subCommand(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options);
+    return .new(name: info.name, builder: .subCommand(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options.mapToList((x) => x.builder)), autocomplete: null, function: null, options: options);
   }
 }
 

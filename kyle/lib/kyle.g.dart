@@ -20,6 +20,7 @@ extension on BotCommands {
           descriptionLocalizations: null,
         ),
         autocomplete: null,
+        options: [],
       );
     }(),
     () {
@@ -50,6 +51,31 @@ extension on BotCommands {
           descriptionLocalizations: null,
         ),
         autocomplete: null,
+        options: [
+          () {
+            return OptionData(
+              name: "input",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "input",
+                  description: "An input.",
+                  isRequired: null,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => TestAutocompleteHandler(),
+              function: null,
+              options: null,
+            );
+          }(),
+        ],
       );
     }(),
   ];

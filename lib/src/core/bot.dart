@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:discord/discord.dart';
+import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
 
 abstract class DiscordBot {
@@ -28,27 +29,34 @@ abstract class DiscordBot {
   Future<void> start({Snowflake? devGuild}) async {
     await onAboutToLoad();
 
-    final List<ApplicationCommandBuilder> results = [];
+    final List<CommandData> results = [];
     final context = BuilderContext(path: []);
 
     for (final c in commandData) {
-      results.add(c.build(context));
+      final data = c.build(context);
+
+      results.add(.new(builder: data.builder, options: data.options, function: data.function));
     }
 
     commands.commands = results;
+    commands.buildRegistry();
     Logger.print("Commands", "Generated ${results.length} top-level commands!");
 
     await clients.loadWithTokens(tokenFilePath);
     await onTimeToLoadClients();
 
+    final builders = commands.commands.mapToList((command) {
+      return command.builder;
+    });
+
     for (final client in clients.allClients) {
       if (devGuild != null) {
-        await client.guilds[devGuild].commands.bulkOverride(commands.commands);
+        await client.guilds[devGuild].commands.bulkOverride(builders);
       } else {
-        await client.commands.bulkOverride(commands.commands);
+        await client.commands.bulkOverride(builders);
       }
 
-      Logger.print("Commands", "Registered ${commands.commands.length} commands for client ${client.user.id} and guild $devGuild!");
+      Logger.print("Commands", "Registered ${builders.length} commands for client ${client.user.id} and guild $devGuild!");
     }
 
     terminal = .new(clients);

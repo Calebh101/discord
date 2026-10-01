@@ -1,5 +1,5 @@
 import 'package:commanded/commanded.dart';
-import 'package:discord/discord.dart' hide Option, Flag;
+import 'package:discord/discord.dart' hide Option, Flag, OptionData;
 import 'package:kyle/kyle.dart';
 
 part 'main.g.dart';
