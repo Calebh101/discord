@@ -7,44 +7,50 @@ part of 'kyle.dart';
 // **************************************************************************
 
 extension on BotCommands {
-  List<CommandOptionBuilder> get commandOptions => [
+  List<OptionData> get commandOptions => [
     () {
-      return CommandOptionBuilder.subCommand(
+      return OptionData(
         name: "ping",
-        description: "Pong!",
-        options: [],
-        nameLocalizations: null,
-        descriptionLocalizations: null,
+        function: ping,
+        builder: .subCommand(
+          name: "ping",
+          description: "Pong!",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
       );
     }(),
     () {
-      return CommandOptionBuilder.subCommand(
+      return OptionData(
         name: "test",
-        description: "Testing...",
-        options: [
-          () {
-            return CommandOptionBuilder(
-              type: .new(3),
-              name: "input",
-              description: "An input.",
-              isRequired: null,
-              choices: null,
-              hasAutocomplete: true,
-              channelTypes: null,
-              minLength: null,
-              maxLength: null,
-              minValue: null,
-              maxValue: null,
-            );
-          }(),
-        ],
-        nameLocalizations: null,
-        descriptionLocalizations: null,
+        function: test,
+        builder: .subCommand(
+          name: "test",
+          description: "Testing...",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "input",
+                description: "An input.",
+                isRequired: null,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
       );
     }(),
   ];
-
-  Map<String, AutocompleteHandler Function()> get commandAutocomplete => {
-    "test.input": () => TestAutocompleteHandler(),
-  };
 }

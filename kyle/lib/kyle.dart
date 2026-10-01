@@ -62,7 +62,6 @@ class BotCommands extends TopLevelParentCommand {
 
   @override
   ApplicationCommandBuilder build(BuilderContext context) {
-    context.addAutocompleteFrom(commandAutocomplete);
     return buildCommand(commandOptions);
   }
 

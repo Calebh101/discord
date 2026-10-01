@@ -75,7 +75,7 @@ final class SubcommandInfo extends CommandInfo {
   @override
   String build() {
     return """
-return CommandOptionBuilder.subCommand(name: "$name", description: "$description", options: [${options.map((x) => '() {${x.build()}}()').join(", ")}], nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))});
+return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: [${options.map((x) => '() {${x.buildBuilder()}}()').join(", ")}], nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))}), autocomplete: null);
 """.trim();
   }
 }
@@ -104,19 +104,18 @@ final class CommandOptionInfo<T> {
   new({required this.type, required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.choices, required this.channelTypes, required this.minLength, required this.maxLength, required this.minValue, required this.maxValue, required this.autocompleteName});
 
   String build() {
+    return """
+return OptionData(name: "$name", builder: () {${buildBuilder()}}, autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null});
+""".trim();
+  }
+
+  String buildBuilder() {
     final channelTypesString = channelTypes?.map((x) => ".new(${x.value})");
 
     return """
 return CommandOptionBuilder(type: .new(${type.value}), name: "$name", description: "$description", isRequired: $isRequired, choices: ${choices?.mapToList((x) => '.new(name: "${x.name}", value: ${x.value}, nameLocalizations: ${jsonEncode(localizations(nameLocalizations))})')}, hasAutocomplete: ${autocompleteName != null}, channelTypes: ${channelTypesString != null ? "[$channelTypesString]" : null}, minLength: $minLength, maxLength: $maxLength, minValue: $minValue, maxValue: $maxValue);
 """.trim();
   }
-}
-
-final class AutocompleteInfo {
-  final String id;
-  final String className;
-
-  new({required this.id, required this.className});
 }
 
 final class CommandGenerator extends GeneratorForSuperclass<TopLevelParentCommand> {
@@ -132,7 +131,6 @@ final class CommandGenerator extends GeneratorForSuperclass<TopLevelParentComman
   @override
   generateForClass(ClassElement element, BuildStep buildStep) {
     final List<CommandInfo> commands = [];
-    final List<AutocompleteInfo> autocomplete = [];
 
     for (final field in element.fields) {
       final annotation = field.metadata.annotations.firstWhereOrNull((x) {
@@ -275,26 +273,16 @@ final class CommandGenerator extends GeneratorForSuperclass<TopLevelParentComman
           choices: choices,
           autocompleteName: autocompleteClassName,
         ));
-
-        if (autocompleteClassName != null) {
-          autocomplete.add(.new(id: [command.name, name].join("."), className: autocompleteClassName));
-        }
       }
     }
 
     return """
 extension on ${element.name} {
-  List<CommandOptionBuilder> get commandOptions => [
+  List<OptionData> get commandOptions => [
     ${commands.map((x) {
       return "() {${x.build()}}()";
     }).join(", ")}
   ];
-
-  Map<String, AutocompleteHandler Function()> get commandAutocomplete => {
-    ${autocomplete.map((x) {
-      return '"${x.id}": () => ${x.className}()';
-    }).join(", ")}
-  };
 }
 """.trim();
   }

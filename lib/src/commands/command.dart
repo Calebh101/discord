@@ -1,4 +1,5 @@
 import 'package:discord/discord.dart';
+import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
 
 sealed class CommandEntity<T extends CreateBuilder> {
@@ -13,11 +14,11 @@ sealed class TopLevelCommand extends CommandEntity<ApplicationCommandBuilder> {
 
   @protected
   @nonVirtual
-  ApplicationCommandBuilder buildCommand(List<CommandOptionBuilder>? options) {
+  ApplicationCommandBuilder buildCommand(List<OptionData>? options) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options, defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts);
+    return .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts);
   }
 }
 

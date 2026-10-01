@@ -27,11 +27,9 @@ abstract class DiscordBot {
   @nonVirtual
   Future<void> start({Snowflake? devGuild}) async {
     await onAboutToLoad();
-    final List<ApplicationCommandBuilder> results = [];
 
-    final context = BuilderContext(path: [], onAutocompleteHandlerAdd: (path, handler) {
-      commands.addAutocompleteHandler(path.join("/"), handler);
-    });
+    final List<ApplicationCommandBuilder> results = [];
+    final context = BuilderContext(path: []);
 
     for (final c in commandData) {
       results.add(c.build(context));
