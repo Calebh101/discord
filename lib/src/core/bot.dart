@@ -30,10 +30,9 @@ abstract class DiscordBot {
     await onAboutToLoad();
 
     final List<CommandData> results = [];
-    final context = BuilderContext(path: []);
 
     for (final c in commandData) {
-      final data = c.build(context);
+      final data = c.build();
 
       results.add(.new(builder: data.builder, options: data.options, function: data.function));
     }

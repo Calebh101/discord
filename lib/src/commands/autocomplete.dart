@@ -7,5 +7,16 @@ final class Autocomplete<T extends AutocompleteHandler> {
 }
 
 abstract class AutocompleteHandler<T> {
-  FutureOr<T?> handle(AutocompleteContext context);
+  FutureOr<List<CommandOptionChoiceBuilder<T>>?> handle(AutocompleteContext<T> context);
+
+  AutocompleteContext<T> createContext(ApplicationCommandAutocompleteInteraction interaction, T? value) {
+    return .new(interaction: interaction, value: value);
+  }
+}
+
+final class AutocompleteContext<T> {
+  final ApplicationCommandAutocompleteInteraction interaction;
+  final T? value;
+
+  const new({required this.interaction, required this.value});
 }

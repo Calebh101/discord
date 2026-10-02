@@ -5,7 +5,7 @@ import 'package:meta/meta.dart';
 sealed class CommandEntity<T> {
   CommandInfo get info;
 
-  T build(BuilderContext context);
+  T build();
 }
 
 sealed class TopLevelCommand extends CommandEntity<CommandData> {
@@ -36,7 +36,7 @@ abstract class SubcommandGroupCommand extends CommandEntity<OptionData> {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(name: info.name, builder: .subCommand(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options.mapToList((x) => x.builder)), autocomplete: null, function: null, options: options);
+    return .new(name: info.name, builder: .subCommandGroup(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options.mapToList((x) => x.builder)), autocomplete: null, function: null, options: options);
   }
 }
 

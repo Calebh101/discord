@@ -15,9 +15,28 @@ class CommandsStore {
 
         for (final subOption in (option.options ?? <OptionData>[])) {
           if (subOption.builder.type != .subCommand) continue;
-          registry[[topLevelCommand.builder.name, option.name, subOption.name].join(".")] = .fromOptionData(option, 2);
+          registry[[topLevelCommand.builder.name, option.name, subOption.name].join(".")] = .fromOptionData(subOption, 2);
         }
       }
+    }
+  }
+
+  dynamic convert(InteractionOption option, ResolvedData? resolved) {
+    final value = option.value;
+
+    switch (option.type) {
+      case .number:
+        return (value as num).toDouble();
+      case .user:
+        return resolved?.users?[value as Snowflake];
+      case .channel:
+        return resolved?.channels?[value as Snowflake];
+      case .role:
+        return resolved?.roles?[value as Snowflake];
+      case .attachment:
+        return resolved?.attachments?[value as Snowflake];
+      default:
+        return value;
     }
   }
 
@@ -42,22 +61,101 @@ class CommandsStore {
 
       final options = subcommand?.options ?? data.options;
       final info = registry[path.join(".")];
+      final function = info?.function;
+      final user = interaction.user ?? interaction.member?.user;
 
-      Logger.print("Commands", "Handling command $path for user ${interaction.user?.id} ${info.runtimeType}");
-
-      if (info == null) {
-        Logger.warn("Commands", "Invalid command: $path");
-
+      Future<void> respond(String content) async {
         try {
-          await interaction.respond(.new(content: "We couldn't find that command! This is an issue on our end. Please try again later!", flags: MessageFlags.ephemeral));
+          await interaction.respond(.new(content: content, flags: MessageFlags.ephemeral));
         } catch (e) {
-          Logger.warn("Commands", "Unable to respond to user ${interaction.user?.id}: $e");
+          Logger.warn("Commands", "Unable to respond to user ${user?.id}: $e");
         }
 
         return;
       }
 
-      await interaction.respond(.new(content: "Hello! I found that command! (${info.function.runtimeType.toDiscordCodeString()}, ${(options?.length).toDiscordCodeString()})\n${path.join(".").toDiscordCodeBlock()}"));
+      if (user == null) {
+        Logger.warn("Commands", "User is null! ${interaction.user.runtimeType}, ${interaction.member.runtimeType}, ${interaction.member?.user.runtimeType}");
+        respond("You don't exist?\nWe couldn't find a user associated with this interaction.");
+        return;
+      }
+
+      Logger.print("Commands", "Handling command $path for user ${user.id}: $info");
+
+      if (info == null) {
+        Logger.warn("Commands", "Invalid command: $path");
+        await respond("We couldn't find that command! This is an issue on our end. Please try again later!");
+        return;
+      }
+
+      if (function == null) {
+        Logger.warn("Commands", "Invalid command: $path\nFunction was null.");
+        await respond("We couldn't find a handler for that command! This is an issue on our end. Please try again later!");
+        return;
+      }
+
+      try {
+        final context = DiscordContext(interaction: interaction, client: client, user: user, member: interaction.member);
+        final List<dynamic> args = [];
+
+        for (final expected in info.options ?? <OptionData>[]) {
+          final given = options?.firstWhereOrNull((x) => x.name == expected.name);
+          args.add(given == null ? null : convert(given, data.resolved));
+        }
+
+        await Function.apply(function, [
+          context,
+          ...args,
+        ]);
+      } catch (e, s) {
+        Logger.warn("Commands", "Unable to run command ${path.join(".")}: $e\n$s");
+      }
+    });
+
+    client.onApplicationCommandAutocompleteInteraction.listen((event) async {
+      final interaction = event.interaction;
+      final data = interaction.data;
+
+      final List<String> path = [data.name];
+      final child1 = data.options?.firstWhereOrNull((x) => x.type == .subCommand || x.type == .subCommandGroup);
+      var subcommand = child1;
+
+      if (child1 != null) {
+        path.add(child1.name);
+        final child2 = child1.options?.firstWhereOrNull((x) => x.type == .subCommand);
+
+        if (child2 != null) {
+          path.add(child2.name);
+          subcommand = child2;
+        }
+      }
+
+      final info = registry[path.join(".")];
+      Logger.print("Autocomplete", "Handling command $path for user ${interaction.user?.id} ${info.runtimeType}");
+
+      if (info == null) {
+        Logger.warn("Autocomplete", "Invalid command: $path\nNo registry entry.");
+        return;
+      }
+
+      final focused = subcommand?.options?.firstWhereOrNull((x) => x.isFocused == true);
+      final option = info.options?.firstWhereOrNull((x) => x.name == focused?.name);
+      final handler = option?.autocomplete?.call();
+
+      if (handler == null) {
+        Logger.warn("Autocomplete", "Invalid command: $path\nSomething was null.\n${[subcommand, focused, option, handler].map((x) => x.runtimeType).join(", ")}");
+        return;
+      }
+
+      try {
+        final context = handler.createContext(interaction, focused?.value);
+        final result = await handler.handle(context);
+
+        if (result == null) return;
+        await interaction.respond(result);
+      } catch (e, s) {
+        Logger.warn("Autocomplete", "Error with command $path: $e\n$s");
+      }
     });
   }
 }
@@ -78,20 +176,31 @@ final class OptionData {
   final Function? function;
 
   const new({required this.name, required this.builder, required this.autocomplete, required this.function, required this.options});
+
+  @override
+  String toString() {
+    return "OptionData(name: $name, type: ${builder.type.value}, function: ${function.runtimeType}, options: $options, autocomplete: ${autocomplete.runtimeType})";
+  }
 }
 
 final class RegistryData {
   final String name;
   final int level; // 0 is start
   final Function? function;
+  final List<OptionData>? options;
 
-  const new({required this.name, required this.level, required this.function});
+  const new({required this.name, required this.level, required this.function, required this.options});
 
   factory fromCommandData(CommandData command) {
-    return .new(name: command.builder.name, level: 0, function: command.function);
+    return .new(name: command.builder.name, level: 0, function: command.function, options: command.options);
   }
 
   factory fromOptionData(OptionData command, int level) {
-    return .new(name: command.name, level: level, function: command.function);
+    return .new(name: command.name, level: level, function: command.function, options: command.options);
+  }
+
+  @override
+  String toString() {
+    return "RegistryData(name: $name, level: $level, function: ${function.runtimeType}, options: $options)";
   }
 }

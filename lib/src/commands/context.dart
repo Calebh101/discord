@@ -1,18 +1,19 @@
 import 'package:discord/discord.dart';
 
 final class DiscordContext {
-  Future<void> respond(MessageBuilder builder) async {}
-}
+  final ApplicationCommandInteraction interaction;
+  final NyxxGateway client;
+  final User user;
+  final Member? member;
 
-final class AutocompleteContext {
-  final ApplicationCommandAutocompleteInteraction interaction;
+  const new({
+    required this.interaction,
+    required this.client,
+    required this.user,
+    required this.member,
+  });
 
-  const new({required this.interaction});
-}
-
-final class BuilderContext {
-  final List<String> path;
-
-  new({required this.path});
-  BuilderContext addName(String name) => .new(path: [...path, name]);
+  Future<void> respond(MessageBuilder builder) async {
+    await interaction.respond(builder);
+  }
 }

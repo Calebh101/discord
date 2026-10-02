@@ -9,6 +9,9 @@ part of 'kyle.dart';
 extension on BotCommands {
   List<OptionData> get commandOptions => [
     () {
+      return MoreBotCommands().build();
+    }(),
+    () {
       return OptionData(
         name: "ping",
         function: ping,
@@ -46,6 +49,21 @@ extension on BotCommands {
                 maxValue: null,
               );
             }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(4),
+                name: "count",
+                description: "A count.",
+                isRequired: null,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
           ],
           nameLocalizations: null,
           descriptionLocalizations: null,
@@ -75,7 +93,50 @@ extension on BotCommands {
               options: null,
             );
           }(),
+          () {
+            return OptionData(
+              name: "count",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(4),
+                  name: "count",
+                  description: "A count.",
+                  isRequired: null,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              function: null,
+              options: null,
+            );
+          }(),
         ],
+      );
+    }(),
+  ];
+}
+
+extension on MoreBotCommands {
+  List<OptionData> get commandOptions => [
+    () {
+      return OptionData(
+        name: "yes",
+        function: yes,
+        builder: .subCommand(
+          name: "yes",
+          description: "Ping!",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [],
       );
     }(),
   ];
