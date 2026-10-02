@@ -21,29 +21,53 @@ class CommandsStore {
     }
   }
 
-  dynamic convert(InteractionOption option, ResolvedData? resolved) {
+  Snowflake snowflake(dynamic value) {
+    if (value is Snowflake) return value;
+    return .parse(value);
+  }
+
+  Future<dynamic> convert(InteractionOption? option, ResolvedData? resolved) async {
+    if (option == null) return null;
     final value = option.value;
 
     switch (option.type) {
       case .number:
         return (value as num).toDouble();
       case .user:
-        return resolved?.users?[value as Snowflake];
+        return resolved?.users?[snowflake(value)];
       case .channel:
-        return resolved?.channels?[value as Snowflake];
+        return await resolved?.channels?[snowflake(value)]?.get();
       case .role:
-        return resolved?.roles?[value as Snowflake];
+        return resolved?.roles?[snowflake(value)];
       case .attachment:
-        return resolved?.attachments?[value as Snowflake];
+        return resolved?.attachments?[snowflake(value)];
       default:
         return value;
     }
   }
 
-  void listen(NyxxGateway client) {
+  void listen(NyxxGateway client, DiscordBot bot) {
+    bool allowed(Snowflake userId, Snowflake? guildId) {
+      final userSettings = UserSettings(bot.store, userId);
+      if (userSettings.ignored.get()) return false;
+
+      if (guildId != null) {
+        final guildSettings = GuildSettings(bot.store, guildId);
+        if (guildSettings.blocked.get()) return false;
+      }
+
+      return true;
+    }
+
     client.onApplicationCommandInteraction.listen((event) async {
       final interaction = event.interaction;
       final data = interaction.data;
+      final user = interaction.user ?? interaction.member?.user;
+
+      if (user != null && !allowed(user.id, interaction.guildId)) {
+        Logger.print("Commands", "Ignored: ${user.id}/${interaction.guildId}");
+        return;
+      }
 
       final List<String> path = [data.name];
       final child1 = data.options?.firstWhereOrNull((x) => x.type == .subCommand || x.type == .subCommandGroup);
@@ -62,7 +86,6 @@ class CommandsStore {
       final options = subcommand?.options ?? data.options;
       final info = registry[path.join(".")];
       final function = info?.function;
-      final user = interaction.user ?? interaction.member?.user;
 
       Future<void> respond(String content) async {
         try {
@@ -100,7 +123,7 @@ class CommandsStore {
 
         for (final expected in info.options ?? <OptionData>[]) {
           final given = options?.firstWhereOrNull((x) => x.name == expected.name);
-          args.add(given == null ? null : convert(given, data.resolved));
+          args.add(await convert(given, data.resolved));
         }
 
         await Function.apply(function, [
@@ -115,6 +138,12 @@ class CommandsStore {
     client.onApplicationCommandAutocompleteInteraction.listen((event) async {
       final interaction = event.interaction;
       final data = interaction.data;
+      final user = interaction.user ?? interaction.member?.user;
+
+      if (user != null && !allowed(user.id, interaction.guildId)) {
+        Logger.print("Commands", "Ignored: ${user.id}/${interaction.guildId}");
+        return;
+      }
 
       final List<String> path = [data.name];
       final child1 = data.options?.firstWhereOrNull((x) => x.type == .subCommand || x.type == .subCommandGroup);

@@ -7,11 +7,12 @@ import 'package:sqlite3/sqlite3.dart';
 
 enum Scope {
   bot("bot"),
-  server("server"),
+  guild("guild"),
   user("user"),
   userPerServer("ups"),
   channel("channel"),
   message("message"),
+  role("role"),
   ;
 
   final String id;
@@ -40,7 +41,7 @@ class KVStore {
     );
 
     if (result.isEmpty) return null;
-    return jsonDecode(result.first['value']);
+    return jsonDecode(result.first['value']) as T;
   }
 
   void set<T>(Scope scope, String id, String key, T value) {
@@ -65,7 +66,7 @@ class KVStore {
     );
 
     return {
-      for (final r in rows) r['key'] as String: jsonDecode(r['value']),
+      for (final r in rows) r['key'] as String: jsonDecode(r['value']) as T,
     };
   }
 
@@ -106,8 +107,10 @@ class SettingsObject<T> {
 
   const new(this.object, this.key, {this.encodeFunction, this.decodeFunction});
 
-  dynamic encode(T input) {
-    return encodeFunction?.call(input) ?? input;
+  dynamic encode(T? input) {
+    if (input == null) return null;
+    if (encodeFunction != null) return encodeFunction?.call(input);
+    return input;
   }
 
   T? decode(dynamic input) {
@@ -141,7 +144,7 @@ class SettingsObject<T> {
         if (value == d) return delete();
       }
 
-      final v = encodeFunction?.call(value) ?? value;
+      final v = encode(value);
       return object.store.set(object.scope, object.id.toString(), key, v);
     } catch (e) {
       Logger.warn("SettingsObject", "$key, $T: Unable to encode value ${value.runtimeType}: $e");
@@ -155,7 +158,7 @@ class SettingsObject<T> {
 
 class SettingsObjectNotNull<T> extends SettingsObject<T> {
   final T Function() defaultFunction;
-  SettingsObjectNotNull(super.obj, super.key, {super.encodeFunction, super.decodeFunction, required this.defaultFunction});
+  SettingsObjectNotNull(super.obj, super.key, this.defaultFunction, {super.encodeFunction, super.decodeFunction});
 
   @override
   T get() {
@@ -182,17 +185,20 @@ abstract class EntitySettings {
   }
 
   static String? ask(String key) {
-    TerminalHandler.claim();
-    stdout.write('Enter value for $key: >> ');
-    final input = stdin.readLineSync();
+    try {
+      TerminalHandler.claim();
+      stdout.write('Enter value for $key: >> ');
+      final input = stdin.readLineSync();
 
-    if (input == null || input.trim().isEmpty) {
-      Logger.error("EntitySettings", 'No input provided.');
-      return null;
+      if (input == null || input.trim().isEmpty) {
+        Logger.error("EntitySettings", 'No input provided.');
+        return null;
+      }
+
+      return input;
+    } finally {
+      TerminalHandler.unclaim();
     }
-
-    TerminalHandler.unclaim();
-    return input;
   }
 
   static Future<String?> getFromLocalFile<T extends SettingsObject<String>>(T item) async {
@@ -204,25 +210,15 @@ abstract class EntitySettings {
   }
 
   static Future<bool> setFromLocalFile<T extends SettingsObject<String>>(T item) async {
-    final value = await () async {
-      try {
-        return (await File("${item.key}.setting").readAsString()).trim();
-      } catch (_) {
-        return null;
-      }
-    }();
-
-    if (value != null) {
-      item.set(value);
-      return true;
-    } else {
-      return false;
-    }
+    final value = await getFromLocalFile(item);
+    if (value == null) return false;
+    item.set(value);
+    return true;
   }
 }
 
-class BotSettings extends EntitySettings {
-  new(super.store) : super(id: "_", scope: .server);
+final class BotSettings extends EntitySettings {
+  new(super.store) : super(id: "_", scope: .bot);
 
   @mustCallSuper
   Future<bool> init() async {
@@ -230,23 +226,31 @@ class BotSettings extends EntitySettings {
   }
 }
 
-class ServerSettings extends EntitySettings {
-  new(super.store, Snowflake id) : super(id: id.toString(), scope: .server);
+final class GuildSettings extends EntitySettings {
+  new(super.store, Snowflake id) : super(id: id.toString(), scope: .guild);
+
+  SettingsObjectNotNull<bool> get blocked => .new(this, "blocked", () => false);
 }
 
-class UserSettings extends EntitySettings {
+final class UserSettings extends EntitySettings {
   new(super.store, Snowflake id) : super(id: id.toString(), scope: .user);
+
+  SettingsObjectNotNull<bool> get ignored => .new(this, "ignored", () => false);
 }
 
-class ChannelSettings extends EntitySettings {
+final class ChannelSettings extends EntitySettings {
   new(super.store, Snowflake id) : super(id: id.toString(), scope: .channel);
 }
 
-class MessageSettings extends EntitySettings {
+final class MessageSettings extends EntitySettings {
   new(super.store, Snowflake id) : super(id: id.toString(), scope: .message);
 }
 
-class UserPerServerSettings extends EntitySettings {
+final class RoleSettings extends EntitySettings {
+  new(super.store, Snowflake id) : super(id: id.toString(), scope: .role);
+}
+
+final class UserPerServerSettings extends EntitySettings {
   new(super.store, Snowflake server, Snowflake user) : super(id: createId(server, user), scope: Scope.userPerServer);
 
   static String createId(Snowflake server, Snowflake user) {

@@ -12,7 +12,7 @@ final class Subcommand {
   });
 }
 
-final class SubcommandGroup {
+final class CommandEntryPoint {
   const new();
 }
 
@@ -23,7 +23,6 @@ sealed class Option<T> {
   final String description;
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
-  final bool? isRequired;
 
   final List<CommandChoice<T>>? choices;
   final Autocomplete<AutocompleteHandler<T>>? autocomplete;
@@ -39,7 +38,6 @@ sealed class Option<T> {
     required this.type,
     this.nameLocalizations,
     this.descriptionLocalizations,
-    this.isRequired,
     this.choices,
     this.autocomplete,
     this.channelTypes,
@@ -54,7 +52,6 @@ final class StringOption extends Option<String> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
-    super.isRequired,
     super.choices,
     super.autocomplete,
     super.minLength,
@@ -66,7 +63,6 @@ final class IntOption extends Option<int> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
-    super.isRequired,
     super.choices,
     super.autocomplete,
     int? super.minValue,
@@ -78,7 +74,6 @@ final class NumOption extends Option<double> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
-    super.isRequired,
     super.choices,
     super.autocomplete,
     double? super.minValue,
@@ -90,7 +85,6 @@ final class BoolOption extends Option<bool> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
-    super.isRequired,
   }) : super(type: .boolean);
 }
 
@@ -98,7 +92,6 @@ final class UserOption extends Option<User> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
-    super.isRequired,
   }) : super(type: .user);
 }
 
@@ -106,7 +99,6 @@ final class ChannelOption extends Option<Channel> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
-    super.isRequired,
     super.channelTypes,
   }) : super(type: .channel);
 }
@@ -115,7 +107,6 @@ final class RoleOption extends Option<Role> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
-    super.isRequired,
   }) : super(type: .role);
 }
 
@@ -123,7 +114,6 @@ final class MentionableOption extends Option<CommandOptionMentionable> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
-    super.isRequired,
   }) : super(type: .mentionable);
 }
 
@@ -131,6 +121,5 @@ final class AttachmentOption extends Option<Attachment> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
-    super.isRequired,
   }) : super(type: .attachment);
 }

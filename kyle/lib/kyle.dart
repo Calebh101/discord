@@ -17,6 +17,7 @@ final class Kyle extends DiscordBot {
 
     addCommands([
       BotCommands(),
+      PingCommand(),
     ]);
   }
 
@@ -53,6 +54,43 @@ final class Kyle extends DiscordBot {
   }
 }
 
+class PingCommand extends TopLevelSingleCommand {
+  @override
+  TopLevelCommandInfo get info => .new(name: "ping", description: "Pong!");
+
+  @override
+  CommandData build() {
+    return buildCommand(commandOptions, entryPoint);
+  }
+
+  @CommandEntryPoint()
+  void run(DiscordContext context) async {
+    final latency = context.client.httpHandler.latency;
+    final realLatency = context.client.httpHandler.realLatency;
+    final gatewayLatency = context.client.gateway.latency;
+
+    final Map<String, String> keys = {
+      "HTTP latency": formatLatency(latency),
+      "Real latency": formatLatency(realLatency),
+      if (gatewayLatency.inMicroseconds > 0) "Gateway latency": formatLatency(gatewayLatency),
+    };
+
+    await context.respond(MessageBuilder(content: "${context.user.toMention()}, pong!\n\n${keys.entries.map((x) {
+      return "> ${x.key}: **${x.value}**";
+    }).join("\n")}"));
+  }
+
+  static String formatLatency(Duration latency) {
+    return "${(latency.inMicroseconds / Duration.microsecondsPerMillisecond).toStringAsFixed(3)}ms";
+  }
+}
+
+enum MyEnum {
+  a,
+  b,
+  ;
+}
+
 class BotCommands extends TopLevelParentCommand {
   @override
   TopLevelCommandInfo get info => .new(
@@ -65,8 +103,10 @@ class BotCommands extends TopLevelParentCommand {
     return buildCommand(commandOptions);
   }
 
-  @SubcommandGroup()
-  late MoreBotCommands moreBotCommands;
+  @override
+  List<SubcommandGroupCommand> get subcommandGroups => [
+    MoreBotCommands(),
+  ];
 
   static String formatLatency(Duration latency) {
     return "${(latency.inMicroseconds / Duration.microsecondsPerMillisecond).toStringAsFixed(3)}ms";
@@ -92,13 +132,19 @@ class BotCommands extends TopLevelParentCommand {
   @Subcommand("test", "Testing...")
   void test(
     DiscordContext context,
-    @StringOption("input", "An input.", autocomplete: Autocomplete<TestAutocompleteHandler>()) String input,
-    @IntOption("count", "A count.") int count,
+    @StringOption("string", "An input.", autocomplete: Autocomplete<TestAutocompleteHandler>()) String a,
+    @IntOption("integer", "An input.") int b,
+    @NumOption("number", "An input.") num c,
+    @BoolOption("boolean", "An input.") bool d,
+    @UserOption("user", "An input.") User e,
+    @ChannelOption("channel", "An input.") Channel f,
+    @RoleOption("role", "An input.") Role g,
+    @MentionableOption("mentionable", "An input.") CommandOptionMentionable h,
+    //@AttachmentOption("attachment", "An input.") Attachment i,
   ) async {
     await context.respond(.new(
       content: [
-        input,
-        count,
+        a, b, c, d, e.username, f.toMention(), g.name,
       ].map((x) {
         return "- ${x.toDiscordCodeString()}";
       }).join("\n"),

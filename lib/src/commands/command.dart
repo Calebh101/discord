@@ -11,32 +11,40 @@ sealed class CommandEntity<T> {
 sealed class TopLevelCommand extends CommandEntity<CommandData> {
   @override
   TopLevelCommandInfo get info;
-
-  @protected
-  @nonVirtual
-  CommandData buildCommand(List<OptionData>? options) {
-    // Assign to a variable to avoid re-running the same getter over and over
-    final info = this.info;
-
-    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: options, function: null);
-  }
 }
 
 abstract class TopLevelSingleCommand extends TopLevelCommand {
-  @override
-  TopLevelCommandInfo get info;
+  @protected
+  @nonVirtual
+  CommandData buildCommand(List<OptionData>? commandOptions, Function entryPoint) {
+    // Assign to a variable to avoid re-running the same getter over and over
+    final info = this.info;
+
+    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: entryPoint);
+  }
 }
 
-abstract class TopLevelParentCommand extends TopLevelCommand {}
+abstract class TopLevelParentCommand extends TopLevelCommand {
+  List<SubcommandGroupCommand> get subcommandGroups => [];
+
+  @protected
+  @nonVirtual
+  CommandData buildCommand(List<OptionData>? commandOptions) {
+    // Assign to a variable to avoid re-running the same getter over and over
+    final info = this.info;
+
+    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: null);
+  }
+}
 
 abstract class SubcommandGroupCommand extends CommandEntity<OptionData> {
   @protected
   @nonVirtual
-  OptionData buildCommand(List<OptionData> options) {
+  OptionData buildCommand(List<OptionData> commandOptions) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(name: info.name, builder: .subCommandGroup(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options.mapToList((x) => x.builder)), autocomplete: null, function: null, options: options);
+    return .new(name: info.name, builder: .subCommandGroup(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions.mapToList((x) => x.builder)), autocomplete: null, function: null, options: commandOptions);
   }
 }
 

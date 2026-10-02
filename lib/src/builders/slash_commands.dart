@@ -15,7 +15,11 @@ import 'package:source_gen/source_gen.dart';
 
 Builder commandBuilder(BuilderOptions options) {
   return SharedPartBuilder(
-    [CommandGenerator()],
+    [
+      ParentSlashCommandGenerator(),
+      SingleSlashCommandGenerator(),
+      SubcommandGroupGenerator(),
+    ],
     'slash_commands',
   );
 }
@@ -49,33 +53,25 @@ sealed class CommandInfo {
   String build();
 }
 
-final class SubcommandGroupInfo extends CommandInfo {
-  final String className;
-
-  new({required this.className});
-
-  @override
-  String build() {
-    return """
-return $className().build();
-""".trim();
-  }
-}
-
 final class SubcommandInfo extends CommandInfo {
   final String name;
   final String description;
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
   final String functionName;
-  final List<CommandOptionInfo> options = [];
+  List<CommandOptionInfo>? options;
 
-  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.functionName});
+  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.functionName, this.options});
+
+  void addOption(CommandOptionInfo option) {
+    options ??= [];
+    options?.add(option);
+  }
 
   @override
   String build() {
     return """
-return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: [${options.map((x) => '() {${x.buildBuilder()}}()').join(", ")}], nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))}), autocomplete: null, options: [${options.map((x) => '() {${x.build()}}()').join(", ")}]);
+return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null});
 """.trim();
   }
 }
@@ -85,7 +81,7 @@ final class CommandOptionInfo<T> {
 
   final String name;
   final String description;
-  final bool? isRequired;
+  final bool isRequired;
 
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
@@ -118,7 +114,184 @@ return CommandOptionBuilder(type: .new(${type.value}), name: "$name", descriptio
   }
 }
 
-final class CommandGenerator extends GeneratorForSuperclass<TopLevelParentCommand> {
+DartObject? getFieldRecursive(DartObject? object, String name) {
+  final value = object?.getField(name);
+  if (value != null && !value.isNull) return value;
+
+  final superObject = object?.getField('(super)');
+  if (superObject != null) return getFieldRecursive(superObject, name);
+  return null;
+}
+
+String? generateForParent(ClassElement element, BuildStep buildStep, bool topLevel) {
+  final List<CommandInfo> commands = [];
+
+  for (final method in element.methods) {
+    final annotation = method.metadata.annotations.firstWhereOrNull((x) {
+      final value = x.computeConstantValue();
+      final name = value?.type?.element?.name;
+      return name == "Subcommand";
+    })?.computeConstantValue();
+
+    if (annotation == null) continue;
+
+    DartObject? field<T>(String name) {
+      return getFieldRecursive(annotation, name);
+    }
+
+    Map<String, String>? localizations(String key) {
+      final data = field(key)?.toMapValue();
+      if (data == null) return null;
+
+      return data.map((k, v) {
+        final id = k!.toStringValue()!;
+        if (!Locale.values.any((x) => x.identifier == id)) throw InvalidGenerationSourceError("Invalid locale ID: '$id'\nPossible values: ${Locale.values.map((x) => "'${x.identifier}'").join(", ")}");
+        return .new(id, v!.toStringValue()!);
+      });
+    }
+
+    final name = field("name")?.toStringValue();
+    final description = field("description")?.toStringValue();
+
+    final nameL = localizations("nameLocalizations");
+    final descL = localizations("descriptionLocalizations");
+
+    final command = SubcommandInfo(
+      name: name!,
+      description: description!,
+      nameLocalizations: nameL,
+      descriptionLocalizations: descL,
+      functionName: method.displayName,
+    );
+
+    commands.add(command);
+
+    if (method.formalParameters.isEmpty) {
+      throw InvalidGenerationSourceError("No formal parameters for function '${method.displayName}'. You need at least DiscordContext.");
+    }
+
+    for (int i = 0; i < method.formalParameters.length; i++) {
+      final param = method.formalParameters[i];
+      final option = parseOption(i, param);
+
+      if (option != null) {
+        command.addOption(option);
+      }
+    }
+  }
+
+  return """
+extension on ${element.name} {
+  List<OptionData> get commandOptions => [
+    ${commands.map((x) {
+      return "() {${x.build()}}()";
+    }).join(", ")},
+    ${topLevel ? '...subcommandGroups.map((x) => x.build()),' : ''}
+  ];
+}
+""".trim();
+}
+
+CommandOptionInfo? parseOption(int i, FormalParameterElement param) {
+  if (i == 0) {
+    final checker = TypeChecker.typeNamed(DiscordContext);
+    if (!checker.isExactlyType(param.type)) throw InvalidGenerationSourceError("First command parameter must be of type DiscordContext. Got: '${param.type.getDisplayString()}'");
+    return null;
+  }
+
+  final annotation = param.metadata.annotations.firstWhereOrNull((x) {
+    final value = x.computeConstantValue();
+    final name = value?.type?.element?.name;
+    return OptionType.annotations.contains(name);
+  })?.computeConstantValue();
+
+  if (annotation == null) {
+    throw InvalidGenerationSourceError("Command parameter #$i ('${param.name}') did not have an option annotation.\nPossible values: ${OptionType.annotations.map((x) => "'$x'").join(", ")}");
+  }
+
+  DartObject? field<T>(String name) {
+    return getFieldRecursive(annotation, name);
+  }
+
+  Map<String, String>? localizations(String key) {
+    final data = field(key)?.toMapValue();
+    if (data == null) return null;
+
+    return data.map((k, v) {
+      final id = k!.toStringValue()!;
+      if (!Locale.values.any((x) => x.identifier == id)) throw InvalidGenerationSourceError("Invalid locale ID: '$id'\nPossible values: ${Locale.values.map((x) => "'${x.identifier}'").join(", ")}");
+      return .new(id, v!.toStringValue()!);
+    });
+  }
+
+  final type = getFieldRecursive(field("type"), "value")?.toIntValue();
+  final name = field("name")?.toStringValue();
+  final description = field("description")?.toStringValue();
+
+  final nameL = localizations("nameLocalizations");
+  final descL = localizations("descriptionLocalizations");
+
+  final channelTypes = field("channelTypes")?.getField("value")?.toListValue()?.map((x) => x.getField("value")?.toIntValue()).whereType<int>().toList();
+
+  final minLength = field("minLength")?.toIntValue();
+  final maxLength = field("maxLength")?.toIntValue();
+
+  final minValue = field("minValue")?.toDoubleValue() ?? field("minValue")?.toIntValue();
+  final maxValue = field("maxValue")?.toDoubleValue() ?? field("maxValue")?.toIntValue();
+
+  final List<CommandChoice>? choices = field("choices")?.toListValue()?.mapToList((x) {
+    return .new(
+      x.getField("name")!.toStringValue()!,
+      x.getField("value")!.toStringValue() ?? x.getField("value")!.toIntValue() ?? x.getField("value")!.toDoubleValue(),
+      nameLocalizations: field("nameLocalizations")?.toMapValue()?.map((k, v) {
+        final id = k!.toStringValue()!;
+        if (!Locale.values.any((x) => x.identifier == id)) throw InvalidGenerationSourceError("Invalid locale ID: '$id'\nPossible values: ${Locale.values.map((x) => "'${x.identifier}'").join(", ")}");
+        return .new(id, v!.toStringValue()!);
+      }),
+    );
+  });
+
+  final autocompleteType = field("autocomplete")?.type;
+  String? autocompleteClassName;
+
+  if (autocompleteType is ParameterizedType) {
+    final args = autocompleteType.typeArguments;
+    if (args.isEmpty) throw InvalidGenerationSourceError("Type AutocompleteInfo must have a non-generic type argument.");
+    autocompleteClassName = args.first.getDisplayString(withNullability: false);
+  }
+
+  return .new(
+    type: .new(type!),
+    name: name!,
+    description: description!,
+    isRequired: param.type.nullabilitySuffix != .question,
+    nameLocalizations: nameL,
+    descriptionLocalizations: descL,
+    channelTypes: channelTypes?.mapToList((x) => .new(x)),
+    minLength: minLength,
+    maxLength: maxLength,
+    minValue: minValue,
+    maxValue: maxValue,
+    choices: choices,
+    autocompleteName: autocompleteClassName,
+  );
+}
+
+final class ParentSlashCommandGenerator extends GeneratorForSuperclass<TopLevelParentCommand> {
+  @override
+  generateForClass(ClassElement element, BuildStep buildStep) {
+    return generateForParent(element, buildStep, true);
+  }
+}
+
+final class SubcommandGroupGenerator extends GeneratorForSuperclass<SubcommandGroupCommand> {
+  @override
+  generateForClass(ClassElement element, BuildStep buildStep) {
+    return generateForParent(element, buildStep, false);
+  }
+}
+
+final class SingleSlashCommandGenerator extends GeneratorForSuperclass<TopLevelSingleCommand> {
   DartObject? getFieldRecursive(DartObject? object, String name) {
     final value = object?.getField(name);
     if (value != null && !value.isNull) return value;
@@ -130,159 +303,38 @@ final class CommandGenerator extends GeneratorForSuperclass<TopLevelParentComman
 
   @override
   generateForClass(ClassElement element, BuildStep buildStep) {
-    final List<CommandInfo> commands = [];
+    final method = element.methods.firstWhereOrNull((x) => x.metadata.annotations.any((x) => x.computeConstantValue()?.type?.element?.name == "CommandEntryPoint"));
+    List<CommandOptionInfo>? options;
 
-    for (final field in element.fields) {
-      final annotation = field.metadata.annotations.firstWhereOrNull((x) {
-        final value = x.computeConstantValue();
-        final name = value?.type?.element?.name;
-        return name == "SubcommandGroup";
-      })?.computeConstantValue();
-
-      if (annotation == null) continue;
-      commands.add(SubcommandGroupInfo(className: field.type.getDisplayString(withNullability: false)));
+    void addOption(CommandOptionInfo option) {
+      options ??= [];
+      options?.add(option);
     }
 
-    for (final method in element.methods) {
-      final annotation = method.metadata.annotations.firstWhereOrNull((x) {
-        final value = x.computeConstantValue();
-        final name = value?.type?.element?.name;
-        return name == "Subcommand";
-      })?.computeConstantValue();
+    if (method == null) {
+      throw InvalidGenerationSourceError("Top level single command needs function 'run'.");
+    }
 
-      if (annotation == null) continue;
+    for (int i = 0; i < method.formalParameters.length; i++) {
+      final param = method.formalParameters[i];
+      final option = parseOption(i, param);
 
-      DartObject? field<T>(String name) {
-        return getFieldRecursive(annotation, name);
-      }
-
-      Map<String, String>? localizations(String key) {
-        final data = field(key)?.toMapValue();
-        if (data == null) return null;
-
-        return data.map((k, v) {
-          final id = k!.toStringValue()!;
-          if (!Locale.values.any((x) => x.identifier == id)) throw InvalidGenerationSourceError("Invalid locale ID: '$id'\nPossible values: ${Locale.values.map((x) => "'${x.identifier}'").join(", ")}");
-          return .new(id, v!.toStringValue()!);
-        });
-      }
-
-      final name = field("name")?.toStringValue();
-      final description = field("description")?.toStringValue();
-
-      final nameL = localizations("nameLocalizations");
-      final descL = localizations("descriptionLocalizations");
-
-      final command = SubcommandInfo(
-        name: name!,
-        description: description!,
-        nameLocalizations: nameL,
-        descriptionLocalizations: descL,
-        functionName: method.displayName,
-      );
-
-      commands.add(command);
-
-      if (method.formalParameters.isEmpty) {
-        throw InvalidGenerationSourceError("No formal parameters for function '${method.displayName}'. You need at least DiscordContext.");
-      }
-
-      for (int i = 0; i < method.formalParameters.length; i++) {
-        final param = method.formalParameters[i];
-
-        if (i == 0) {
-          final checker = TypeChecker.typeNamed(DiscordContext);
-          if (!checker.isExactlyType(param.type)) throw InvalidGenerationSourceError("First command parameter must be of type DiscordContext. Got: '${param.type.getDisplayString()}'");
-          continue;
-        }
-
-        final annotation = param.metadata.annotations.firstWhereOrNull((x) {
-          final value = x.computeConstantValue();
-          final name = value?.type?.element?.name;
-          return OptionType.annotations.contains(name);
-        })?.computeConstantValue();
-
-        if (annotation == null) {
-          throw InvalidGenerationSourceError("Command parameter #$i ('${param.name}') did not have an option annotation.\nPossible values: ${OptionType.annotations.map((x) => "'$x'").join(", ")}");
-        }
-
-        DartObject? field<T>(String name) {
-          return getFieldRecursive(annotation, name);
-        }
-
-        Map<String, String>? localizations(String key) {
-          final data = field(key)?.toMapValue();
-          if (data == null) return null;
-
-          return data.map((k, v) {
-            final id = k!.toStringValue()!;
-            if (!Locale.values.any((x) => x.identifier == id)) throw InvalidGenerationSourceError("Invalid locale ID: '$id'\nPossible values: ${Locale.values.map((x) => "'${x.identifier}'").join(", ")}");
-            return .new(id, v!.toStringValue()!);
-          });
-        }
-
-        final type = getFieldRecursive(field("type"), "value")?.toIntValue();
-        final name = field("name")?.toStringValue();
-        final description = field("description")?.toStringValue();
-        final isRequired = field("isRequired")?.toBoolValue();
-
-        final nameL = localizations("nameLocalizations");
-        final descL = localizations("descriptionLocalizations");
-
-        final channelTypes = field("channelTypes")?.getField("value")?.toListValue()?.map((x) => x.getField("value")?.toIntValue()).whereType<int>().toList();
-
-        final minLength = field("minLength")?.toIntValue();
-        final maxLength = field("maxLength")?.toIntValue();
-
-        final minValue = field("minValue")?.toDoubleValue() ?? field("minValue")?.toIntValue();
-        final maxValue = field("maxValue")?.toDoubleValue() ?? field("maxValue")?.toIntValue();
-
-        final List<CommandChoice>? choices = field("choices")?.toListValue()?.mapToList((x) {
-          return .new(
-            x.getField("name")!.toStringValue()!,
-            x.getField("value")!.toStringValue() ?? x.getField("value")!.toIntValue() ?? x.getField("value")!.toDoubleValue(),
-            nameLocalizations: field("nameLocalizations")?.toMapValue()?.map((k, v) {
-              final id = k!.toStringValue()!;
-              if (!Locale.values.any((x) => x.identifier == id)) throw InvalidGenerationSourceError("Invalid locale ID: '$id'\nPossible values: ${Locale.values.map((x) => "'${x.identifier}'").join(", ")}");
-              return .new(id, v!.toStringValue()!);
-            }),
-          );
-        });
-
-        final autocompleteType = field("autocomplete")?.type;
-        String? autocompleteClassName;
-
-        if (autocompleteType is ParameterizedType) {
-          final args = autocompleteType.typeArguments;
-          if (args.isEmpty) throw InvalidGenerationSourceError("Type AutocompleteInfo must have a non-generic type argument.");
-          autocompleteClassName = args.first.getDisplayString(withNullability: false);
-        }
-
-        command.options.add(.new(
-          type: .new(type!),
-          name: name!,
-          description: description!,
-          isRequired: isRequired,
-          nameLocalizations: nameL,
-          descriptionLocalizations: descL,
-          channelTypes: channelTypes?.mapToList((x) => .new(x)),
-          minLength: minLength,
-          maxLength: maxLength,
-          minValue: minValue,
-          maxValue: maxValue,
-          choices: choices,
-          autocompleteName: autocompleteClassName,
-        ));
+      if (option != null) {
+        addOption(option);
       }
     }
 
     return """
 extension on ${element.name} {
-  List<OptionData> get commandOptions => [
-    ${commands.map((x) {
-      return "() {${x.build()}}()";
-    }).join(", ")}
-  ];
+  List<OptionData>? get commandOptions => ${options != null ? """
+    [
+      ${options?.map((x) {
+        return "() {${x.build()}}()";
+      }).join(", ")},
+    ]
+""" : null};
+
+  Function get entryPoint => ${method.name};
 }
 """.trim();
   }

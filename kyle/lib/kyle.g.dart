@@ -3,14 +3,11 @@
 part of 'kyle.dart';
 
 // **************************************************************************
-// CommandGenerator
+// ParentSlashCommandGenerator
 // **************************************************************************
 
 extension on BotCommands {
   List<OptionData> get commandOptions => [
-    () {
-      return MoreBotCommands().build();
-    }(),
     () {
       return OptionData(
         name: "ping",
@@ -23,7 +20,7 @@ extension on BotCommands {
           descriptionLocalizations: null,
         ),
         autocomplete: null,
-        options: [],
+        options: null,
       );
     }(),
     () {
@@ -37,9 +34,9 @@ extension on BotCommands {
             () {
               return CommandOptionBuilder(
                 type: .new(3),
-                name: "input",
+                name: "string",
                 description: "An input.",
-                isRequired: null,
+                isRequired: true,
                 choices: null,
                 hasAutocomplete: true,
                 channelTypes: null,
@@ -52,9 +49,99 @@ extension on BotCommands {
             () {
               return CommandOptionBuilder(
                 type: .new(4),
-                name: "count",
-                description: "A count.",
-                isRequired: null,
+                name: "integer",
+                description: "An input.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(10),
+                name: "number",
+                description: "An input.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(5),
+                name: "boolean",
+                description: "An input.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(6),
+                name: "user",
+                description: "An input.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(7),
+                name: "channel",
+                description: "An input.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(8),
+                name: "role",
+                description: "An input.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(9),
+                name: "mentionable",
+                description: "An input.",
+                isRequired: true,
                 choices: null,
                 hasAutocomplete: false,
                 channelTypes: null,
@@ -72,13 +159,13 @@ extension on BotCommands {
         options: [
           () {
             return OptionData(
-              name: "input",
+              name: "string",
               builder: () {
                 return CommandOptionBuilder(
                   type: .new(3),
-                  name: "input",
+                  name: "string",
                   description: "An input.",
-                  isRequired: null,
+                  isRequired: true,
                   choices: null,
                   hasAutocomplete: true,
                   channelTypes: null,
@@ -95,13 +182,151 @@ extension on BotCommands {
           }(),
           () {
             return OptionData(
-              name: "count",
+              name: "integer",
               builder: () {
                 return CommandOptionBuilder(
                   type: .new(4),
-                  name: "count",
-                  description: "A count.",
-                  isRequired: null,
+                  name: "integer",
+                  description: "An input.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              function: null,
+              options: null,
+            );
+          }(),
+          () {
+            return OptionData(
+              name: "number",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(10),
+                  name: "number",
+                  description: "An input.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              function: null,
+              options: null,
+            );
+          }(),
+          () {
+            return OptionData(
+              name: "boolean",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(5),
+                  name: "boolean",
+                  description: "An input.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              function: null,
+              options: null,
+            );
+          }(),
+          () {
+            return OptionData(
+              name: "user",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(6),
+                  name: "user",
+                  description: "An input.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              function: null,
+              options: null,
+            );
+          }(),
+          () {
+            return OptionData(
+              name: "channel",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(7),
+                  name: "channel",
+                  description: "An input.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              function: null,
+              options: null,
+            );
+          }(),
+          () {
+            return OptionData(
+              name: "role",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(8),
+                  name: "role",
+                  description: "An input.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              function: null,
+              options: null,
+            );
+          }(),
+          () {
+            return OptionData(
+              name: "mentionable",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(9),
+                  name: "mentionable",
+                  description: "An input.",
+                  isRequired: true,
                   choices: null,
                   hasAutocomplete: false,
                   channelTypes: null,
@@ -119,8 +344,23 @@ extension on BotCommands {
         ],
       );
     }(),
+    ...subcommandGroups.map((x) => x.build()),
   ];
 }
+
+// **************************************************************************
+// SingleSlashCommandGenerator
+// **************************************************************************
+
+extension on PingCommand {
+  List<OptionData>? get commandOptions => null;
+
+  Function get entryPoint => run;
+}
+
+// **************************************************************************
+// SubcommandGroupGenerator
+// **************************************************************************
 
 extension on MoreBotCommands {
   List<OptionData> get commandOptions => [
@@ -136,7 +376,7 @@ extension on MoreBotCommands {
           descriptionLocalizations: null,
         ),
         autocomplete: null,
-        options: [],
+        options: null,
       );
     }(),
   ];
