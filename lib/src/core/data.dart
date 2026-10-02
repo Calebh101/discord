@@ -114,6 +114,7 @@ class SettingsObject<T> {
   }
 
   T? decode(dynamic input) {
+    if (input == null) return null;
     final f = decodeFunction ?? cast<T>;
     return f(input);
   }

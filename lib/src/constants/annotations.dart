@@ -59,6 +59,18 @@ final class StringOption extends Option<String> {
   }) : super(type: .string);
 }
 
+final class EnumOption<T extends Enum> extends Option<T> {
+  final String nameField;
+  final String valueField;
+
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+    this.nameField = "name",
+    this.valueField = "name",
+  }) : super(type: .string);
+}
+
 final class IntOption extends Option<int> {
   const new(super.name, super.description, {
     super.nameLocalizations,

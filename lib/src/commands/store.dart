@@ -26,9 +26,13 @@ class CommandsStore {
     return .parse(value);
   }
 
-  Future<dynamic> convert(InteractionOption? option, ResolvedData? resolved) async {
-    if (option == null) return null;
+  Future<dynamic> convert(InteractionOption? option, OptionData? data, ResolvedData? resolved) async {
+    if (option == null || data == null) return null;
     final value = option.value;
+
+    if (data.converter != null) {
+      return data.converter!.call(value);
+    }
 
     switch (option.type) {
       case .number:
@@ -39,6 +43,8 @@ class CommandsStore {
         return await resolved?.channels?[snowflake(value)]?.get();
       case .role:
         return resolved?.roles?[snowflake(value)];
+      case .mentionable:
+        return resolved?.roles?[snowflake(value)] ?? resolved?.users?[snowflake(value)];
       case .attachment:
         return resolved?.attachments?[snowflake(value)];
       default:
@@ -103,7 +109,7 @@ class CommandsStore {
         return;
       }
 
-      Logger.print("Commands", "Handling command $path for user ${user.id}: $info");
+      Logger.print("Commands", "Handling command $path for user ${user.id}:${interaction.guildId}...");
 
       if (info == null) {
         Logger.warn("Commands", "Invalid command: $path");
@@ -123,7 +129,7 @@ class CommandsStore {
 
         for (final expected in info.options ?? <OptionData>[]) {
           final given = options?.firstWhereOrNull((x) => x.name == expected.name);
-          args.add(await convert(given, data.resolved));
+          args.add(await convert(given, expected, data.resolved));
         }
 
         await Function.apply(function, [
@@ -159,8 +165,13 @@ class CommandsStore {
         }
       }
 
+      if (user == null) {
+        Logger.warn("Commands", "User is null! ${interaction.user.runtimeType}, ${interaction.member.runtimeType}, ${interaction.member?.user.runtimeType}");
+        return;
+      }
+
       final info = registry[path.join(".")];
-      Logger.print("Autocomplete", "Handling command $path for user ${interaction.user?.id} ${info.runtimeType}");
+      Logger.print("Autocomplete", "Handling command $path for user ${user.id}:${interaction.guildId}");
 
       if (info == null) {
         Logger.warn("Autocomplete", "Invalid command: $path\nNo registry entry.");
@@ -203,8 +214,9 @@ final class OptionData {
   final List<OptionData>? options;
   final AutocompleteHandler Function()? autocomplete;
   final Function? function;
+  final dynamic Function(dynamic value)? converter;
 
-  const new({required this.name, required this.builder, required this.autocomplete, required this.function, required this.options});
+  const new({required this.name, required this.builder, required this.autocomplete, required this.function, required this.options, this.converter});
 
   @override
   String toString() {

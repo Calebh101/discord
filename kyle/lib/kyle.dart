@@ -133,6 +133,7 @@ class BotCommands extends TopLevelParentCommand {
   void test(
     DiscordContext context,
     @StringOption("string", "An input.", autocomplete: Autocomplete<TestAutocompleteHandler>()) String a,
+    @EnumOption<MyEnum>("enum", "An input.") MyEnum j,
     @IntOption("integer", "An input.") int b,
     @NumOption("number", "An input.") num c,
     @BoolOption("boolean", "An input.") bool d,
@@ -140,14 +141,23 @@ class BotCommands extends TopLevelParentCommand {
     @ChannelOption("channel", "An input.") Channel f,
     @RoleOption("role", "An input.") Role g,
     @MentionableOption("mentionable", "An input.") CommandOptionMentionable h,
-    //@AttachmentOption("attachment", "An input.") Attachment i,
   ) async {
     await context.respond(.new(
       content: [
-        a, b, c, d, e.username, f.toMention(), g.name,
+        a, j.name, b, c, d, e.username, f.toMention(), g.name,
       ].map((x) {
         return "- ${x.toDiscordCodeString()}";
       }).join("\n"),
+    ));
+  }
+
+  @Subcommand("attachment", "Testing... attachments!")
+  void attachment(
+    DiscordContext context,
+    @AttachmentOption("attachment", "An attachment.") Attachment attachment,
+  ) async {
+    await context.respond(.new(
+      content: "Attachment: ${attachment.fileName}\nSize: ${attachment.size} bytes",
     ));
   }
 }

@@ -48,6 +48,27 @@ extension on BotCommands {
             }(),
             () {
               return CommandOptionBuilder(
+                type: .string,
+                name: "enum",
+                description: "An input.",
+                isRequired: true,
+                choices: MyEnum.values.map((v) {
+                  return CommandOptionChoiceBuilder(
+                    name: v.name,
+                    value: v.name,
+                    nameLocalizations: null,
+                  );
+                }).toList(),
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
                 type: .new(4),
                 name: "integer",
                 description: "An input.",
@@ -178,6 +199,38 @@ extension on BotCommands {
               autocomplete: () => TestAutocompleteHandler(),
               function: null,
               options: null,
+            );
+          }(),
+          () {
+            return OptionData(
+              name: "enum",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .string,
+                  name: "enum",
+                  description: "An input.",
+                  isRequired: true,
+                  choices: MyEnum.values.map((v) {
+                    return CommandOptionChoiceBuilder(
+                      name: v.name,
+                      value: v.name,
+                      nameLocalizations: null,
+                    );
+                  }).toList(),
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              function: null,
+              options: null,
+              converter: (value) {
+                return MyEnum.values.firstWhere((x) => x.name == value);
+              },
             );
           }(),
           () {
@@ -326,6 +379,61 @@ extension on BotCommands {
                   type: .new(9),
                   name: "mentionable",
                   description: "An input.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              function: null,
+              options: null,
+            );
+          }(),
+        ],
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "attachment",
+        function: attachment,
+        builder: .subCommand(
+          name: "attachment",
+          description: "Testing... attachments!",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(11),
+                name: "attachment",
+                description: "An attachment.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData(
+              name: "attachment",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(11),
+                  name: "attachment",
+                  description: "An attachment.",
                   isRequired: true,
                   choices: null,
                   hasAutocomplete: false,

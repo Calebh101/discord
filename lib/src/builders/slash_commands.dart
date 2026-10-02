@@ -39,6 +39,7 @@ enum OptionType {
   role("RoleOption"),
   mentionable("MentionableOption"),
   attachment("AttachmentOption"),
+  enumT("EnumOption"),
   ;
 
   final String annotation;
@@ -59,11 +60,11 @@ final class SubcommandInfo extends CommandInfo {
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
   final String functionName;
-  List<CommandOptionInfo>? options;
+  List<CommandOptionBase>? options;
 
   new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.functionName, this.options});
 
-  void addOption(CommandOptionInfo option) {
+  void addOption(CommandOptionBase option) {
     options ??= [];
     options?.add(option);
   }
@@ -76,7 +77,12 @@ return OptionData(name: "$name", function: $functionName, builder: .subCommand(n
   }
 }
 
-final class CommandOptionInfo<T> {
+sealed class CommandOptionBase {
+  String build();
+  String buildBuilder();
+}
+
+final class CommandOptionInfo<T> extends CommandOptionBase {
   final CommandOptionType type;
 
   final String name;
@@ -99,17 +105,52 @@ final class CommandOptionInfo<T> {
 
   new({required this.type, required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.choices, required this.channelTypes, required this.minLength, required this.maxLength, required this.minValue, required this.maxValue, required this.autocompleteName});
 
+  @override
   String build() {
     return """
 return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}, function: null, options: null);
 """.trim();
   }
 
+  @override
   String buildBuilder() {
     final channelTypesString = channelTypes?.map((x) => ".new(${x.value})");
 
     return """
 return CommandOptionBuilder(type: .new(${type.value}), name: "$name", description: "$description", isRequired: $isRequired, choices: ${choices?.mapToList((x) => '.new(name: "${x.name}", value: ${x.value}, nameLocalizations: ${jsonEncode(localizations(nameLocalizations))})')}, hasAutocomplete: ${autocompleteName != null}, channelTypes: ${channelTypesString != null ? "[$channelTypesString]" : null}, minLength: $minLength, maxLength: $maxLength, minValue: $minValue, maxValue: $maxValue);
+""".trim();
+  }
+}
+
+final class EnumCommandOptionInfo extends CommandOptionBase {
+  final String name;
+  final String description;
+  final bool isRequired;
+
+  final String enumName;
+  final String nameField;
+  final String valueField;
+
+  final Map<String, String>? nameLocalizations;
+  final Map<String, String>? descriptionLocalizations;
+
+  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.enumName, required this.nameField, required this.valueField});
+
+  @override
+  String build() {
+    return """
+return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: null, function: null, options: null, converter: (value) {
+  return $enumName.values.firstWhere((x) => x.$valueField == value);
+});
+""".trim();
+  }
+
+  @override
+  String buildBuilder() {
+    return """
+return CommandOptionBuilder(type: .string, name: "$name", description: "$description", isRequired: $isRequired, choices: $enumName.values.map((v) {
+  return CommandOptionChoiceBuilder(name: v.$nameField, value: v.$valueField, nameLocalizations: null);
+}).toList(), hasAutocomplete: false, channelTypes: null, minLength: null, maxLength: null, minValue: null, maxValue: null);
 """.trim();
   }
 }
@@ -192,7 +233,7 @@ extension on ${element.name} {
 """.trim();
 }
 
-CommandOptionInfo? parseOption(int i, FormalParameterElement param) {
+CommandOptionBase? parseOption(int i, FormalParameterElement param) {
   if (i == 0) {
     final checker = TypeChecker.typeNamed(DiscordContext);
     if (!checker.isExactlyType(param.type)) throw InvalidGenerationSourceError("First command parameter must be of type DiscordContext. Got: '${param.type.getDisplayString()}'");
@@ -224,13 +265,43 @@ CommandOptionInfo? parseOption(int i, FormalParameterElement param) {
     });
   }
 
-  final type = getFieldRecursive(field("type"), "value")?.toIntValue();
+  if (annotation.type is InterfaceType && annotation.type?.element?.name == "EnumOption") {
+    final type = annotation.type as InterfaceType;
+    final arg = type.typeArguments.firstOrNull;
+
+    if (arg == null || arg.isDartCoreEnum) {
+      throw InvalidGenerationSourceError("Error with EnumOption: Type argument was either not passed, or was a generic 'Enum'. Type argument must be specific.");
+    }
+
+    final name = field("name")?.toStringValue();
+    final description = field("description")?.toStringValue();
+
+    final nameL = localizations("nameLocalizations");
+    final descL = localizations("descriptionLocalizations");
+
+    final enumName = arg.getDisplayString(withNullability: false);
+    final nameField = field("nameField")!.toStringValue()!;
+    final valueField = field("valueField")!.toStringValue()!;
+
+    return EnumCommandOptionInfo(
+      name: name!,
+      description: description!,
+      nameLocalizations: nameL,
+      descriptionLocalizations: descL,
+      isRequired: param.type.nullabilitySuffix != .question,
+      enumName: enumName,
+      nameField: nameField,
+      valueField: valueField,
+    );
+  }
+
   final name = field("name")?.toStringValue();
   final description = field("description")?.toStringValue();
 
   final nameL = localizations("nameLocalizations");
   final descL = localizations("descriptionLocalizations");
 
+  final type = getFieldRecursive(field("type"), "value")?.toIntValue();
   final channelTypes = field("channelTypes")?.getField("value")?.toListValue()?.map((x) => x.getField("value")?.toIntValue()).whereType<int>().toList();
 
   final minLength = field("minLength")?.toIntValue();
@@ -260,7 +331,7 @@ CommandOptionInfo? parseOption(int i, FormalParameterElement param) {
     autocompleteClassName = args.first.getDisplayString(withNullability: false);
   }
 
-  return .new(
+  return CommandOptionInfo(
     type: .new(type!),
     name: name!,
     description: description!,
@@ -304,9 +375,9 @@ final class SingleSlashCommandGenerator extends GeneratorForSuperclass<TopLevelS
   @override
   generateForClass(ClassElement element, BuildStep buildStep) {
     final method = element.methods.firstWhereOrNull((x) => x.metadata.annotations.any((x) => x.computeConstantValue()?.type?.element?.name == "CommandEntryPoint"));
-    List<CommandOptionInfo>? options;
+    List<CommandOptionBase>? options;
 
-    void addOption(CommandOptionInfo option) {
+    void addOption(CommandOptionBase option) {
       options ??= [];
       options?.add(option);
     }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:discord/discord.dart';
+import 'package:discord/src/plugins/plugin.dart';
 import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
 
@@ -21,13 +22,17 @@ abstract class DiscordBot {
   String get tokenFilePath;
   String get dbFilePath;
 
+  List<DiscordPlugin> get plugins => [];
+
   FutureOr<void> onAboutToLoad() {}
   FutureOr<void> onTimeToLoadClients() {}
   FutureOr<void> onReady() {}
 
   @nonVirtual
   Future<void> start({Snowflake? devGuild}) async {
+    for (final p in plugins) await p.onAboutToLoad(this);
     await onAboutToLoad();
+    for (final p in plugins) await p.onLoad(this);
 
     final List<CommandData> results = [];
 
@@ -65,7 +70,8 @@ abstract class DiscordBot {
       commands.listen(client, this);
     }
 
-    Logger.print("Bot", "Ready with ${clients.count} clients!");
+    Logger.print("Bot", "Ready with ${clients.count} clients and ${plugins.length} plugins!");
+    for (final p in plugins) p.onReady(this);
     await onReady();
   }
 
