@@ -1,0 +1,1 @@
+export 'src/plugins/bot/bot.dart';

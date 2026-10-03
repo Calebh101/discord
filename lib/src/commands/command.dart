@@ -1,4 +1,5 @@
 import 'package:discord/src/commands/store.dart';
+import 'package:discord/src/core/permissions.dart';
 import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
 import 'package:nyxx/nyxx.dart';
@@ -15,13 +16,15 @@ sealed class TopLevelCommand extends CommandEntity<CommandData> {
 }
 
 abstract class TopLevelSingleCommand extends TopLevelCommand {
+  BotPermissions get requiredPermissions => .all;
+
   @protected
   @nonVirtual
   CommandData buildCommand(List<OptionData>? commandOptions, Function entryPoint) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: entryPoint);
+    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: entryPoint, requiredPerms: requiredPermissions);
   }
 }
 
@@ -34,7 +37,7 @@ abstract class TopLevelParentCommand extends TopLevelCommand {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: null);
+    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: null, requiredPerms: .all);
   }
 }
 
@@ -45,7 +48,7 @@ abstract class SubcommandGroupCommand extends CommandEntity<OptionData> {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(name: info.name, builder: .subCommandGroup(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions.mapToList((x) => x.builder)), autocomplete: null, function: null, options: commandOptions);
+    return .new(name: info.name, builder: .subCommandGroup(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions.mapToList((x) => x.builder)), autocomplete: null, function: null, options: commandOptions, requiredPerms: .all);
   }
 }
 

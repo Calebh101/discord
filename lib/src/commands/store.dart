@@ -54,11 +54,11 @@ class CommandsStore {
 
   void listen(NyxxGateway client, DiscordBot bot) {
     bool allowed(Snowflake userId, Snowflake? guildId) {
-      final userSettings = UserSettings(bot.store, userId);
+      final userSettings = UserPermissionSettings(bot.store, userId);
       if (userSettings.ignored.get()) return false;
 
       if (guildId != null) {
-        final guildSettings = GuildSettings(bot.store, guildId);
+        final guildSettings = GuildPermissionSettings(bot.store, guildId);
         if (guildSettings.blocked.get()) return false;
       }
 
@@ -109,7 +109,7 @@ class CommandsStore {
         return;
       }
 
-      Logger.print("Commands", "Handling command $path for user ${user.id}:${interaction.guildId}...");
+      Logger.print("Commands", "Handling command $path (${info?.permsRequired.name}) for user ${user.id}:${interaction.guildId}...");
 
       if (info == null) {
         Logger.warn("Commands", "Invalid command: $path");
@@ -123,8 +123,25 @@ class CommandsStore {
         return;
       }
 
+      switch (info.permsRequired) {
+        case .all: break;
+
+        case .owner:
+          final settings = UserPermissionSettings(bot.store, user.id);
+          if (!settings.owner.get()) return await respond("You can't execute this command, you're not an owner!");
+          break;
+
+        case .admin:
+          if (interaction.guildId == null) return await respond("This command needs to be run in a guild.");
+          if (UserPermissionSettings(bot.store, user.id).owner.get()) break;
+
+          final settings = UserPerServerPermissionSettings(bot.store, interaction.guildId!, user.id);
+          if (!settings.admin.get()) return await respond("You can't execute this command, you're not an admin!");
+          break;
+      }
+
       try {
-        final context = DiscordContext(interaction: interaction, client: client, user: user, member: interaction.member);
+        final context = DiscordContext(interaction: interaction, bot: bot, client: client, user: user);
         final List<dynamic> args = [];
 
         for (final expected in info.options ?? <OptionData>[]) {
@@ -204,8 +221,9 @@ final class CommandData {
   final ApplicationCommandBuilder builder;
   final List<OptionData>? options;
   final Function? function;
+  final BotPermissions requiredPerms;
 
-  const new({required this.builder, required this.options, required this.function});
+  const new({required this.builder, required this.options, required this.function, required this.requiredPerms});
 }
 
 final class OptionData {
@@ -215,8 +233,9 @@ final class OptionData {
   final AutocompleteHandler Function()? autocomplete;
   final Function? function;
   final dynamic Function(dynamic value)? converter;
+  final BotPermissions requiredPerms;
 
-  const new({required this.name, required this.builder, required this.autocomplete, required this.function, required this.options, this.converter});
+  const new({required this.name, required this.builder, required this.autocomplete, required this.function, required this.options, this.converter, required this.requiredPerms});
 
   @override
   String toString() {
@@ -229,15 +248,16 @@ final class RegistryData {
   final int level; // 0 is start
   final Function? function;
   final List<OptionData>? options;
+  final BotPermissions permsRequired;
 
-  const new({required this.name, required this.level, required this.function, required this.options});
+  const new({required this.name, required this.level, required this.function, required this.options, required this.permsRequired});
 
   factory fromCommandData(CommandData command) {
-    return .new(name: command.builder.name, level: 0, function: command.function, options: command.options);
+    return .new(name: command.builder.name, level: 0, function: command.function, options: command.options, permsRequired: command.requiredPerms);
   }
 
   factory fromOptionData(OptionData command, int level) {
-    return .new(name: command.name, level: level, function: command.function, options: command.options);
+    return .new(name: command.name, level: level, function: command.function, options: command.options, permsRequired: command.requiredPerms);
   }
 
   @override

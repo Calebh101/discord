@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:discord/discord.dart';
+import 'package:discord/plugins.dart';
 
 final class Kyle extends DiscordBot {
   new({super.dev});

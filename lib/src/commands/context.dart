@@ -1,19 +1,38 @@
-import 'package:nyxx/nyxx.dart';
+import 'package:discord/src/core/bot.dart';
+import 'package:discord/src/core/data.dart';
+import 'package:discord/src/core/logger.dart';
+import 'package:nyxx/nyxx.dart' hide Logger;
 
 final class DiscordContext {
   final ApplicationCommandInteraction interaction;
+  final DiscordBot bot;
   final NyxxGateway client;
   final User user;
-  final Member? member;
+
+  KVStore get store => bot.store;
+  Member? get member => interaction.member;
+  Message? get message => interaction.message;
+
+  PartialChannel? get channel => interaction.channel;
+  PartialGuild? get guild => interaction.guild;
+
+  Snowflake get userId => user.id;
+  Snowflake? get channelId => interaction.channelId;
+  Snowflake? get guildId => interaction.guildId;
+  Snowflake get interactionId => interaction.id;
 
   const new({
     required this.interaction,
+    required this.bot,
     required this.client,
     required this.user,
-    required this.member,
   });
 
   Future<void> respond(MessageBuilder builder) async {
-    await interaction.respond(builder);
+    try {
+      await interaction.respond(builder);
+    } catch (e) {
+      Logger.warn("Respond", "Error responding to user $userId and interaction $interactionId: $e");
+    }
   }
 }

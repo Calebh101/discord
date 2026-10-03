@@ -218,7 +218,7 @@ abstract class EntitySettings {
   }
 }
 
-final class BotSettings extends EntitySettings {
+class BotSettings extends EntitySettings {
   new(super.store) : super(id: "_", scope: .bot);
 
   @mustCallSuper
@@ -227,31 +227,27 @@ final class BotSettings extends EntitySettings {
   }
 }
 
-final class GuildSettings extends EntitySettings {
+abstract class GuildSettings extends EntitySettings {
   new(super.store, Snowflake id) : super(id: id.toString(), scope: .guild);
-
-  SettingsObjectNotNull<bool> get blocked => .new(this, "blocked", () => false);
 }
 
-final class UserSettings extends EntitySettings {
+abstract class UserSettings extends EntitySettings {
   new(super.store, Snowflake id) : super(id: id.toString(), scope: .user);
-
-  SettingsObjectNotNull<bool> get ignored => .new(this, "ignored", () => false);
 }
 
-final class ChannelSettings extends EntitySettings {
+abstract class ChannelSettings extends EntitySettings {
   new(super.store, Snowflake id) : super(id: id.toString(), scope: .channel);
 }
 
-final class MessageSettings extends EntitySettings {
+abstract class MessageSettings extends EntitySettings {
   new(super.store, Snowflake id) : super(id: id.toString(), scope: .message);
 }
 
-final class RoleSettings extends EntitySettings {
+abstract class RoleSettings extends EntitySettings {
   new(super.store, Snowflake id) : super(id: id.toString(), scope: .role);
 }
 
-final class UserPerServerSettings extends EntitySettings {
+abstract class UserPerServerSettings extends EntitySettings {
   new(super.store, Snowflake server, Snowflake user) : super(id: createId(server, user), scope: Scope.userPerServer);
 
   static String createId(Snowflake server, Snowflake user) {

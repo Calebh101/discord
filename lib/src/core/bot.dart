@@ -46,8 +46,7 @@ abstract class DiscordBot {
 
     for (final c in commandData) {
       final data = c.build();
-
-      results.add(.new(builder: data.builder, options: data.options, function: data.function));
+      results.add(data);
     }
 
     commands.commands = results;

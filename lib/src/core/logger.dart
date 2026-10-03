@@ -1,9 +1,9 @@
 import 'dart:math';
 
-import 'package:discord/discord.dart';
 import 'package:discord/src/other/logger_override.dart';
 import 'package:intl/intl.dart';
 import 'package:localpkg/localpkg.dart';
+import 'package:nyxx/nyxx.dart';
 
 class Log {
   final LogLevel level;

@@ -5,10 +5,12 @@ final class Subcommand {
   final String description;
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
+  final BotPermissions permissionsRequired;
 
   const new(this.name, this.description, {
     this.nameLocalizations,
     this.descriptionLocalizations,
+    this.permissionsRequired = .all,
   });
 }
 
