@@ -1,6 +1,7 @@
-import 'package:discord/discord.dart';
+import 'package:discord/src/commands/store.dart';
 import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
+import 'package:nyxx/nyxx.dart';
 
 sealed class CommandEntity<T> {
   CommandInfo get info;

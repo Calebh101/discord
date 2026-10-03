@@ -5,6 +5,7 @@ import 'package:kyle/kyle.dart';
 part 'main.g.dart';
 
 void main(List<String> arguments) async {
+  Logger.enable();
   runCommands(arguments);
 }
 
@@ -42,6 +43,7 @@ final class MainTerminalCommand extends Command {
 
   @override
   void onRun() async {
+    Logger.print("Main", "Loading...");
     final bot = Kyle(dev: dev);
     await bot.start(devGuild: devGuild != null ? .parse(devGuild!) : null);
   }

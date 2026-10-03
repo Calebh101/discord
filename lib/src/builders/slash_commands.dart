@@ -5,13 +5,14 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:collection/collection.dart';
+import 'package:localpkg/localpkg.dart';
+import 'package:nyxx/nyxx.dart' hide Builder;
+import 'package:source_gen/source_gen.dart';
+
 import 'package:discord/src/commands/choice.dart';
 import 'package:discord/src/commands/command.dart';
 import 'package:discord/src/commands/context.dart';
 import 'package:discord/src/other/generator_for_superclass.dart';
-import 'package:localpkg/localpkg.dart';
-import 'package:nyxx/nyxx.dart' hide Builder;
-import 'package:source_gen/source_gen.dart';
 
 Builder commandBuilder(BuilderOptions options) {
   return SharedPartBuilder(
@@ -224,10 +225,12 @@ String? generateForParent(ClassElement element, BuildStep buildStep, bool topLev
   return """
 extension on ${element.name} {
   List<OptionData> get commandOptions => [
-    ${commands.map((x) {
-      return "() {${x.build()}}()";
-    }).join(", ")},
-    ${topLevel ? '...subcommandGroups.map((x) => x.build()),' : ''}
+    ${[
+      ...commands.map((x) {
+        return "() {${x.build()}}()";
+      }),
+      if (topLevel) '...subcommandGroups.map((x) => x.build())',
+    ].join(", ")}
   ];
 }
 """.trim();
@@ -401,7 +404,7 @@ extension on ${element.name} {
     [
       ${options?.map((x) {
         return "() {${x.build()}}()";
-      }).join(", ")},
+      }).join(", ")}
     ]
 """ : null};
 

@@ -8,6 +8,7 @@ export 'src/core/bot.dart';
 export 'src/core/logger.dart';
 export 'src/core/data.dart';
 export 'src/core/terminal.dart';
+export 'src/core/plugin.dart';
 
 export 'src/util/stringify.dart';
 
@@ -19,6 +20,8 @@ export 'src/commands/autocomplete.dart';
 export 'src/commands/choice.dart';
 export 'src/commands/context.dart';
 export 'src/commands/store.dart';
+
+export 'src/plugins/bot/bot.dart';
 
 export 'package:nyxx/nyxx.dart' hide Logger;
 

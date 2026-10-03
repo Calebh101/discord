@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:discord/discord.dart';
@@ -33,6 +32,7 @@ class Log {
 }
 
 typedef OnLogCallback = void Function(Log log);
+const _print = print;
 
 enum LogLevel {
   config,
@@ -83,7 +83,7 @@ class Logger {
 
       final line = "${effect()}${i == 0 ? first : (" " * first.replaceAll(regex, '').length)}${" " * max(2, spacing)}> $input${effect()}";
       compiled.add(line);
-      stdout.writeln(line);
+      _print(line);
     }
 
     if (level == LogLevel.signal) {

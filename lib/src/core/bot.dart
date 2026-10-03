@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:discord/discord.dart';
-import 'package:discord/src/plugins/plugin.dart';
 import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
 
@@ -30,10 +29,19 @@ abstract class DiscordBot {
 
   @nonVirtual
   Future<void> start({Snowflake? devGuild}) async {
-    for (final p in plugins) await p.onAboutToLoad(this);
+    Logger.print("Bot", "Starting...");
+    terminal = .new(clients);
+    await terminal.init();
+    Logger.print("Plugins", "Loading ${plugins.length} plugins...");
+
+    for (final p in plugins) {
+      addCommands(p.commands(this));
+      terminal.commands.addAll(p.terminalCommands(this));
+      await p.onAboutToLoad(this);
+    }
+
     await onAboutToLoad();
     for (final p in plugins) await p.onLoad(this);
-
     final List<CommandData> results = [];
 
     for (final c in commandData) {
@@ -62,9 +70,6 @@ abstract class DiscordBot {
 
       Logger.print("Commands", "Registered ${builders.length} commands for client ${client.user.id} and guild $devGuild!");
     }
-
-    terminal = .new(clients);
-    await terminal.init();
 
     for (final client in clients.allClients) {
       commands.listen(client, this);

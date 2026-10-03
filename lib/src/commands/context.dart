@@ -1,4 +1,4 @@
-import 'package:discord/discord.dart';
+import 'package:nyxx/nyxx.dart';
 
 final class DiscordContext {
   final ApplicationCommandInteraction interaction;
