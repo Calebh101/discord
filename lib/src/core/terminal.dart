@@ -15,9 +15,10 @@ final class ExitCode {
 
 final class TerminalCommand {
   final Char key;
+  final String description;
   final void Function() callback;
 
-  const TerminalCommand(this.key, this.callback);
+  const TerminalCommand(this.key, this.description, this.callback);
 }
 
 final class TerminalHandler {
@@ -32,15 +33,31 @@ final class TerminalHandler {
     commands.add(command);
   }
 
+  static String? askForInput(String message) {
+    try {
+      TerminalHandler.claim();
+      stdout.write('$message >> ');
+      final input = stdin.readLineSync();
+      return input?.nullIfEmptyTrimmed;
+    } finally {
+      TerminalHandler.unclaim();
+    }
+  }
+
   Future<void> init() async {
     commands.addAll([
-      TerminalCommand(Char.from("q"), () async {
+      TerminalCommand(Char.from("h"), "Get all terminal commands.", () async {
+        for (final command in commands) {
+          Logger.print("Command", "${command.key.string}  ${command.description}");
+        }
+      }),
+      TerminalCommand(Char.from("q"), "Stop the bot.", () async {
         await close();
       }),
-      TerminalCommand(Char.from("r"), () async {
+      TerminalCommand(Char.from("r"), "Send the exit code to restart the bot.", () async {
         await close.call(ExitCode.restart);
       }),
-      TerminalCommand(Char.from("p"), () async {
+      TerminalCommand(Char.from("p"), "Get latency stats.", () async {
         clients.runIndexed((i, k, client) {
           final latency = client.httpHandler.latency;
           final realLatency = client.httpHandler.realLatency;
@@ -103,12 +120,14 @@ final class TerminalHandler {
   }
 
   static void claim() {
+    Logger.paused = true;
     isStdinLocked = true;
     stdin.echoMode = true;
     stdin.lineMode = true;
   }
 
   static void unclaim() {
+    Logger.paused = false;
     stdin.echoMode = false;
     stdin.lineMode = false;
     isStdinLocked = false;

@@ -1,4 +1,6 @@
 import 'package:discord/discord.dart';
+import 'package:discord/src/plugins/bot/admin.dart';
+import 'package:localpkg/localpkg.dart';
 
 part 'bot.g.dart';
 
@@ -10,6 +12,43 @@ final class BotPlugin extends DiscordPlugin {
   List<TopLevelCommand> commands(DiscordBot bot) {
     return [
       BotCommands(),
+    ];
+  }
+
+  @override
+  List<TerminalCommand> terminalCommands(DiscordBot bot) {
+    return [
+      .new(.from("o"), "Manage bot owners.", () {
+        final command = TerminalHandler.askForInput("To view a user's status, type 'user'. To list all active owners, type 'list'.")?.toLowerCase().trim();
+
+        if (command == "user") {
+          final input = TerminalHandler.askForInput("Enter a user ID.");
+          final id = tryCatch(() => Snowflake.parse(input!));
+
+          if (id == null) {
+            Logger.print("Owner", "Cancelled. No input was received or ID was invalid.");
+            return;
+          }
+
+          final settings = UserPermissionSettings(bot.store, id);
+          final owner = settings.owner.get();
+
+          Logger.print("Owner", "This person is currently ${owner ? "an" : "not an"} owner.");
+          final toggle = TerminalHandler.askForInput("To toggle their owner status, type 'toggle'. Type anything else to cancel.")?.toLowerCase().trim();
+
+          if (toggle == "toggle") {
+            settings.owner.set(!owner);
+            Logger.print("Owner", "Made user $id ${settings.owner.get() ? "an" : "not an"} owner.");
+          } else {
+            Logger.print("Owner", "Cancelled.");
+          }
+        } else if (command == "list") {
+          final all = bot.store.getAllForKey<bool>(.user, "owner").entriesAsRecords.where((x) => x.$3);
+          Logger.print("Owner", "Current owners (${all.length}): ${all.map((x) => x.$2).join(", ")}");
+        } else {
+          Logger.print("Owner", "Cancelled.");
+        }
+      }),
     ];
   }
 }
@@ -50,34 +89,5 @@ final class BotCommands extends TopLevelParentCommand {
     await context.respond(MessageBuilder(content: "${context.user.toMention()}, pong!\n\n${keys.entries.map((x) {
       return "> ${x.key}: **${x.value}**";
     }).join("\n")}"));
-  }
-}
-
-final class BotAdminCommands extends SubcommandGroupCommand {
-  @override
-  CommandInfo get info => .new(name: "admin", description: "Bot admin.");
-
-  @override
-  OptionData build() {
-    return buildCommand(commandOptions);
-  }
-
-  @Subcommand("ignore", "Ignore/unignore a user bot-wide.", permissionsRequired: .owner)
-  void ignore(
-    DiscordContext context,
-    @UserOption("user", "The user to ignore/unignore.") User user,
-    @BoolOption("ignore", "If the user should be ignored.") bool ignore,
-  ) async {
-    final settings = UserPermissionSettings(context.store, user.id);
-
-    if (ignore) {
-      if (settings.ignored.get()) return await context.respond(.new(content: "User is already ignored."));
-      settings.ignored.set(true);
-      await context.respond(.new(content: "${user.toMention()} successfully **ignored**.", allowedMentions: .new()));
-    } else {
-      if (!settings.ignored.get()) return await context.respond(.new(content: "User is already not ignored."));
-      settings.ignored.set(false);
-      await context.respond(.new(content: "${user.toMention()} successfully **unignored**.", allowedMentions: .new()));
-    }
   }
 }

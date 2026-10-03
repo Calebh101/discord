@@ -47,10 +47,14 @@ class Logger {
   const Logger._();
 
   static bool enabled = false;
+  static bool paused = false;
+
   static int leftOfMessagePadding = 50;
   static DateFormat dateFormat = DateFormat("h:mm:ss.SSS a");
-  static final List<OnLogCallback> _onLogs = [];
   static final regex = RegExp(r'\x1b\[[0-9;]*m');
+
+  static final List<OnLogCallback> _onLogs = [];
+  static final List<String> buffer = [];
 
   static void enable() {
     loggerOverride();
@@ -83,7 +87,17 @@ class Logger {
 
       final line = "${effect()}${i == 0 ? first : (" " * first.replaceAll(regex, '').length)}${" " * max(2, spacing)}> $input${effect()}";
       compiled.add(line);
-      _print(line);
+
+      if (paused) {
+        buffer.add(line);
+      } else {
+        for (final line in buffer) {
+          _print(line);
+        }
+
+        _print(line);
+        buffer.clear();
+      }
     }
 
     if (level == LogLevel.signal) {
