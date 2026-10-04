@@ -22,6 +22,7 @@ extension on BotCommands {
         autocomplete: null,
         options: null,
         requiredPerms: .parse(0),
+        needsGuild: false,
       );
     }(),
     ...subcommandGroups.map((x) => x.build()),

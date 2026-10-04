@@ -9,7 +9,7 @@ enum Scope {
   bot("bot"),
   guild("guild"),
   user("user"),
-  userPerServer("ups"),
+  userPerGuild("upg"),
   channel("channel"),
   message("message"),
   role("role"),
@@ -155,6 +155,14 @@ class SettingsObject<T> {
   void delete() {
     return object.store.delete(object.scope, object.id.toString(), key);
   }
+
+  static SettingsObject<Snowflake> snowflake<T>(EntitySettings obj, String key) {
+    return SettingsObject<Snowflake>(obj, key, encodeFunction: (input) => input.value, decodeFunction: (input) => input != null ? Snowflake(input) : null);
+  }
+
+  static SettingsObject<DateTime> dateTime<T>(EntitySettings obj, String key) {
+    return SettingsObject(obj, key, encodeFunction: (input) => input.toUtc().millisecondsSinceEpoch, decodeFunction: (input) => input != null ? DateTime.fromMillisecondsSinceEpoch(input, isUtc: true) : null);
+  }
 }
 
 class SettingsObjectNotNull<T> extends SettingsObject<T> {
@@ -164,6 +172,23 @@ class SettingsObjectNotNull<T> extends SettingsObject<T> {
   @override
   T get() {
     return super.get() ?? defaultFunction.call();
+  }
+
+  static SettingsObjectNotNull<List<T>> list<T>(EntitySettings obj, String key, {T Function(dynamic input)? decodeFunction, dynamic Function(T)? encodeFunction}) {
+    return SettingsObjectNotNull(obj, key, () => [], encodeFunction: (input) => input.map((x) => encodeFunction?.call(x) ?? x).toList(), decodeFunction: (input) => (input as List?)?.map((x) {
+      if (decodeFunction != null) return decodeFunction.call(x);
+      return x as T;
+    }).toList());
+  }
+
+  static SettingsObjectNotNull<Map<K, V>> map<K, V>(EntitySettings obj, String key, {K Function(dynamic input)? decodeKey, dynamic Function(K)? encodeKey, V Function(dynamic input)? decodeValue, dynamic Function(V)? encodeValue}) {
+    return SettingsObjectNotNull(obj, key, () => {}, encodeFunction: (input) => input.map((k, v) => MapEntry(encodeKey?.call(k) ?? k, encodeValue?.call(v) ?? v)), decodeFunction: (input) => (input as Map?)?.map((k, v) {
+      return MapEntry(decodeKey?.call(k) ?? k as K, decodeValue?.call(v) ?? v as V);
+    }));
+  }
+
+  static SettingsObjectNotNull<List<Snowflake>> listSnowflake<T>(EntitySettings obj, String key) {
+    return list<Snowflake>(obj, key, encodeFunction: (input) => input.value, decodeFunction: (input) => input != null ? Snowflake(input) : input);
   }
 }
 
@@ -247,16 +272,16 @@ abstract class RoleSettings extends EntitySettings {
   new(super.store, Snowflake id) : super(id: id.toString(), scope: .role);
 }
 
-abstract class UserPerServerSettings extends EntitySettings {
-  new(super.store, Snowflake server, Snowflake user) : super(id: createId(server, user), scope: Scope.userPerServer);
+abstract class UserPerGuildSettings extends EntitySettings {
+  new(super.store, Snowflake guild, Snowflake user) : super(id: createId(guild, user), scope: Scope.userPerGuild);
 
-  static String createId(Snowflake server, Snowflake user) {
-    return [server, user].join(".");
+  static String createId(Snowflake guild, Snowflake user) {
+    return [guild, user].join(".");
   }
 
-  static ({Snowflake server, Snowflake user}) parseId(String id) {
+  static ({Snowflake guild, Snowflake user}) parseId(String id) {
     final elements = id.split(".");
     if (elements.length != 2) throw Exception("Unable to parse ID $id: Expected 2 elements, got ${elements.length}.");
-    return (server: Snowflake(int.parse(elements[0])), user: Snowflake(int.parse(elements[1])));
+    return (guild: Snowflake(int.parse(elements[0])), user: Snowflake(int.parse(elements[1])));
   }
 }

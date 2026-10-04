@@ -24,7 +24,7 @@ abstract class TopLevelSingleCommand extends TopLevelCommand {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: entryPoint, requiredPerms: requiredPermissions);
+    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: entryPoint, requiredPerms: requiredPermissions, needsGuild: info.needsGuild);
   }
 }
 
@@ -37,7 +37,7 @@ abstract class TopLevelParentCommand extends TopLevelCommand {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: null, requiredPerms: .all);
+    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: null, requiredPerms: .all, needsGuild: info.needsGuild);
   }
 }
 
@@ -48,7 +48,7 @@ abstract class SubcommandGroupCommand extends CommandEntity<OptionData> {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(name: info.name, builder: .subCommandGroup(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions.mapToList((x) => x.builder)), autocomplete: null, function: null, options: commandOptions, requiredPerms: .all);
+    return .new(name: info.name, builder: .subCommandGroup(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions.mapToList((x) => x.builder)), autocomplete: null, function: null, options: commandOptions, requiredPerms: .all, needsGuild: info.needsGuild);
   }
 }
 
@@ -57,8 +57,9 @@ class CommandInfo {
   final String description;
   final Map<Locale, String>? nameLocalizations;
   final Map<Locale, String>? descriptionLocalizations;
+  final bool needsGuild;
 
-  const new({required this.name, required this.description, this.nameLocalizations, this.descriptionLocalizations});
+  const new({required this.name, required this.description, this.nameLocalizations, this.descriptionLocalizations, this.needsGuild = false});
 }
 
 final class TopLevelCommandInfo extends CommandInfo {

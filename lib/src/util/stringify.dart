@@ -52,6 +52,16 @@ extension ChannelToMention on PartialChannel {
   }
 }
 
+extension MentionableToMention on CommandOptionMentionable {
+  String toUserMention() {
+    return id.value.toUserMention();
+  }
+
+  String toRoleMention() {
+    return id.value.toRoleMention();
+  }
+}
+
 extension ToDiscordCodeBlock on Object? {
   String toDiscordCodeBlock({String? language}) {
     final x = toString().trim();

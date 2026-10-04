@@ -62,9 +62,11 @@ final class SubcommandInfo extends CommandInfo {
   final Map<String, String>? descriptionLocalizations;
   final String functionName;
   final int perms;
+  final bool needsGuild;
+
   List<CommandOptionBase>? options;
 
-  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.functionName, this.options, required this.perms});
+  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.functionName, this.options, required this.perms, required this.needsGuild});
 
   void addOption(CommandOptionBase option) {
     options ??= [];
@@ -74,7 +76,7 @@ final class SubcommandInfo extends CommandInfo {
   @override
   String build() {
     return """
-return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms));
+return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms), needsGuild: $needsGuild);
 """.trim();
   }
 }
@@ -110,7 +112,7 @@ final class CommandOptionInfo<T> extends CommandOptionBase {
   @override
   String build() {
     return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}, function: null, options: null, requiredPerms: .all);
+return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}, needsGuild: false, function: null, options: null, requiredPerms: .all);
 """.trim();
   }
 
@@ -141,7 +143,7 @@ final class EnumCommandOptionInfo extends CommandOptionBase {
   @override
   String build() {
     return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: null, function: null, options: null, requiredPerms: .all, converter: (value) {
+return OptionData(name: "$name", builder: () {${buildBuilder()}}(), needsGuild: false, autocomplete: null, function: null, options: null, requiredPerms: .all, converter: (value) {
   return $enumName.values.firstWhere((x) => x.$valueField == value);
 });
 """.trim();
@@ -195,7 +197,9 @@ String? generateForParent(ClassElement element, BuildStep buildStep, bool topLev
 
     final name = field("name")?.toStringValue();
     final description = field("description")?.toStringValue();
+
     final perms = getFieldRecursive(field("permissionsRequired")!, "value")!.toIntValue()!;
+    final needsGuild = field("needsGuild")?.toBoolValue() ?? false;
 
     final nameL = localizations("nameLocalizations");
     final descL = localizations("descriptionLocalizations");
@@ -207,6 +211,7 @@ String? generateForParent(ClassElement element, BuildStep buildStep, bool topLev
       descriptionLocalizations: descL,
       functionName: method.displayName,
       perms: perms,
+      needsGuild: needsGuild,
     );
 
     commands.add(command);

@@ -123,20 +123,25 @@ class CommandsStore {
         return;
       }
 
+      if (info.needsGuild && interaction.guildId != null) {
+        return await respond("This command needs to be run in a guild.");
+      }
+
       switch (info.permsRequired) {
         case .all: break;
 
         case .owner:
-          final settings = UserPermissionSettings(bot.store, user.id);
-          if (!settings.owner.get()) return await respond("You can't execute this command, you're not an owner!");
+          if (!BotPermissions.isOwner(bot.store, user.id)) return await respond("You can't execute this command, you're not an owner!");
+          break;
+
+        case .claimer:
+          if (interaction.guildId == null) return await respond("This command needs to be run in a guild.");
+          if (!BotPermissions.isClaimer(bot.store, interaction.guildId!, user.id)) return await respond("You can't execute this command, you're not the bot claimer!");
           break;
 
         case .admin:
           if (interaction.guildId == null) return await respond("This command needs to be run in a guild.");
-          if (UserPermissionSettings(bot.store, user.id).owner.get()) break;
-
-          final settings = UserPerServerPermissionSettings(bot.store, interaction.guildId!, user.id);
-          if (!settings.admin.get()) return await respond("You can't execute this command, you're not an admin!");
+          if (!BotPermissions.isAdmin(bot.store, interaction.guildId!, user.id)) return await respond("You can't execute this command, you're not a bot admin!");
           break;
       }
 
@@ -222,8 +227,9 @@ final class CommandData {
   final List<OptionData>? options;
   final Function? function;
   final BotPermissions requiredPerms;
+  final bool needsGuild;
 
-  const new({required this.builder, required this.options, required this.function, required this.requiredPerms});
+  const new({required this.builder, required this.options, required this.function, required this.requiredPerms, required this.needsGuild});
 }
 
 final class OptionData {
@@ -234,8 +240,9 @@ final class OptionData {
   final Function? function;
   final dynamic Function(dynamic value)? converter;
   final BotPermissions requiredPerms;
+  final bool needsGuild;
 
-  const new({required this.name, required this.builder, required this.autocomplete, required this.function, required this.options, this.converter, required this.requiredPerms});
+  const new({required this.name, required this.builder, required this.autocomplete, required this.function, required this.options, this.converter, required this.requiredPerms, required this.needsGuild});
 
   @override
   String toString() {
@@ -249,15 +256,16 @@ final class RegistryData {
   final Function? function;
   final List<OptionData>? options;
   final BotPermissions permsRequired;
+  final bool needsGuild;
 
-  const new({required this.name, required this.level, required this.function, required this.options, required this.permsRequired});
+  const new({required this.name, required this.level, required this.function, required this.options, required this.permsRequired, required this.needsGuild});
 
   factory fromCommandData(CommandData command) {
-    return .new(name: command.builder.name, level: 0, function: command.function, options: command.options, permsRequired: command.requiredPerms);
+    return .new(name: command.builder.name, level: 0, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild);
   }
 
   factory fromOptionData(OptionData command, int level) {
-    return .new(name: command.name, level: level, function: command.function, options: command.options, permsRequired: command.requiredPerms);
+    return .new(name: command.name, level: level, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild);
   }
 
   @override

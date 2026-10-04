@@ -6,11 +6,13 @@ final class Subcommand {
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
   final BotPermissions permissionsRequired;
+  final bool needsGuild;
 
   const new(this.name, this.description, {
     this.nameLocalizations,
     this.descriptionLocalizations,
     this.permissionsRequired = .all,
+    this.needsGuild = false,
   });
 }
 
