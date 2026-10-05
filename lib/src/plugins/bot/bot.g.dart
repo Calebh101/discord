@@ -25,6 +25,61 @@ extension on BotCommands {
         needsGuild: false,
       );
     }(),
+    () {
+      return OptionData(
+        name: "attributes",
+        function: attributes,
+        builder: .subCommand(
+          name: "attributes",
+          description: "List attributes for a user.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(6),
+                name: "user",
+                description: "User to list attributes for.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData(
+              name: "user",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(6),
+                  name: "user",
+                  description: "User to list attributes for.",
+                  isRequired: false,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(0),
+        needsGuild: false,
+      );
+    }(),
     ...subcommandGroups.map((x) => x.build()),
   ];
 }

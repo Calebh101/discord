@@ -56,15 +56,25 @@ final class BotAdminCommands extends SubcommandGroupCommand {
   @Subcommand("claim", "Claim the bot for this guild.", needsGuild: true)
   void claim(
     DiscordContext context,
+    @BoolOption("claim", "Whether to claim the bot. If this is false, the bot will be unclaimed.") bool claim,
   ) async {
     final guildId = context.guildId!;
     final settings = GuildPermissionSettings(context.store, guildId);
 
-    if (!BotPermissions.isOwner(context.store, context.userId) && settings.claimer.get() != null) {
-      return await context.respond(.new(content: "Someone has already claimed me!", flags: MessageFlags.ephemeral));
-    }
+    if (claim) {
+      if (!BotPermissions.isOwner(context.store, context.userId) && settings.claimer.get() != null) {
+        return await context.respond(.new(content: "Someone has already claimed me!", flags: MessageFlags.ephemeral));
+      }
 
-    settings.claimer.set(context.userId);
-    await context.respond(.new(content: "I have now been claimed by ${context.user.toMention()}!"));
+      settings.claimer.set(context.userId);
+      await context.respond(.new(content: "I have now been claimed by ${context.user.toMention()}!"));
+    } else {
+      if (!BotPermissions.isClaimer(context.store, guildId, context.userId)) {
+        return await context.respond(.new(content: "You can't unclaim the bot when you haven't claimed it in the first place!", flags: MessageFlags.ephemeral));
+      }
+
+      settings.claimer.delete();
+      await context.respond(.new(content: "I have been unclaimed."));
+    }
   }
 }

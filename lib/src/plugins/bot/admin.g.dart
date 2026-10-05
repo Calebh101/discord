@@ -71,10 +71,6 @@ extension on BotAdminCommands {
                 );
               }(),
               autocomplete: null,
-              needsGuild: false,
-              function: null,
-              options: null,
-              requiredPerms: .all,
             );
           }(),
           () {
@@ -96,10 +92,6 @@ extension on BotAdminCommands {
                 );
               }(),
               autocomplete: null,
-              needsGuild: false,
-              function: null,
-              options: null,
-              requiredPerms: .all,
             );
           }(),
         ],
@@ -170,10 +162,6 @@ extension on BotAdminCommands {
                 );
               }(),
               autocomplete: null,
-              needsGuild: false,
-              function: null,
-              options: null,
-              requiredPerms: .all,
             );
           }(),
           () {
@@ -195,10 +183,6 @@ extension on BotAdminCommands {
                 );
               }(),
               autocomplete: null,
-              needsGuild: false,
-              function: null,
-              options: null,
-              requiredPerms: .all,
             );
           }(),
         ],
@@ -213,12 +197,50 @@ extension on BotAdminCommands {
         builder: .subCommand(
           name: "claim",
           description: "Claim the bot for this guild.",
-          options: [],
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(5),
+                name: "claim",
+                description: "Whether to claim the bot. If this is false, the bot will be unclaimed.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
           nameLocalizations: null,
           descriptionLocalizations: null,
         ),
         autocomplete: null,
-        options: null,
+        options: [
+          () {
+            return OptionData(
+              name: "claim",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(5),
+                  name: "claim",
+                  description: "Whether to claim the bot. If this is false, the bot will be unclaimed.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+        ],
         requiredPerms: .parse(0),
         needsGuild: true,
       );

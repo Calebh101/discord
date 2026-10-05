@@ -5,6 +5,7 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:collection/collection.dart';
+import 'package:discord/src/builders/slash_commands_plugins.dart';
 import 'package:localpkg/localpkg.dart';
 import 'package:nyxx/nyxx.dart' hide Builder;
 import 'package:source_gen/source_gen.dart';
@@ -13,6 +14,13 @@ import 'package:discord/src/commands/choice.dart';
 import 'package:discord/src/commands/command.dart';
 import 'package:discord/src/commands/context.dart';
 import 'package:discord/src/other/generator_for_superclass.dart';
+
+List<String> get allAnnotationNames => [
+  "StringOption", "IntOption", "NumOption", "BoolOption",
+  "UserOption", "ChannelOption", "RoleOption", "MentionableOption",
+  "AttachmentOption",
+  ...plugins.keys,
+];
 
 Builder commandBuilder(BuilderOptions options) {
   return SharedPartBuilder(
@@ -25,30 +33,9 @@ Builder commandBuilder(BuilderOptions options) {
   );
 }
 
-Map<Locale, String>? localizations(Map<String, String>? input) {
+Map<Locale, String>? parseLocalizations(Map<String, String>? input) {
   if (input == null) return null;
   return input.map((k, v) => .new(.parse(k), v));
-}
-
-enum OptionType {
-  string("StringOption"),
-  int("IntOption"),
-  num("NumOption"),
-  bool("BoolOption"),
-  user("UserOption"),
-  channel("ChannelOption"),
-  role("RoleOption"),
-  mentionable("MentionableOption"),
-  attachment("AttachmentOption"),
-  enumT("EnumOption"),
-  ;
-
-  final String annotation;
-  const new(this.annotation);
-
-  static List<String> get annotations {
-    return values.mapToList((x) => x.annotation);
-  }
 }
 
 sealed class CommandInfo {
@@ -76,12 +63,12 @@ final class SubcommandInfo extends CommandInfo {
   @override
   String build() {
     return """
-return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(localizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(localizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms), needsGuild: $needsGuild);
+return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(parseLocalizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(parseLocalizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms), needsGuild: $needsGuild);
 """.trim();
   }
 }
 
-sealed class CommandOptionBase {
+abstract class CommandOptionBase {
   String build();
   String buildBuilder();
 }
@@ -112,7 +99,7 @@ final class CommandOptionInfo<T> extends CommandOptionBase {
   @override
   String build() {
     return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}, needsGuild: false, function: null, options: null, requiredPerms: .all);
+return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null});
 """.trim();
   }
 
@@ -121,40 +108,7 @@ return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete
     final channelTypesString = channelTypes?.map((x) => ".new(${x.value})");
 
     return """
-return CommandOptionBuilder(type: .new(${type.value}), name: "$name", description: "$description", isRequired: $isRequired, choices: ${choices?.mapToList((x) => '.new(name: "${x.name}", value: ${x.value}, nameLocalizations: ${jsonEncode(localizations(nameLocalizations))})')}, hasAutocomplete: ${autocompleteName != null}, channelTypes: ${channelTypesString != null ? "[$channelTypesString]" : null}, minLength: $minLength, maxLength: $maxLength, minValue: $minValue, maxValue: $maxValue);
-""".trim();
-  }
-}
-
-final class EnumCommandOptionInfo extends CommandOptionBase {
-  final String name;
-  final String description;
-  final bool isRequired;
-
-  final String enumName;
-  final String nameField;
-  final String valueField;
-
-  final Map<String, String>? nameLocalizations;
-  final Map<String, String>? descriptionLocalizations;
-
-  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.enumName, required this.nameField, required this.valueField});
-
-  @override
-  String build() {
-    return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}(), needsGuild: false, autocomplete: null, function: null, options: null, requiredPerms: .all, converter: (value) {
-  return $enumName.values.firstWhere((x) => x.$valueField == value);
-});
-""".trim();
-  }
-
-  @override
-  String buildBuilder() {
-    return """
-return CommandOptionBuilder(type: .string, name: "$name", description: "$description", isRequired: $isRequired, choices: $enumName.values.map((v) {
-  return CommandOptionChoiceBuilder(name: v.$nameField, value: v.$valueField, nameLocalizations: null);
-}).toList(), hasAutocomplete: false, channelTypes: null, minLength: null, maxLength: null, minValue: null, maxValue: null);
+return CommandOptionBuilder(type: .new(${type.value}), name: "$name", description: "$description", isRequired: $isRequired, choices: ${choices?.mapToList((x) => '.new(name: "${x.name}", value: ${x.value}, nameLocalizations: ${jsonEncode(parseLocalizations(nameLocalizations))})')}, hasAutocomplete: ${autocompleteName != null}, channelTypes: ${channelTypesString != null ? "[$channelTypesString]" : null}, minLength: $minLength, maxLength: $maxLength, minValue: $minValue, maxValue: $maxValue);
 """.trim();
   }
 }
@@ -254,11 +208,11 @@ CommandOptionBase? parseOption(int i, FormalParameterElement param) {
   final annotation = param.metadata.annotations.firstWhereOrNull((x) {
     final value = x.computeConstantValue();
     final name = value?.type?.element?.name;
-    return OptionType.annotations.contains(name);
+    return allAnnotationNames.contains(name);
   })?.computeConstantValue();
 
   if (annotation == null) {
-    throw InvalidGenerationSourceError("Command parameter #$i ('${param.name}') did not have an option annotation.\nPossible values: ${OptionType.annotations.map((x) => "'$x'").join(", ")}");
+    throw InvalidGenerationSourceError("Command parameter #$i ('${param.name}') did not have an option annotation.\nPossible values: ${allAnnotationNames.map((x) => "'$x'").join(", ")}");
   }
 
   DartObject? field<T>(String name) {
@@ -274,6 +228,12 @@ CommandOptionBase? parseOption(int i, FormalParameterElement param) {
       if (!Locale.values.any((x) => x.identifier == id)) throw InvalidGenerationSourceError("Invalid locale ID: '$id'\nPossible values: ${Locale.values.map((x) => "'${x.identifier}'").join(", ")}");
       return .new(id, v!.toStringValue()!);
     });
+  }
+
+  for (final (_, key, plugin) in plugins.entriesAsRecords) {
+    if (annotation.type?.element?.name == key) {
+      return plugin.build(i: i, param: param, annotation: annotation);
+    }
   }
 
   if (annotation.type is InterfaceType && annotation.type?.element?.name == "EnumOption") {
@@ -357,6 +317,27 @@ CommandOptionBase? parseOption(int i, FormalParameterElement param) {
     choices: choices,
     autocompleteName: autocompleteClassName,
   );
+}
+
+abstract class SlashCommandsPlugin {
+  new();
+
+  DartObject? field<T>(DartObject annotation, String name) {
+    return getFieldRecursive(annotation, name);
+  }
+
+  Map<String, String>? localizations(DartObject annotation, String key) {
+    final data = field(annotation, key)?.toMapValue();
+    if (data == null) return null;
+
+    return data.map((k, v) {
+      final id = k!.toStringValue()!;
+      if (!Locale.values.any((x) => x.identifier == id)) throw InvalidGenerationSourceError("Invalid locale ID: '$id'\nPossible values: ${Locale.values.map((x) => "'${x.identifier}'").join(", ")}");
+      return .new(id, v!.toStringValue()!);
+    });
+  }
+
+  CommandOptionBase build({required int i, required FormalParameterElement param, required DartObject annotation});
 }
 
 final class ParentSlashCommandGenerator extends GeneratorForSuperclass<TopLevelParentCommand> {

@@ -90,4 +90,33 @@ final class BotCommands extends TopLevelParentCommand {
       return "> ${x.key}: **${x.value}**";
     }).join("\n")}"));
   }
+
+  @Subcommand("attributes", "List attributes for a user.")
+  void attributes(
+    DiscordContext context,
+    @UserOption("user", "User to list attributes for.") User? u,
+  ) async {
+    final user = u ?? context.user;
+    final guild = await context.guild?.get();
+    final member = await tryCatchA(() async => await guild!.members.get(user.id));
+
+    final List<String> attributes = [
+      "Alive",
+      if (member != null) "In *${guild?.name}*",
+    ];
+
+    if (guild != null) {
+      if (member?.permissions?.isAdministrator ?? false) attributes.add("Administrator");
+      if (guild.ownerId == user.id) attributes.add("Server owner");
+
+      if (BotPermissions.isAdmin(context.store, guild.id, user.id)) attributes.add("Bot admin");
+      if (BotPermissions.isClaimer(context.store, guild.id, user.id)) attributes.add("Bot claimer");
+      if (BotPermissions.isOwner(context.store, user.id)) attributes.add("Bot owner");
+    }
+
+    await context.respond(.new(
+      content: "### Attributes for ${user.toMention()}\n${attributes.map((x) => "- $x").join("\n")}",
+      allowedMentions: .new(),
+    ));
+  }
 }

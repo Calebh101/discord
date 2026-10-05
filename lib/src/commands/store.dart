@@ -1,5 +1,71 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:discord/discord.dart';
+
+final class CommandParseError implements Exception {
+  final String message;
+
+  new(this.message);
+
+  @override
+  String toString() {
+    return "CommandParseError: $message";
+  }
+}
+
+final class CommandData {
+  final ApplicationCommandBuilder builder;
+  final List<OptionData>? options;
+  final Function? function;
+  final BotPermissions requiredPerms;
+  final bool needsGuild;
+
+  const new({required this.builder, required this.options, required this.function, required this.requiredPerms, required this.needsGuild});
+}
+
+final class OptionData {
+  final String name;
+  final CommandOptionBuilder builder;
+  final List<OptionData>? options;
+  final AutocompleteHandler Function()? autocomplete;
+  final Function? function;
+  final FutureOr<dynamic> Function(DiscordContext context, dynamic value)? converter;
+  final BotPermissions requiredPerms;
+  final bool needsGuild;
+
+  const new({required this.name, required this.builder, this.autocomplete, this.function, this.options, this.converter, this.requiredPerms = .all, this.needsGuild = false});
+
+  @override
+  String toString() {
+    return "OptionData(name: $name, type: ${builder.type.value}, function: ${function.runtimeType}, options: $options, autocomplete: ${autocomplete.runtimeType})";
+  }
+}
+
+final class RegistryData {
+  final String name;
+  final int level; // 0 is start
+  final Function? function;
+  final List<OptionData>? options;
+  final BotPermissions permsRequired;
+  final bool needsGuild;
+
+  const new({required this.name, required this.level, required this.function, required this.options, required this.permsRequired, required this.needsGuild});
+
+  factory fromCommandData(CommandData command) {
+    return .new(name: command.builder.name, level: 0, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild);
+  }
+
+  factory fromOptionData(OptionData command, int level) {
+    return .new(name: command.name, level: level, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild);
+  }
+
+  @override
+  String toString() {
+    return "RegistryData(name: $name, level: $level, function: ${function.runtimeType}, options: $options)";
+  }
+}
+
 
 class CommandsStore {
   final Map<String, RegistryData> registry = {};
@@ -19,6 +85,8 @@ class CommandsStore {
         }
       }
     }
+
+    Logger.print("Commands", "Built ${registry.length} registry entries!");
   }
 
   Snowflake snowflake(dynamic value) {
@@ -26,12 +94,19 @@ class CommandsStore {
     return .parse(value);
   }
 
-  Future<dynamic> convert(InteractionOption? option, OptionData? data, ResolvedData? resolved) async {
+  Future<dynamic> convert(DiscordContext context, InteractionOption? option, OptionData? data, ResolvedData? resolved) async {
     if (option == null || data == null) return null;
     final value = option.value;
 
     if (data.converter != null) {
-      return data.converter!.call(value);
+      try {
+        return await data.converter!.call(context, value);
+      } on CommandParseError catch (_) {
+        rethrow;
+      } catch (e) {
+        Logger.warn("Convert", "Converting value ${value.runtimeType} with converter ${data.converter.runtimeType} of option ${data.name}: $e");
+        throw CommandParseError("We couldn't parse this value. The converter crashed.");
+      }
     }
 
     switch (option.type) {
@@ -109,7 +184,7 @@ class CommandsStore {
         return;
       }
 
-      Logger.print("Commands", "Handling command $path (${info?.permsRequired.name}) for user ${user.id}:${interaction.guildId}...");
+      Logger.print("Commands", "Handling command $path (${info?.permsRequired.name}) for user ${user.id}:${interaction.guildId} (${user.username})...");
 
       if (info == null) {
         Logger.warn("Commands", "Invalid command: $path");
@@ -123,7 +198,7 @@ class CommandsStore {
         return;
       }
 
-      if (info.needsGuild && interaction.guildId != null) {
+      if (info.needsGuild && interaction.guildId == null) {
         return await respond("This command needs to be run in a guild.");
       }
 
@@ -151,7 +226,13 @@ class CommandsStore {
 
         for (final expected in info.options ?? <OptionData>[]) {
           final given = options?.firstWhereOrNull((x) => x.name == expected.name);
-          args.add(await convert(given, expected, data.resolved));
+
+          try {
+            args.add(await convert(context, given, expected, data.resolved));
+          } on CommandParseError catch (e) {
+            await respond("We couldn't parse argument `${expected.name}`.\n${e.message}");
+            return;
+          }
         }
 
         await Function.apply(function, [
@@ -193,7 +274,7 @@ class CommandsStore {
       }
 
       final info = registry[path.join(".")];
-      Logger.print("Autocomplete", "Handling command $path for user ${user.id}:${interaction.guildId}");
+      Logger.print("Autocomplete", "Handling command $path for user ${user.id}:${interaction.guildId} (${user.username})");
 
       if (info == null) {
         Logger.warn("Autocomplete", "Invalid command: $path\nNo registry entry.");
@@ -219,57 +300,5 @@ class CommandsStore {
         Logger.warn("Autocomplete", "Error with command $path: $e\n$s");
       }
     });
-  }
-}
-
-final class CommandData {
-  final ApplicationCommandBuilder builder;
-  final List<OptionData>? options;
-  final Function? function;
-  final BotPermissions requiredPerms;
-  final bool needsGuild;
-
-  const new({required this.builder, required this.options, required this.function, required this.requiredPerms, required this.needsGuild});
-}
-
-final class OptionData {
-  final String name;
-  final CommandOptionBuilder builder;
-  final List<OptionData>? options;
-  final AutocompleteHandler Function()? autocomplete;
-  final Function? function;
-  final dynamic Function(dynamic value)? converter;
-  final BotPermissions requiredPerms;
-  final bool needsGuild;
-
-  const new({required this.name, required this.builder, required this.autocomplete, required this.function, required this.options, this.converter, required this.requiredPerms, required this.needsGuild});
-
-  @override
-  String toString() {
-    return "OptionData(name: $name, type: ${builder.type.value}, function: ${function.runtimeType}, options: $options, autocomplete: ${autocomplete.runtimeType})";
-  }
-}
-
-final class RegistryData {
-  final String name;
-  final int level; // 0 is start
-  final Function? function;
-  final List<OptionData>? options;
-  final BotPermissions permsRequired;
-  final bool needsGuild;
-
-  const new({required this.name, required this.level, required this.function, required this.options, required this.permsRequired, required this.needsGuild});
-
-  factory fromCommandData(CommandData command) {
-    return .new(name: command.builder.name, level: 0, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild);
-  }
-
-  factory fromOptionData(OptionData command, int level) {
-    return .new(name: command.name, level: level, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild);
-  }
-
-  @override
-  String toString() {
-    return "RegistryData(name: $name, level: $level, function: ${function.runtimeType}, options: $options)";
   }
 }

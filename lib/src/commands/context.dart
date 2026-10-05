@@ -21,7 +21,10 @@ final class DiscordContext {
   Snowflake? get guildId => interaction.guildId;
   Snowflake get interactionId => interaction.id;
 
-  const new({
+  InteractionCallbackResponse? myResponse;
+  Message? myResponseMessage;
+
+  new({
     required this.interaction,
     required this.bot,
     required this.client,
@@ -30,9 +33,18 @@ final class DiscordContext {
 
   Future<void> respond(MessageBuilder builder) async {
     try {
-      await interaction.respond(builder);
+      myResponse = await interaction.respond(builder);
+      myResponseMessage = myResponse?.resource?.message;
     } catch (e) {
       Logger.warn("Respond", "Error responding to user $userId and interaction $interactionId: $e");
+    }
+  }
+
+  Future<void> updateOriginalResponse(MessageUpdateBuilder builder) async {
+    try {
+      myResponseMessage = await interaction.updateOriginalResponse(builder);
+    } catch (e) {
+      Logger.warn("Respond", "Error updating response to user $userId and interaction $interactionId: $e");
     }
   }
 }

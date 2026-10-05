@@ -17,10 +17,12 @@ export 'src/clients/store.dart';
 export 'src/clients/tokens.dart';
 
 export 'src/commands/command.dart';
-export 'src/commands/autocomplete.dart';
 export 'src/commands/choice.dart';
 export 'src/commands/context.dart';
 export 'src/commands/store.dart';
+
+export 'src/autocomplete/base.dart';
+export 'src/autocomplete/extras.dart';
 
 export 'package:nyxx/nyxx.dart' hide Logger;
 

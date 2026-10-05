@@ -133,6 +133,13 @@ final class MentionableOption extends Option<CommandOptionMentionable> {
   }) : super(type: .mentionable);
 }
 
+final class MessageOption extends Option<Message> {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(type: .string);
+}
+
 final class AttachmentOption extends Option<Attachment> {
   const new(super.name, super.description, {
     super.nameLocalizations,
