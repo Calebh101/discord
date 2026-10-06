@@ -119,4 +119,13 @@ final class BotCommands extends TopLevelParentCommand {
       allowedMentions: .new(),
     ));
   }
+
+  @Subcommand("plugins", "List all plugins.")
+  void plugins(DiscordContext context) async {
+    await context.respond(.new(
+      content: "**${context.bot.plugins.length}** plugins enabled.\n${context.bot.plugins.map((plugin) {
+        return "- `${plugin.info.id}`";
+      }).join("\n")}",
+    ));
+  }
 }

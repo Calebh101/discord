@@ -80,6 +80,23 @@ extension on BotCommands {
         needsGuild: false,
       );
     }(),
+    () {
+      return OptionData(
+        name: "plugins",
+        function: plugins,
+        builder: .subCommand(
+          name: "plugins",
+          description: "List all plugins.",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: false,
+      );
+    }(),
     ...subcommandGroups.map((x) => x.build()),
   ];
 }

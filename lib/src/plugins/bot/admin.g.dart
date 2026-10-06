@@ -192,6 +192,23 @@ extension on BotAdminCommands {
     }(),
     () {
       return OptionData(
+        name: "list",
+        function: list,
+        builder: .subCommand(
+          name: "list",
+          description: "List all bot admins.",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: true,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "claim",
         function: claim,
         builder: .subCommand(

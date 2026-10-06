@@ -1,4 +1,5 @@
 import 'package:discord/discord.dart';
+import 'package:localpkg/localpkg.dart';
 
 part 'admin.g.dart';
 
@@ -51,6 +52,22 @@ final class BotAdminCommands extends SubcommandGroupCommand {
       settings.admin.delete();
       await context.respond(.new(content: "Removed ${user.toMention()} as admin.", allowedMentions: .new()));
     }
+  }
+
+  @Subcommand("list", "List all bot admins.", needsGuild: true)
+  void list(DiscordContext context) async {
+    final List<Snowflake> admins = [];
+    final settings = GuildPermissionSettings(context.store, context.guildId!);
+
+    for (final (_, id, value) in context.store.getAllForKey<bool>(.userPerGuild, "admin").entriesAsRecords) {
+      if (!value) continue;
+      admins.add(UserPerGuildSettings.parseId(id).user);
+    }
+
+    await context.respond(.new(
+      content: "**${admins.length}** admins: ${admins.map((x) => x.toUserMention()).join(", ")}\nBot claimer: ${settings.claimer.get()?.toUserMention() ?? "I haven't been claimed yet!"}",
+      allowedMentions: .new(),
+    ));
   }
 
   @Subcommand("claim", "Claim the bot for this guild.", needsGuild: true)
