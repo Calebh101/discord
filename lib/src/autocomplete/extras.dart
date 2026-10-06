@@ -13,7 +13,8 @@ final class MessageAutocompleteHandler extends AutocompleteHandler<String> {
     if (messages == null) return null;
 
     return messages.mapToList((message) {
-      return .new(name: "${message.timestamp.hour}:${message.timestamp.minute} ${message.author.username}: ${message.content}".max(100), value: message.id.toString());
+      final difference = DateTime.now().difference(message.timestamp);
+      return .new(name: "-${difference.inDays}d${difference.inHours % 24}h${difference.inMinutes % 60}m ${message.author.username}: ${message.content.replaceAll("\n", "\\n")}".max(100), value: message.id.toString());
     });
   }
 }

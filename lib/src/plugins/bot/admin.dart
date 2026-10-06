@@ -38,10 +38,10 @@ final class BotAdminCommands extends SubcommandGroupCommand {
     @BoolOption("admin", "If to make the user admin.") bool? makeAdmin,
   ) async {
     final guildId = context.guildId!;
-    final settings = UserPerGuildPermissionSettings(context.store, guildId, context.userId);
+    final settings = UserPerGuildPermissionSettings(context.store, guildId, user.id);
 
     if (makeAdmin == null) {
-      await context.respond(.new(content: "${user.toMention()} ${settings.admin.get() ? "**is**" : "is **not**"} an admin.", allowedMentions: .new()));
+      await context.respond(.new(content: "${user.toMention()} ${BotPermissions.isAdmin(context.store, guildId, user.id) ? "**is**" : "is **not**"} an admin.", allowedMentions: .new()));
     } else if (makeAdmin) {
       if (settings.admin.get()) return await context.respond(.new(content: "${user.toMention()} is already an admin.", allowedMentions: .new()));
       settings.admin.set(true);
