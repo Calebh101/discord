@@ -1,13 +1,11 @@
-import 'package:discord/src/commands/store.dart';
-import 'package:discord/src/core/permissions.dart';
+import 'package:discord/discord.dart';
 import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
-import 'package:nyxx/nyxx.dart';
 
 sealed class CommandEntity<T> {
   CommandInfo get info;
 
-  T build();
+  T build(DiscordBot bot);
 }
 
 sealed class TopLevelCommand extends CommandEntity<CommandData> {
@@ -29,7 +27,7 @@ abstract class TopLevelSingleCommand extends TopLevelCommand {
 }
 
 abstract class TopLevelParentCommand extends TopLevelCommand {
-  List<SubcommandGroupCommand> get subcommandGroups => [];
+  List<SubcommandGroupCommand> subcommandGroups(DiscordBot bot) => [];
 
   @protected
   @nonVirtual

@@ -7,7 +7,117 @@ part of 'modlog.dart';
 // **************************************************************************
 
 extension on ModlogCommands {
-  List<OptionData> get commandOptions => [
-    ...subcommandGroups.map((x) => x.build()),
+  List<OptionData> commandOptions(DiscordBot bot) => [
+    () {
+      return OptionData(
+        name: "test",
+        function: test,
+        builder: .subCommand(
+          name: "test",
+          description: "Send a test modlog.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "body",
+                description: "The body of the test modlog.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData(
+              name: "body",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "body",
+                  description: "The body of the test modlog.",
+                  isRequired: false,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "channel",
+        function: setChannel,
+        builder: .subCommand(
+          name: "channel",
+          description: "Set the channel to send modlogs in.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(7),
+                name: "channel",
+                description: "The channel to send modlogs in.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: [.new(0)],
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData(
+              name: "channel",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(7),
+                  name: "channel",
+                  description: "The channel to send modlogs in.",
+                  isRequired: false,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: [.new(0)],
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+      );
+    }(),
+    ...subcommandGroups(bot).map((x) => x.build(bot)),
   ];
 }

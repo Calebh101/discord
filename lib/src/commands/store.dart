@@ -241,6 +241,7 @@ class CommandsStore {
         ]);
       } catch (e, s) {
         Logger.warn("Commands", "Unable to run command ${path.join(".")}: $e\n$s");
+        await respond("There was an unexpected error running this command.");
       }
     });
 

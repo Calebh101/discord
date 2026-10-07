@@ -8,8 +8,8 @@ final class BotAdminCommands extends SubcommandGroupCommand {
   CommandInfo get info => .new(name: "admin", description: "Bot admin.");
 
   @override
-  OptionData build() {
-    return buildCommand(commandOptions);
+  OptionData build(DiscordBot bot) {
+    return buildCommand(commandOptions(bot));
   }
 
   @Subcommand("ignore", "Ignore/unignore a user bot-wide.", permissionsRequired: .owner)

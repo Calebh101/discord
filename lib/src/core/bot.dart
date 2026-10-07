@@ -13,6 +13,7 @@ abstract class DiscordBot {
 
   final commands = CommandsStore();
   final clients = ClientStore<NyxxGateway>();
+  final modlog = ModlogStore();
 
   new({this.dev = false}) {
     store = .new(dbFilePath);
@@ -38,6 +39,10 @@ abstract class DiscordBot {
       addCommands(p.commands(this));
       terminal.commands.addAll(p.terminalCommands(this));
       await p.onAboutToLoad(this);
+
+      for (final group in p.modlogGroups(this, modlog)) {
+        modlog.register(group);
+      }
     }
 
     await onAboutToLoad();
@@ -45,7 +50,7 @@ abstract class DiscordBot {
     final List<CommandData> results = [];
 
     for (final c in commandData) {
-      final data = c.build();
+      final data = c.build(this);
       results.add(data);
     }
 
@@ -79,14 +84,17 @@ abstract class DiscordBot {
     await onReady();
   }
 
+  @nonVirtual
   void addCommand(TopLevelCommand command) {
     commandData.add(command);
   }
 
+  @nonVirtual
   void addCommands(List<TopLevelCommand> commands) {
     commandData.addAll(commands);
   }
 
+  @nonVirtual
   void addClient(String name, NyxxGateway client) {
     clients.clients[name] = client;
   }

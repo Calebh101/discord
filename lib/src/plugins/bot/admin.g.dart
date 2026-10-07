@@ -7,7 +7,7 @@ part of 'admin.dart';
 // **************************************************************************
 
 extension on BotAdminCommands {
-  List<OptionData> get commandOptions => [
+  List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
         name: "ignore",

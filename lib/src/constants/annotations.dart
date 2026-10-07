@@ -111,14 +111,6 @@ final class UserOption extends Option<User> {
   }) : super(type: .user);
 }
 
-final class ChannelOption extends Option<Channel> {
-  const new(super.name, super.description, {
-    super.nameLocalizations,
-    super.descriptionLocalizations,
-    super.channelTypes,
-  }) : super(type: .channel);
-}
-
 final class RoleOption extends Option<Role> {
   const new(super.name, super.description, {
     super.nameLocalizations,
@@ -145,4 +137,103 @@ final class AttachmentOption extends Option<Attachment> {
     super.nameLocalizations,
     super.descriptionLocalizations,
   }) : super(type: .attachment);
+}
+
+class ChannelOption extends Option<Channel> {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+    super.channelTypes,
+  }) : super(type: .channel);
+}
+
+final class TextChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.dm, .groupDm, .announcementThread, .guildAnnouncement, .guildStageVoice, .guildText, .guildVoice]);
+}
+
+final class GuildChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.guildAnnouncement, .guildCategory, .guildDirectory, .guildForum, .guildMedia, .guildStageVoice, .guildText, .guildVoice]);
+}
+
+final class DmChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.dm]);
+}
+
+final class GroupDmChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.groupDm]);
+}
+
+final class AnnouncementThreadOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.announcementThread]);
+}
+
+final class GuildAnnouncementChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.guildAnnouncement]);
+}
+
+final class GuildCategoryOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.guildCategory]);
+}
+
+final class GuildDirectoryChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.guildDirectory]);
+}
+
+final class GuildForumChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.guildForum]);
+}
+
+final class GuildMediaChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.guildMedia]);
+}
+
+final class GuildStageChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.guildStageVoice]);
+}
+
+final class GuildTextChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.guildText]);
+}
+
+final class GuildVoiceChannelOption extends ChannelOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(channelTypes: const [.guildVoice]);
 }

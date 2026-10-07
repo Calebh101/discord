@@ -7,7 +7,7 @@ part of 'bot.dart';
 // **************************************************************************
 
 extension on BotCommands {
-  List<OptionData> get commandOptions => [
+  List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
         name: "ping",
@@ -97,6 +97,6 @@ extension on BotCommands {
         needsGuild: false,
       );
     }(),
-    ...subcommandGroups.map((x) => x.build()),
+    ...subcommandGroups(bot).map((x) => x.build(bot)),
   ];
 }

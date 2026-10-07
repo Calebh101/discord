@@ -15,10 +15,13 @@ import 'package:discord/src/commands/command.dart';
 import 'package:discord/src/commands/context.dart';
 import 'package:discord/src/other/generator_for_superclass.dart';
 
-List<String> get allAnnotationNames => [
+final List<String> allAnnotationNames = [
   "StringOption", "IntOption", "NumOption", "BoolOption",
-  "UserOption", "ChannelOption", "RoleOption", "MentionableOption",
+  "UserOption", "RoleOption", "MentionableOption",
   "AttachmentOption",
+  "ChannelOption", "TextChannelOption", "GuildChannelOption",
+  "DmChannelOption", "GroupDmChannelOption", "AnnouncementThreadOption",
+  "GuildAnnouncementChannelOption", "GuildCategoryOption", "GuildDirectoryChannelOption", "GuildForumChannelOption", "GuildMediaChannelOption", "GuildStageChannelOption", "GuildTextChannelOption", "GuildVoiceChannelOption",
   ...plugins.keys,
 ];
 
@@ -84,7 +87,7 @@ final class CommandOptionInfo<T> extends CommandOptionBase {
   final Map<String, String>? descriptionLocalizations;
 
   final List<CommandChoice<T>>? choices;
-  final List<ChannelType>? channelTypes;
+  final List<int>? channelTypes;
 
   final int? minLength;
   final int? maxLength;
@@ -105,7 +108,7 @@ return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete
 
   @override
   String buildBuilder() {
-    final channelTypesString = channelTypes?.map((x) => ".new(${x.value})");
+    final channelTypesString = channelTypes?.map((x) => ".new($x)").join(", ").nullIfEmptyTrimmed;
 
     return """
 return CommandOptionBuilder(type: .new(${type.value}), name: "$name", description: "$description", isRequired: $isRequired, choices: ${choices?.mapToList((x) => '.new(name: "${x.name}", value: ${x.value}, nameLocalizations: ${jsonEncode(parseLocalizations(nameLocalizations))})')}, hasAutocomplete: ${autocompleteName != null}, channelTypes: ${channelTypesString != null ? "[$channelTypesString]" : null}, minLength: $minLength, maxLength: $maxLength, minValue: $minValue, maxValue: $maxValue);
@@ -186,12 +189,12 @@ String? generateForParent(ClassElement element, BuildStep buildStep, bool topLev
 
   return """
 extension on ${element.name} {
-  List<OptionData> get commandOptions => [
+  List<OptionData> commandOptions(DiscordBot bot) => [
     ${[
       ...commands.map((x) {
         return "() {${x.build()}}()";
       }),
-      if (topLevel) '...subcommandGroups.map((x) => x.build())',
+      if (topLevel) '...subcommandGroups(bot).map((x) => x.build(bot))',
     ].join(", ")}
   ];
 }
@@ -236,36 +239,6 @@ CommandOptionBase? parseOption(int i, FormalParameterElement param) {
     }
   }
 
-  if (annotation.type is InterfaceType && annotation.type?.element?.name == "EnumOption") {
-    final type = annotation.type as InterfaceType;
-    final arg = type.typeArguments.firstOrNull;
-
-    if (arg == null || arg.isDartCoreEnum) {
-      throw InvalidGenerationSourceError("Error with EnumOption: Type argument was either not passed, or was a generic 'Enum'. Type argument must be specific.");
-    }
-
-    final name = field("name")?.toStringValue();
-    final description = field("description")?.toStringValue();
-
-    final nameL = localizations("nameLocalizations");
-    final descL = localizations("descriptionLocalizations");
-
-    final enumName = arg.getDisplayString(withNullability: false);
-    final nameField = field("nameField")!.toStringValue()!;
-    final valueField = field("valueField")!.toStringValue()!;
-
-    return EnumCommandOptionInfo(
-      name: name!,
-      description: description!,
-      nameLocalizations: nameL,
-      descriptionLocalizations: descL,
-      isRequired: param.type.nullabilitySuffix != .question,
-      enumName: enumName,
-      nameField: nameField,
-      valueField: valueField,
-    );
-  }
-
   final name = field("name")?.toStringValue();
   final description = field("description")?.toStringValue();
 
@@ -273,7 +246,7 @@ CommandOptionBase? parseOption(int i, FormalParameterElement param) {
   final descL = localizations("descriptionLocalizations");
 
   final type = getFieldRecursive(field("type"), "value")?.toIntValue();
-  final channelTypes = field("channelTypes")?.getField("value")?.toListValue()?.map((x) => x.getField("value")?.toIntValue()).whereType<int>().toList();
+  final channelTypes = field("channelTypes")?.toListValue()?.map((x) => getFieldRecursive(x, "value")?.toIntValue()).whereType<int>().toList();
 
   final minLength = field("minLength")?.toIntValue();
   final maxLength = field("maxLength")?.toIntValue();
@@ -309,7 +282,7 @@ CommandOptionBase? parseOption(int i, FormalParameterElement param) {
     isRequired: param.type.nullabilitySuffix != .question,
     nameLocalizations: nameL,
     descriptionLocalizations: descL,
-    channelTypes: channelTypes?.mapToList((x) => .new(x)),
+    channelTypes: channelTypes,
     minLength: minLength,
     maxLength: maxLength,
     minValue: minValue,

@@ -1,5 +1,6 @@
 import 'package:discord/discord.dart';
 import 'package:discord/src/plugins/bot/admin.dart';
+import 'package:discord/src/plugins/bot/test.dart';
 import 'package:localpkg/localpkg.dart';
 
 part 'bot.g.dart';
@@ -61,12 +62,13 @@ final class BotCommands extends TopLevelParentCommand {
   );
 
   @override
-  CommandData build() {
-    return buildCommand(commandOptions);
+  CommandData build(DiscordBot bot) {
+    return buildCommand(commandOptions(bot));
   }
 
   @override
-  List<SubcommandGroupCommand> get subcommandGroups => [
+  List<SubcommandGroupCommand> subcommandGroups(DiscordBot bot) => [
+    if (bot.dev) TestCommands(),
     BotAdminCommands(),
   ];
 
