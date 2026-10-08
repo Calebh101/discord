@@ -30,21 +30,31 @@ final class ModlogRegistrationError extends Error {
   }
 }
 
-final class ModlogEventGroup {
+final class ModlogGroup {
   final String name;
-  final List<String> children;
+  final String prettyName;
+  final List<ModlogScope> scopes;
 
-  const new(this.name, this.children);
+  new(this.name, this.prettyName, Map<String, String> children) : scopes = children.mapToList((k, v) {
+    return .new([name, k].join("."), v);
+  });
+}
+
+final class ModlogScope {
+  final String name;
+  final String description;
+
+  const new(this.name, this.description);
 }
 
 final class ModlogStore {
   static const int maxChildren = 25;
 
-  final List<ModlogEventGroup> groups = [];
+  final List<ModlogGroup> groups = [];
 
-  void register(ModlogEventGroup group) {
+  void register(ModlogGroup group) {
     if (groups.any((x) => x.name == group.name)) throw ModlogRegistrationError("Group name already exists: '${group.name}'");
-    if (group.children.length > maxChildren) throw ModlogRegistrationError("Group '${group.name}' has more than $maxChildren children (${group.children.length}). If you need more than $maxChildren children, consider splitting your group up into multiple groups.");
+    if (group.scopes.length > maxChildren) throw ModlogRegistrationError("Group '${group.name}' has more than $maxChildren children (${group.scopes.length}). If you need more than $maxChildren children, consider splitting your group up into multiple groups.");
 
     groups.add(group);
   }

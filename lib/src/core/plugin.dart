@@ -7,7 +7,7 @@ abstract class DiscordPlugin {
 
   List<TopLevelCommand> commands(DiscordBot bot) => [];
   List<TerminalCommand> terminalCommands(DiscordBot bot) => [];
-  List<ModlogEventGroup> modlogGroups(DiscordBot bot, ModlogStore modlog) => [];
+  List<ModlogGroup> modlogGroups(DiscordBot bot, ModlogStore modlog) => [];
 
   FutureOr<void> onAboutToLoad(DiscordBot bot) {}
   FutureOr<void> onLoad(DiscordBot bot) {}

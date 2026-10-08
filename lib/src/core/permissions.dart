@@ -49,3 +49,7 @@ final class UserPerGuildPermissionSettings extends UserPerGuildSettings {
 
   SettingsObjectNotNull<bool> get admin => .new(this, "admin", () => false);
 }
+
+bool isIgnored(KVStore store, Snowflake id) {
+  return UserPermissionSettings(store, id).ignored.get();
+}
