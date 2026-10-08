@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:collection/collection.dart';
 import 'package:discord/discord.dart';
 
 part 'modlog.g.dart';
@@ -62,5 +65,34 @@ final class ModlogCommands extends TopLevelParentCommand {
     await context.respond(.new(
       content: "Modlog channel ${channel != null ? "**set** to ${channel.toMention()}" : "**reset**."}",
     ));
+  }
+
+  @Subcommand("set", "Set modlog scopes by group.")
+  void setGroup(
+    DiscordContext context,
+    @StringOption("group", "Modlog group name.", autocomplete: Autocomplete<ModlogGroupAutocomplete>()) String groupName,
+  ) async {
+    final group = context.bot.modlog.groups.firstWhereOrNull((x) => x.name == groupName.toLowerCase().trim());
+    if (group == null) return await context.respond(.new(content: "Group doesn't exist: `$groupName`", flags: MessageFlags.ephemeral));
+
+    await context.respond(.new(content: "${group.name}\n${group.children.join(", ")}"));
+    // TODO
+  }
+}
+
+final class ModlogGroupAutocomplete extends AutocompleteHandler<String> {
+  @override
+  FutureOr<List<CommandOptionChoiceBuilder<String>>?> handle(AutocompleteContext<String> context) {
+    final value = context.value?.toLowerCase().trim();
+    if (value == null) return [];
+
+    final candidates = context.bot.modlog.groups
+      .map((x) => x.name)
+      .where((x) => x.startsWith(value))
+      .toList().maxLength(25);
+
+    return candidates.mapToList((x) {
+      return .new(name: x, value: x);
+    });
   }
 }

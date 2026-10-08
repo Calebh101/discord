@@ -26,5 +26,6 @@ export 'src/autocomplete/base.dart';
 export 'src/autocomplete/extras.dart';
 
 export 'package:nyxx/nyxx.dart' hide Logger;
+export 'package:localpkg/localpkg.dart';
 
 bool isStdinLocked = false;

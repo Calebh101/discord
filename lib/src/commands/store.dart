@@ -275,7 +275,7 @@ class CommandsStore {
       }
 
       final info = registry[path.join(".")];
-      Logger.print("Autocomplete", "Handling command $path for user ${user.id}:${interaction.guildId} (${user.username})");
+      if (bot.dev) Logger.print("Autocomplete", "Handling command $path for user ${user.id}:${interaction.guildId} (${user.username})");
 
       if (info == null) {
         Logger.warn("Autocomplete", "Invalid command: $path\nNo registry entry.");
@@ -292,7 +292,7 @@ class CommandsStore {
       }
 
       try {
-        final context = handler.createContext(interaction, focused?.value);
+        final context = handler.createContext(bot, interaction, focused?.value);
         final result = await handler.handle(context);
 
         if (result == null) return;

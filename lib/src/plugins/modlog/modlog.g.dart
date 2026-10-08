@@ -118,6 +118,61 @@ extension on ModlogCommands {
         needsGuild: true,
       );
     }(),
+    () {
+      return OptionData(
+        name: "set",
+        function: setGroup,
+        builder: .subCommand(
+          name: "set",
+          description: "Set modlog scopes by group.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "group",
+                description: "Modlog group name.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData(
+              name: "group",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "group",
+                  description: "Modlog group name.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => ModlogGroupAutocomplete(),
+            );
+          }(),
+        ],
+        requiredPerms: .parse(0),
+        needsGuild: false,
+      );
+    }(),
     ...subcommandGroups(bot).map((x) => x.build(bot)),
   ];
 }
