@@ -82,6 +82,10 @@ final class ModlogStore {
 
     return scopes;
   }
+
+  List<String> get allRequiredString {
+    return allRequired.mapToList((x) => x.fullName);
+  }
 }
 
 final class Modlog {

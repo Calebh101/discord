@@ -10,6 +10,74 @@ extension on TestCommands {
   List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
+        name: "permsall",
+        function: permsAll,
+        builder: .subCommand(
+          name: "permsall",
+          description: ".all",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: false,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "permsadmin",
+        function: permsAdmin,
+        builder: .subCommand(
+          name: "permsadmin",
+          description: ".admin",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(2),
+        needsGuild: false,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "permsclaimer",
+        function: permsClaimer,
+        builder: .subCommand(
+          name: "permsclaimer",
+          description: ".claimer",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(3),
+        needsGuild: false,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "permsowner",
+        function: permsOwner,
+        builder: .subCommand(
+          name: "permsowner",
+          description: ".owner",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(1),
+        needsGuild: false,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "channels",
         function: channels,
         builder: .subCommand(

@@ -10,6 +10,23 @@ extension on ModlogCommands {
   List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
+        name: "info",
+        function: getInfo,
+        builder: .subCommand(
+          name: "info",
+          description: "Get settings of the modlog system.",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: true,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "test",
         function: test,
         builder: .subCommand(

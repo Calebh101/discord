@@ -11,6 +11,26 @@ final class TestCommands extends SubcommandGroupCommand {
     return buildCommand(commandOptions(bot));
   }
 
+  @Subcommand("permsall", ".all", permissionsRequired: .all)
+  void permsAll(DiscordContext context) async {
+    await context.respond(.new(content: "Success!"));
+  }
+
+  @Subcommand("permsadmin", ".admin", permissionsRequired: .admin)
+  void permsAdmin(DiscordContext context) async {
+    await context.respond(.new(content: "Success!"));
+  }
+
+  @Subcommand("permsclaimer", ".claimer", permissionsRequired: .claimer)
+  void permsClaimer(DiscordContext context) async {
+    await context.respond(.new(content: "Success!"));
+  }
+
+  @Subcommand("permsowner", ".owner", permissionsRequired: .owner)
+  void permsOwner(DiscordContext context) async {
+    await context.respond(.new(content: "Success!"));
+  }
+
   @Subcommand("channels", "Test channel parameters.")
   void channels(
     DiscordContext context,

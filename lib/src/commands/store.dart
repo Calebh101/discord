@@ -205,17 +205,22 @@ class CommandsStore {
         case .all: break;
 
         case .owner:
-          if (!BotPermissions.isOwner(bot.store, user.id)) return await respond("You can't execute this command, you're not an owner!");
+          final isOwner = BotPermissions.isOwner(bot.store, user.id);
+          if (!isOwner) return await respond("You can't execute this command, you're not a bot owner!");
           break;
 
         case .claimer:
           if (interaction.guildId == null) return await respond("This command needs to be run in a guild.");
-          if (!BotPermissions.isClaimer(bot.store, interaction.guildId!, user.id)) return await respond("You can't execute this command, you're not the bot claimer!");
+          final isClaimer = BotPermissions.isClaimer(bot.store, interaction.guildId!, user.id);
+
+          if (!isClaimer) return await respond("You can't execute this command, you're not the bot claimer!");
           break;
 
         case .admin:
           if (interaction.guildId == null) return await respond("This command needs to be run in a guild.");
-          if (!BotPermissions.isAdmin(bot.store, interaction.guildId!, user.id)) return await respond("You can't execute this command, you're not a bot admin!");
+          final isAdmin = BotPermissions.isAdmin(bot.store, interaction.guildId!, user.id);
+
+          if (!isAdmin) return await respond("You can't execute this command, you're not a bot admin!");
           break;
       }
 

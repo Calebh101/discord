@@ -111,6 +111,28 @@ final class ModlogCommands extends TopLevelParentCommand {
     return buildCommand(commandOptions(bot));
   }
 
+  @Subcommand("info", "Get settings of the modlog system.", needsGuild: true)
+  void getInfo(DiscordContext context) async {
+    final settings = ModlogSettings(context.store, context.guildId!);
+    final scopes = settings.scopes.get() + context.bot.modlog.allRequiredString;
+
+    await context.respond(.new(
+      content: """
+- Current modlog channel: ${settings.channel.get()?.toChannelMention() ?? "**Not set**"}
+- Enabled scopes: **${scopes.length}**
+
+${context.bot.modlog.groups.map((group) {
+  final enabled = group.scopes.where((x) => x.required || scopes.contains(x.fullName));
+
+  return """
+**${group.prettyName}** (`${group.name}`): **${enabled.length}/${group.scopes.length}** enabled
+${enabled.map((x) => x.fullName.toDiscordCodeString()).join(", ")}
+  """.trim();
+}).join("\n\n")}
+      """.maxLength(2000, ellipsis: true).trim(),
+    ));
+  }
+
   @Subcommand("test", "Send a test modlog.", needsGuild: true, permissionsRequired: .admin)
   void test(
     DiscordContext context,
