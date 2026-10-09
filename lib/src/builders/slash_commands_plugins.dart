@@ -5,9 +5,31 @@ import 'package:discord/src/builders/slash_commands.dart';
 import 'package:source_gen/source_gen.dart';
 
 final Map<String, SlashCommandsPlugin> plugins = {
+  "SnowflakeOption": SnowflakePlugin(),
   "EnumOption": EnumPlugin(),
   "MessageOption": RecentMessagePlugin(),
 };
+
+final class SnowflakePlugin extends SlashCommandsPlugin {
+  @override
+  CommandOptionBase build({required int i, required FormalParameterElement param, required DartObject annotation}) {
+    final result = processBasicOption(param: param, annotation: annotation);
+
+    result.converterText = """(_, value) {
+try {
+  return Snowflake.parse(value);
+} catch (_) {
+  throw CommandParseError("Invalid snowflake (ID).");
+}
+    }""".trim();
+
+    return result;
+  }
+}
+
+bool isRequired(FormalParameterElement param) {
+  return param.type.nullabilitySuffix != .question;
+}
 
 final class EnumPlugin extends SlashCommandsPlugin {
   @override
@@ -34,7 +56,7 @@ final class EnumPlugin extends SlashCommandsPlugin {
       description: description!,
       nameLocalizations: nameL,
       descriptionLocalizations: descL,
-      isRequired: param.type.nullabilitySuffix != .question,
+      isRequired: isRequired(param),
       enumName: enumName,
       nameField: nameField,
       valueField: valueField,
@@ -89,7 +111,7 @@ final class RecentMessagePlugin extends SlashCommandsPlugin {
       description: description!,
       nameLocalizations: nameL,
       descriptionLocalizations: descL,
-      isRequired: param.type.nullabilitySuffix != .question,
+      isRequired: isRequired(param),
     );
   }
 }

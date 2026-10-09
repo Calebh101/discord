@@ -96,13 +96,14 @@ final class CommandOptionInfo<T> extends CommandOptionBase {
   final num? maxValue;
 
   final String? autocompleteName;
+  String? converterText;
 
   new({required this.type, required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.choices, required this.channelTypes, required this.minLength, required this.maxLength, required this.minValue, required this.maxValue, required this.autocompleteName});
 
   @override
   String build() {
     return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null});
+return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}${converterText != null ? ", converter: $converterText": ""});
 """.trim();
   }
 
@@ -218,6 +219,16 @@ CommandOptionBase? parseOption(int i, FormalParameterElement param) {
     throw InvalidGenerationSourceError("Command parameter #$i ('${param.name}') did not have an option annotation.\nPossible values: ${allAnnotationNames.map((x) => "'$x'").join(", ")}");
   }
 
+  for (final (_, key, plugin) in plugins.entriesAsRecords) {
+    if (annotation.type?.element?.name == key) {
+      return plugin.build(i: i, param: param, annotation: annotation);
+    }
+  }
+
+  return processBasicOption(param: param, annotation: annotation);
+}
+
+CommandOptionInfo processBasicOption({required FormalParameterElement param, required DartObject annotation}) {
   DartObject? field<T>(String name) {
     return getFieldRecursive(annotation, name);
   }
@@ -231,12 +242,6 @@ CommandOptionBase? parseOption(int i, FormalParameterElement param) {
       if (!Locale.values.any((x) => x.identifier == id)) throw InvalidGenerationSourceError("Invalid locale ID: '$id'\nPossible values: ${Locale.values.map((x) => "'${x.identifier}'").join(", ")}");
       return .new(id, v!.toStringValue()!);
     });
-  }
-
-  for (final (_, key, plugin) in plugins.entriesAsRecords) {
-    if (annotation.type?.element?.name == key) {
-      return plugin.build(i: i, param: param, annotation: annotation);
-    }
   }
 
   final name = field("name")?.toStringValue();
@@ -279,7 +284,7 @@ CommandOptionBase? parseOption(int i, FormalParameterElement param) {
     type: .new(type!),
     name: name!,
     description: description!,
-    isRequired: param.type.nullabilitySuffix != .question,
+    isRequired: isRequired(param),
     nameLocalizations: nameL,
     descriptionLocalizations: descL,
     channelTypes: channelTypes,

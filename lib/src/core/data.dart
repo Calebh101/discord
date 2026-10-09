@@ -243,7 +243,7 @@ abstract class EntitySettings {
   }
 }
 
-class BotSettings extends EntitySettings {
+abstract class BotSettings extends EntitySettings {
   new(super.store) : super(id: "_", scope: .bot);
 
   @mustCallSuper

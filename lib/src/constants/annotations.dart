@@ -104,6 +104,15 @@ final class BoolOption extends Option<bool> {
   }) : super(type: .boolean);
 }
 
+final class SnowflakeOption extends StringOption {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+    super.choices,
+    super.autocomplete,
+  }) : super(minLength: 17);
+}
+
 final class UserOption extends Option<User> {
   const new(super.name, super.description, {
     super.nameLocalizations,

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:discord/discord.dart';
-import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
 
 abstract class DiscordBot {

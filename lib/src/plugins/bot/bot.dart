@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:discord/discord.dart';
 import 'package:discord/src/plugins/bot/admin.dart';
+import 'package:discord/src/plugins/bot/owner.dart';
 import 'package:discord/src/plugins/bot/test.dart';
-import 'package:localpkg/localpkg.dart';
+import 'package:system_info2/system_info2.dart';
 
 part 'bot.g.dart';
 
@@ -52,6 +55,50 @@ final class BotPlugin extends DiscordPlugin {
       }),
     ];
   }
+
+  @override
+  void onReady(DiscordBot bot) {
+    bot.clients.run((client) {
+      final Set<Snowflake> knownGuilds = {};
+
+      client.onReady.listen((ReadyEvent event) {
+        for (final guild in event.guilds) {
+          knownGuilds.add(guild.id);
+        }
+      });
+
+      client.onGuildCreate.listen((event) async {
+        Logger.print("Bot", "Joined guild ${event.guild.id}");
+        if (knownGuilds.contains(event.guild.id)) return;
+        final guild = await event.guild.fetch(withCounts: true);
+
+        await alertOwners(client, bot.store, EmbedBuilder(
+          title: "Guild Joined",
+          fields: [
+            EmbedFieldBuilder(name: "Name", value: guild.name, isInline: true),
+            EmbedFieldBuilder(name: "ID", value: guild.id.toDiscordCodeString(), isInline: true),
+            EmbedFieldBuilder(name: "Owner", value: "${guild.ownerId.toUserMention()} (`${guild.ownerId}`)", isInline: false),
+            EmbedFieldBuilder(name: "Members", value: guild.approximateMemberCount.toDiscordCodeString(), isInline: true),
+          ],
+        ));
+      });
+
+      client.onGuildDelete.listen((event) async {
+        Logger.print("Bot", "Left guild ${event.deletedGuild?.id}/${event.guild.id}");
+        final guild = event.deletedGuild;
+
+        await alertOwners(client, bot.store, EmbedBuilder(
+          title: "Guild Left",
+          fields: [
+            if (guild != null) EmbedFieldBuilder(name: "Name", value: guild.name, isInline: true),
+            EmbedFieldBuilder(name: "ID", value: event.guild.id.toDiscordCodeString(), isInline: true),
+            if (guild != null) EmbedFieldBuilder(name: "Owner", value: "${guild.ownerId.toUserMention()} (`${guild.ownerId}`)", isInline: false),
+            if (guild != null) EmbedFieldBuilder(name: "Members", value: guild.approximateMemberCount.toDiscordCodeString(), isInline: true),
+          ],
+        ));
+      });
+    });
+  }
 }
 
 final class BotCommands extends TopLevelParentCommand {
@@ -70,6 +117,7 @@ final class BotCommands extends TopLevelParentCommand {
   List<SubcommandGroupCommand> subcommandGroups(DiscordBot bot) => [
     if (bot.dev) TestCommands(),
     BotAdminCommands(),
+    BotOwnerCommands(),
   ];
 
   static String formatLatency(Duration latency) {
@@ -129,5 +177,174 @@ final class BotCommands extends TopLevelParentCommand {
         return "- `${plugin.info.id}`";
       }).join("\n")}",
     ));
+  }
+
+  @Subcommand("update", "Update the bot.", permissionsRequired: .owner)
+  void update(
+    DiscordContext context,
+    @BoolOption("git-reset", "Run git --reset hard.") bool? gitReset,
+    @BoolOption("restart", "Restart the bot after updating.") bool? restart,
+  ) async {
+    await context.respond(.new(
+      content: "Updating...",
+    ));
+
+    // TODO
+
+    if (restart == true) {
+      await context.updateOriginalResponse(.new(content: "Restarting..."));
+      await context.bot.terminal.close.call(restart == true ? ExitCode.restart : ExitCode.success);
+      return;
+    }
+
+    await context.updateOriginalResponse(.new(content: "Updated!"));
+  }
+
+  @Subcommand("kill", "Kill (or restart) the bot.", permissionsRequired: .owner)
+  void kill(
+    DiscordContext context,
+    @BoolOption("restart", "Restart the bot instead.") bool? restart,
+  ) async {
+    Logger.print("Kill", "User ${context.userId} requested my ${restart == true ? "restart" : "death"}.");
+    await context.respond(.new(content: "Now ${restart == true ? "restarting" : "stopping"}..."));
+    await context.bot.terminal.close.call(restart == true ? ExitCode.restart : ExitCode.success);
+  }
+
+  @Subcommand("status", "Get the machine status of the bot.")
+  void status(DiscordContext context) async {
+    const factor = 1024;
+    await context.acknowledge();
+    Map<String, String> elements = {};
+
+    final memory = await getMemory();
+    final rss = ProcessInfo.currentRss;
+    final maxRss = ProcessInfo.maxRss;
+    final storage = await getStorage();
+
+    String megabytes(num input) {
+      return "${(input / (factor * factor)).toStringAsFixed(1)} MiB";
+    }
+
+    String gigabytes(num input) {
+      return "${(input / (factor * factor * factor)).toStringAsFixed(1)} GiB";
+    }
+
+    elements["System"] = [
+      "${SysInfo.operatingSystemName} ${SysInfo.kernelArchitecture} ${SysInfo.operatingSystemVersion} ${SysInfo.kernelVersion}".trim(),
+      (() {
+        final processor = SysInfo.cores.first;
+        return "${processor.vendor} ${processor.name}".trim();
+      }()),
+      "Kernel: ${SysInfo.kernelName} ${SysInfo.kernelVersion} ${SysInfo.kernelArchitecture.name}",
+      "Dart: ${Platform.version.trim()}",
+    ].join("\n").trim();
+
+    elements["Memory/Storage"] = [
+      "Memory: ${gigabytes(memory.available)} available / ${gigabytes(memory.total)},",
+      "Memory for this process: ${megabytes(rss)} used (max since started: ${megabytes(maxRss)})",
+      "Storage: ${gigabytes(storage.free)} Free / ${gigabytes(storage.total)}",
+    ].join("\n").trim();
+
+    elements["Uptime"] = [
+      "System: ${await () async {
+        try {
+          return await getSystemUptime();
+        } catch (e) {
+          return "Error: $e";
+        }
+      }()}",
+    ].join("\n").trim();
+
+    elements["Machine"] = await getStatus() ?? "No machine-defined status found.";
+    await context.respond(.new(content: elements.entries.map((x) => "### ${x.key}\n${x.value.toDiscordCodeBlock()}").join("\n")));
+  }
+
+  Future<({int free, int total})> getStorage() async {
+    if (Platform.isMacOS || Platform.isLinux) {
+      final result = await Process.run('df', ['-k', '/']);
+      final parts = result.stdout.toString().trim().split('\n')[1].split(RegExp(r'\s+'));
+
+      return (
+        total: int.parse(parts[1]) * 1024,
+        free: int.parse(parts[3]) * 1024,
+      );
+    } else if (Platform.isWindows) {
+      final result = await Process.run('wmic', ['logicaldisk', 'where', 'DeviceID="C:"', 'get', 'Size,FreeSpace']);
+      final parts = result.stdout.toString().trim().split('\n').last.trim().split(RegExp(r'\s+'));
+
+      return (
+        total: int.parse(parts[0]),
+        free: int.parse(parts[1]),
+      );
+    } else {
+      throw UnsupportedError('Unsupported OS: ${Platform.operatingSystem}');
+    }
+  }
+
+  Future<({int free, int available, int total})> getMemory() async {
+    if (Platform.isMacOS) {
+      final totalResult = await Process.run('sysctl', ['-n', 'hw.memsize']);
+      final total = int.parse(totalResult.stdout.toString().trim());
+
+      final vmResult = await Process.run('vm_stat', []);
+      final lines = vmResult.stdout.toString().split('\n');
+      final pageSize = 16384; // macOS default page size
+
+      int getPages(String key) {
+        final line = lines.firstWhere((l) => l.contains(key), orElse: () => '0');
+        return int.tryParse(line.split(':').last.trim().replaceAll('.', '')) ?? 0;
+      }
+
+      final a = (getPages('Pages free') + getPages('Pages inactive')) * pageSize;
+      final free = getPages("Pages free") * pageSize;
+      return (total: total, free: free, available: a);
+    } else {
+      return (
+        total: SysInfo.getTotalPhysicalMemory(),
+        free: SysInfo.getFreePhysicalMemory(),
+        available: SysInfo.getAvailablePhysicalMemory(),
+      );
+    }
+  }
+
+  Future<Duration> getSystemUptime() async {
+    if (Platform.isLinux) {
+      final content = await File('/proc/uptime').readAsString();
+      final seconds = double.parse(content.trim().split(' ')[0]);
+      return Duration(milliseconds: (seconds * 1000).round());
+    }
+
+    if (Platform.isMacOS) {
+      final result = await Process.run('sysctl', ['-n', 'kern.boottime']);
+      final match = RegExp(r'sec = (\d+)').firstMatch(result.stdout as String);
+      if (match == null) throw Exception('Could not parse kern.boottime');
+      final bootEpoch = int.parse(match.group(1)!);
+      final bootTime = DateTime.fromMillisecondsSinceEpoch(bootEpoch * 1000);
+      return DateTime.now().difference(bootTime);
+    }
+
+    if (Platform.isWindows) {
+      final result = await Process.run('powershell', [
+        '-Command',
+        '(Get-Date) - (gcim Win32_OperatingSystem).LastBootUpTime | Select-Object -ExpandProperty TotalSeconds',
+      ]);
+
+      final seconds = double.parse((result.stdout as String).trim());
+      return Duration(milliseconds: (seconds * 1000).round());
+    }
+
+    throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
+  }
+
+  Future<String?> getStatus() async {
+    try {
+      final result = await Process.run("dev_status", [pid.toString()]);
+      final output = result.stdout.toString().trim();
+      if (output.trim().isEmpty) throw Exception("Output was empty: '$output'");
+      return output;
+    } catch (e) {
+      Logger.warn("Status", "Unable to get status: $e\nMake sure the dev_status command is set up on your system.");
+      return null;
+    }
   }
 }

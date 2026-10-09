@@ -31,6 +31,14 @@ final class DiscordContext {
     required this.user,
   });
 
+  Future<void> acknowledge({bool isEphemeral = false}) async {
+    try {
+      await interaction.acknowledge(isEphemeral: isEphemeral);
+    } catch (e) {
+      Logger.warn("Respond", "Error acknowledging interaction $interactionId with user $userId (ephemeral: $isEphemeral): $e");
+    }
+  }
+
   Future<void> respond(MessageBuilder builder) async {
     try {
       myResponse = await interaction.respond(builder);

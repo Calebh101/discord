@@ -13,6 +13,7 @@ export 'src/core/permissions.dart';
 
 export 'src/util/stringify.dart';
 export 'src/util/modlog.dart';
+export 'src/util/alert.dart';
 
 export 'src/clients/store.dart';
 export 'src/clients/tokens.dart';
