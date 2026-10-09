@@ -33,18 +33,32 @@ final class ModlogRegistrationError extends Error {
 final class ModlogGroup {
   final String name;
   final String prettyName;
-  final List<ModlogScope> scopes;
+  late final List<ModlogScope> scopes;
 
-  new(this.name, this.prettyName, Map<String, String> children) : scopes = children.mapToList((k, v) {
-    return .new([name, k].join("."), v);
-  });
+  new(this.name, this.prettyName, List<ModlogScopeData> children) {
+    scopes = children.mapToList((x) => x.build(this));
+  }
 }
 
 final class ModlogScope {
   final String name;
+  final String fullName;
   final String description;
+  final bool required;
 
-  const new(this.name, this.description);
+  const new({required this.name, required this.fullName, required this.description, required this.required});
+}
+
+final class ModlogScopeData {
+  final String name;
+  final String description;
+  final bool required;
+
+  const new(this.name, this.description, {this.required = false});
+
+  ModlogScope build(ModlogGroup parent) {
+    return .new(name: name, fullName: [parent.name, name].join("."), description: description, required: required);
+  }
 }
 
 final class ModlogStore {
@@ -57,6 +71,16 @@ final class ModlogStore {
     if (group.scopes.length > maxChildren) throw ModlogRegistrationError("Group '${group.name}' has more than $maxChildren children (${group.scopes.length}). If you need more than $maxChildren children, consider splitting your group up into multiple groups.");
 
     groups.add(group);
+  }
+
+  List<ModlogScope> get allRequired {
+    final List<ModlogScope> scopes = [];
+
+    for (final group in groups) {
+      scopes.addAll(group.scopes.where((x) => x.required));
+    }
+
+    return scopes;
   }
 }
 
@@ -81,7 +105,12 @@ final class Modlog {
 
   Future<String?> create(ModlogEvent report) async {
     if (channelId == null) return "No channel set.";
-    if (!settings.scopes.get().any((x) => report.triggers.contains(x))) return "No triggers enabled.";
+
+    if (!modlog.allRequired.any((x) => x.fullName == report.eventId)) {
+      if (!settings.scopes.get().any((x) => report.triggers.contains(x))) {
+        return "No triggers enabled.";
+      }
+    }
 
     final message = MessageBuilder(
       embeds: [report.toEmbed()],
@@ -95,7 +124,8 @@ final class Modlog {
 
   Future<Message?> sendMessage(MessageBuilder message) async {
     try {
-      final channel = client.channels.get(channelId!) as TextChannel;
+      final channel = await client.channels.get(channelId!);
+      if (channel is! TextChannel) throw Exception("Invalid channel type: ${channel.runtimeType}");
       return await channel.sendMessage(message);
     } catch (e) {
       Logger.warn("Modlog", "Unable to send message in $guildId:$channelId: $e");

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:discord/discord.dart';
@@ -19,9 +20,10 @@ final class ModlogPlugin extends DiscordPlugin {
   @override
   List<ModlogGroup> modlogGroups(DiscordBot bot, ModlogStore modlog) {
     return [
-      .new("core", "Core", {
-        "test": "Test modlogs.",
-      }),
+      .new("core", "Core", [
+        .new("test", "Test modlogs."),
+        .new("scopes", "When scopes are changed.", required: true),
+      ]),
     ];
   }
 
@@ -40,6 +42,7 @@ final class ModlogPlugin extends DiscordPlugin {
 
         final groupName = data.customId.replaceFirst("modlog-", "");
         final group = bot.modlog.groups.firstWhereOrNull((x) => x.name == groupName);
+        Logger.print("Modlog", "Changing modlog scopes with ${group?.name} (${data.customId}) for user ${user.id} and guild ${guild.id}");
 
         if (group == null) {
           await interaction.respond(.new(content: "Invalid group name: `$groupName`", flags: MessageFlags.ephemeral));
@@ -62,19 +65,36 @@ final class ModlogPlugin extends DiscordPlugin {
         }
 
         for (final scope in group.scopes) {
-          current.remove(scope.name);
+          current.remove(scope.fullName);
+          if (scope.required) continue;
 
-          if (isEnabled(scope.name)) {
-            current.add(scope.name);
+          if (isEnabled(scope.fullName)) {
+            current.add(scope.fullName);
           }
         }
 
         settings.scopes.set(current);
 
+        await Modlog.fromBot(
+          bot,
+          client: client,
+          guildId: guild.id,
+        ).create(.new(
+          "core.scopes",
+          severity: .log,
+          title: "Modlog Scopes Changed",
+          fields: {
+            "Amount": "$old => ${current.length}",
+          },
+          attachments: [
+            .new(data: utf8.encode(current.join(", ")), fileName: "scopes.txt"),
+          ]
+        ));
+
         await interaction.respond(.new(
-          content: "Set modlog scopes!\n**$old** enabled -> **${current.length}** enabled\n\nScopes:\n${group.scopes.map((scope) {
-            final enabled = current.contains(scope.name);
-            return enabled ? "**`${scope.name}`**" : scope.name.toDiscordCodeString();
+          content: "Set modlog scopes!\n**$old** enabled -> **${current.length}** enabled\n-# Not including required scopes.\n\nAll scopes:\n-# **Bold** = enabled.\n${group.scopes.map((scope) {
+            final enabled = current.contains(scope.fullName);
+            return enabled ? "**`${scope.fullName}`**" : scope.fullName.toDiscordCodeString();
           }).join(", ")}",
         ));
       });
@@ -121,7 +141,7 @@ final class ModlogCommands extends TopLevelParentCommand {
     settings.channel.set(channel?.id);
 
     await context.respond(.new(
-      content: "Modlog channel ${channel != null ? "**set** to ${channel.toMention()}" : "**reset**."}",
+      content: "Modlog channel ${channel != null ? "**set** to ${channel.toMention()}" : "**reset**"}.",
     ));
   }
 
@@ -164,16 +184,43 @@ final class ModlogCommands extends TopLevelParentCommand {
             maxValues: scopes.length,
             options: scopes.mapToList((scope) {
               return .new(
-                label: scope.name,
-                value: scope.name,
-                description: scope.description,
-                defaultValue: enabled.contains(scope.name),
+                label: scope.fullName,
+                value: scope.fullName,
+                description: [
+                  scope.description,
+                  if (scope.required) "This option cannot be turned off."
+                ].join(" "),
+                defaultValue: scope.required ? true : enabled.contains(scope.fullName),
               );
             }),
           ),
         );
       }),
     ]));
+  }
+
+  @Subcommand("clear", "Clear all modlog scopes.", permissionsRequired: .admin, needsGuild: true)
+  void clear(
+    DiscordContext context,
+    @StringOption("group", "Modlog group name.", autocomplete: Autocomplete<ModlogGroupAutocomplete>()) String? groupName,
+  ) async {
+    final settings = ModlogSettings(context.store, context.guildId!);
+    final scopes = settings.scopes.get();
+
+    if (groupName != null) {
+      final group = context.bot.modlog.groups.firstWhereOrNull((x) => x.name == groupName.toLowerCase().trim());
+      if (group == null) return await context.respond(.new(content: "Group doesn't exist: `$groupName`", flags: MessageFlags.ephemeral));
+
+      final removed = scopes.removeWhereWithCount((scope) {
+        return group.scopes.any((x) => scope == x.fullName);
+      });
+
+      settings.scopes.set(scopes);
+      await context.respond(.new(content: "Removed **$removed** modlog scopes!"));
+    } else {
+      settings.scopes.delete();
+      await context.respond(.new(content: "Removed **${scopes.length}** modlog scopes!"));
+    }
   }
 }
 

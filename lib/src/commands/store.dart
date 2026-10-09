@@ -66,7 +66,6 @@ final class RegistryData {
   }
 }
 
-
 class CommandsStore {
   final Map<String, RegistryData> registry = {};
   late final List<CommandData> commands;
@@ -112,10 +111,10 @@ class CommandsStore {
     switch (option.type) {
       case .number:
         return (value as num).toDouble();
-      case .user:
-        return resolved?.users?[snowflake(value)];
       case .channel:
         return await resolved?.channels?[snowflake(value)]?.get();
+      case .user:
+        return resolved?.users?[snowflake(value)];
       case .role:
         return resolved?.roles?[snowflake(value)];
       case .mentionable:

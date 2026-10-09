@@ -169,8 +169,63 @@ extension on ModlogCommands {
             );
           }(),
         ],
-        requiredPerms: .parse(0),
-        needsGuild: false,
+        requiredPerms: .parse(2),
+        needsGuild: true,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "clear",
+        function: clear,
+        builder: .subCommand(
+          name: "clear",
+          description: "Clear all modlog scopes.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "group",
+                description: "Modlog group name.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData(
+              name: "group",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "group",
+                  description: "Modlog group name.",
+                  isRequired: false,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => ModlogGroupAutocomplete(),
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
       );
     }(),
     ...subcommandGroups(bot).map((x) => x.build(bot)),
