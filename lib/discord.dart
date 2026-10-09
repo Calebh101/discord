@@ -3,6 +3,7 @@ library;
 
 export 'src/constants/constants.dart';
 export 'src/constants/annotations.dart';
+export 'src/constants/colors.dart';
 
 export 'src/core/bot.dart';
 export 'src/core/logger.dart';
@@ -22,6 +23,7 @@ export 'src/commands/command.dart';
 export 'src/commands/choice.dart';
 export 'src/commands/context.dart';
 export 'src/commands/store.dart';
+export 'src/commands/errors.dart';
 
 export 'src/autocomplete/base.dart';
 export 'src/autocomplete/extras.dart';

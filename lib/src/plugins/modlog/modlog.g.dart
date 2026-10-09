@@ -192,6 +192,95 @@ extension on ModlogCommands {
     }(),
     () {
       return OptionData(
+        name: "save",
+        function: save,
+        builder: .subCommand(
+          name: "save",
+          description: "Send a file with all enabled modlog scopes.",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(2),
+        needsGuild: true,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "load",
+        function: load,
+        builder: .subCommand(
+          name: "load",
+          description: "Load modlog scopes from an input.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(11),
+                name: "scopes",
+                description: "String of all enabled scopes.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData(
+              name: "scopes",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(11),
+                  name: "scopes",
+                  description: "String of all enabled scopes.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "allscopes",
+        function: allScopes,
+        builder: .subCommand(
+          name: "allscopes",
+          description: "Send a file with all possible modlog scopes.",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: false,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "clear",
         function: clear,
         builder: .subCommand(

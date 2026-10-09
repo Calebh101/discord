@@ -109,7 +109,7 @@ extension on BotCommands {
               return CommandOptionBuilder(
                 type: .new(5),
                 name: "git-reset",
-                description: "Run git --reset hard.",
+                description: "Run git reset --hard. This is destructive and cannot be undone.",
                 isRequired: false,
                 choices: null,
                 hasAutocomplete: false,
@@ -148,7 +148,7 @@ extension on BotCommands {
                 return CommandOptionBuilder(
                   type: .new(5),
                   name: "git-reset",
-                  description: "Run git --reset hard.",
+                  description: "Run git reset --hard. This is destructive and cannot be undone.",
                   isRequired: false,
                   choices: null,
                   hasAutocomplete: false,

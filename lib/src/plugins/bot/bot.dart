@@ -182,22 +182,102 @@ final class BotCommands extends TopLevelParentCommand {
   @Subcommand("update", "Update the bot.", permissionsRequired: .owner)
   void update(
     DiscordContext context,
-    @BoolOption("git-reset", "Run git --reset hard.") bool? gitReset,
+    @BoolOption("git-reset", "Run git reset --hard. This is destructive and cannot be undone.") bool? gitReset,
     @BoolOption("restart", "Restart the bot after updating.") bool? restart,
   ) async {
     await context.respond(.new(
       content: "Updating...",
     ));
 
-    // TODO
+    const pubGets = 2;
+    final directory = Directory.current;
+
+    Future<bool> dmResult(String name, ProcessResult process) async {
+      try {
+        final channel = await context.client.users.createDm(context.user.id);
+
+        await channel.sendMessage(MessageBuilder(embeds: [
+          EmbedBuilder(
+            title: "Process $name",
+            timestamp: DateTime.now().toUtc(),
+            fields: [
+              EmbedFieldBuilder(name: "PID", value: process.pid.toDiscordCodeString(), isInline: true),
+              EmbedFieldBuilder(name: "Exit Code", value: process.exitCode.toDiscordCodeString(), isInline: true),
+              EmbedFieldBuilder(name: "stdout", value: process.stdout.toString().maxLength(1018, ellipsis: true).toDiscordCodeBlock(), isInline: false),
+              EmbedFieldBuilder(name: "stderr", value: process.stderr.toString().maxLength(1018, ellipsis: true).toDiscordCodeBlock(), isInline: false),
+            ],
+            color: process.exitCode == 0 ? Colors.green : Colors.red,
+          ),
+        ]));
+
+        return true;
+      } catch (e) {
+        Logger.warn("Update", "Unable to send DM for process $name (${process.exitCode}): $e");
+        return false;
+      }
+    }
+
+    bool failed(ProcessResult p) => p.exitCode != 0;
+
+    Future<void> fail(String processName) async {
+      await context.updateOriginalResponse(.new(
+        content: "Update failed on:\n${processName.toDiscordCodeBlock()}",
+      ));
+    }
+
+    if (gitReset == true) {
+      try {
+        Logger.print("Update", "Running command: git reset --hard");
+        final p = await Process.run("git", ["reset", "--hard"], workingDirectory: directory.path);
+
+        if (p.stdout.toString().isNotEmpty) Logger.print("Update", "Command results (code ${p.exitCode}, pid ${p.pid}) stdout:\n${p.stdout}");
+        if (p.stderr.toString().isNotEmpty) Logger.print("Update", "Command results (code ${p.exitCode}, pid ${p.pid}) stderr:\n${p.stderr}");
+
+        await dmResult("git reset", p);
+        if (failed(p)) return await fail("git reset");
+      } catch (e) {
+        Logger.warn("Update", "Unable to run command git reset");
+        return await fail("git reset");
+      }
+    }
+
+    try {
+      Logger.print("Update", "Running command: git pull");
+      final p = await Process.run("git", ["pull"], workingDirectory: directory.path);
+
+      if (p.stdout.toString().isNotEmpty) Logger.print("Update", "Command results (code ${p.exitCode}, pid ${p.pid}) stdout:\n${p.stdout}");
+      if (p.stderr.toString().isNotEmpty) Logger.print("Update", "Command results (code ${p.exitCode}, pid ${p.pid}) stderr:\n${p.stderr}");
+
+      await dmResult("git pull", p);
+      if (failed(p)) return await fail("git pull");
+    } catch (e) {
+      Logger.warn("Update", "Unable to run command git pull");
+      return await fail("git pull");
+    }
+
+    for (int i = 0; i < pubGets; i++) {
+      try {
+        Logger.print("Update", "Running command: dart pub get ($i)");
+        final p = await Process.run("dart", ["pub", "get"], workingDirectory: directory.path, runInShell: true);
+
+        if (p.stdout.toString().isNotEmpty) Logger.print("Update", "Command results (code ${p.exitCode}, pid ${p.pid}) stdout:\n${p.stdout}");
+        if (p.stderr.toString().isNotEmpty) Logger.print("Update", "Command results (code ${p.exitCode}, pid ${p.pid}) stderr:\n${p.stderr}");
+
+        await dmResult("dart pub get ($i)", p);
+        if (failed(p)) return await fail("dart pub get #$i");
+      } catch (e) {
+        Logger.warn("Update", "Unable to run command dart pub get ($i)");
+        return await fail("dart pub get #$i");
+      }
+    }
 
     if (restart == true) {
       await context.updateOriginalResponse(.new(content: "Restarting..."));
-      await context.bot.terminal.close.call(restart == true ? ExitCode.restart : ExitCode.success);
+      await context.bot.terminal.close.call(ExitCode.restart);
       return;
     }
 
-    await context.updateOriginalResponse(.new(content: "Updated!"));
+    await context.updateOriginalResponse(.new(content: "Updated! The bot needs to be restarted to apply updates."));
   }
 
   @Subcommand("kill", "Kill (or restart) the bot.", permissionsRequired: .owner)

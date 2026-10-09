@@ -105,3 +105,7 @@ extension ToDiscordTimestamp on DateTime {
     return "<t:${((toUtc().millisecondsSinceEpoch) / Duration.millisecondsPerSecond).floor()}:${flag.id}>";
   }
 }
+
+Uri discordLink(Snowflake? guild, Snowflake channel, [Snowflake? message]) {
+  return Uri.parse("https://discord.com/channels/${[guild ?? "@me", channel, ?message].join("/")}");
+}

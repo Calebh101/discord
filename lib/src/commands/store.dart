@@ -243,9 +243,12 @@ class CommandsStore {
           context,
           ...args,
         ]);
+      } on UserFacingException catch (e) {
+        Logger.warn("Commands", "User-facing exception thrown on command ${path.join(".")} and user ${user.id}: $e");
+        await respond("There was an error running this command.\n${e.message}");
       } catch (e, s) {
-        Logger.warn("Commands", "Unable to run command ${path.join(".")}: $e\n$s");
-        await respond("There was an unexpected error running this command.");
+        Logger.warn("Commands", "Unable to run command ${path.join(".")} and user ${user.id}: $e\n$s");
+        await respond("There was an unexpected error running this command.\n${e.runtimeType.toDiscordCodeBlock()}");
       }
     });
 

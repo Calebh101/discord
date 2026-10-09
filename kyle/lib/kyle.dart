@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:discord/discord.dart';
 import 'package:discord/plugins.dart';
+import 'package:kyle/plugins/modlog_events.dart';
 
 final class Kyle extends DiscordBot {
   new({super.dev});
@@ -13,6 +14,7 @@ final class Kyle extends DiscordBot {
   List<DiscordPlugin> get plugins => [
     BotPlugin(),
     ModlogPlugin(),
+    ModlogEventsPlugin(),
   ];
 
   @override
@@ -23,6 +25,10 @@ final class Kyle extends DiscordBot {
         GatewayIntents.all,
       );
     });
+  }
+
+  static String formatLatency(Duration latency) {
+    return "${(latency.inMicroseconds / Duration.microsecondsPerMillisecond).toStringAsFixed(3)}ms";
   }
 
   @override
@@ -37,8 +43,16 @@ final class Kyle extends DiscordBot {
 
         if (message.content.contains(client.user.toMention())) {
           try {
+            final latency = client.httpHandler.latency;
+            final realLatency = client.httpHandler.realLatency;
+
             await message.channel.sendMessage(.new(
-              content: "Hi!",
+              content: "${[
+                "Hello!",
+                "Hey there!",
+                "Hi!",
+                "Ow",
+              ].random()}\n-# Latency: ${formatLatency(latency)} / ${formatLatency(realLatency)}",
               referencedMessage: .reply(messageId: message.id),
             ));
           } catch (_) {}

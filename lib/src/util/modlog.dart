@@ -1,16 +1,14 @@
 import 'package:discord/discord.dart';
 
 enum ModlogSeverity {
-  verbose("#808080"),
-  log("#808080"),
-  good("#90EE90"),
-  severe("#e74c3c"),
+  verbose(Colors.grey),
+  log(Colors.grey),
+  good(Colors.green),
+  severe(Colors.red),
   ;
 
-  final String hex;
-  const new(this.hex);
-
-  DiscordColor get color => .parseHexString(hex);
+  final DiscordColor color;
+  const new(this.color);
 }
 
 final class ModlogSettings extends GuildSettings {
@@ -52,12 +50,12 @@ final class ModlogScope {
 final class ModlogScopeData {
   final String name;
   final String description;
-  final bool required;
+  final bool isRequired;
 
-  const new(this.name, this.description, {this.required = false});
+  const new(this.name, this.description, {this.isRequired = false});
 
   ModlogScope build(ModlogGroup parent) {
-    return .new(name: name, fullName: [parent.name, name].join("."), description: description, required: required);
+    return .new(name: name, fullName: [parent.name, name].join("."), description: description, required: isRequired);
   }
 }
 
@@ -73,14 +71,18 @@ final class ModlogStore {
     groups.add(group);
   }
 
-  List<ModlogScope> get allRequired {
+  List<ModlogScope> get all {
     final List<ModlogScope> scopes = [];
 
     for (final group in groups) {
-      scopes.addAll(group.scopes.where((x) => x.required));
+      scopes.addAll(group.scopes);
     }
 
     return scopes;
+  }
+
+  List<ModlogScope> get allRequired {
+    return all.where((x) => x.required).toList();
   }
 
   List<String> get allRequiredString {

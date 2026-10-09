@@ -1,7 +1,16 @@
-import 'package:discord/src/core/bot.dart';
-import 'package:discord/src/core/data.dart';
-import 'package:discord/src/core/logger.dart';
-import 'package:nyxx/nyxx.dart' hide Logger;
+import 'package:discord/discord.dart';
+
+final class ResponseException extends UserFacingException {
+  final Snowflake userId;
+  final Snowflake interactionId;
+
+  new(super.message, {required this.userId, required this.interactionId});
+
+  @override
+  String toString() {
+    return "ResponseException(userId=$userId, interactionId=$interactionId): $message";
+  }
+}
 
 final class DiscordContext {
   final ApplicationCommandInteraction interaction;
@@ -35,7 +44,8 @@ final class DiscordContext {
     try {
       await interaction.acknowledge(isEphemeral: isEphemeral);
     } catch (e) {
-      Logger.warn("Respond", "Error acknowledging interaction $interactionId with user $userId (ephemeral: $isEphemeral): $e");
+      Logger.warn("Context", "Error acknowledging interaction $interactionId with user $userId (ephemeral: $isEphemeral): $e");
+      throw ResponseException("Unable to acknowledge.", userId: userId, interactionId: interactionId);
     }
   }
 
@@ -44,7 +54,8 @@ final class DiscordContext {
       myResponse = await interaction.respond(builder);
       myResponseMessage = myResponse?.resource?.message;
     } catch (e) {
-      Logger.warn("Respond", "Error responding to user $userId and interaction $interactionId: $e");
+      Logger.warn("Context", "Error responding to user $userId and interaction $interactionId: $e");
+      throw ResponseException("Unable to respond.", userId: userId, interactionId: interactionId);
     }
   }
 
@@ -52,7 +63,35 @@ final class DiscordContext {
     try {
       myResponseMessage = await interaction.updateOriginalResponse(builder);
     } catch (e) {
-      Logger.warn("Respond", "Error updating response to user $userId and interaction $interactionId: $e");
+      Logger.warn("Context", "Error updating response to user $userId and interaction $interactionId: $e");
+      throw ResponseException("Unable to update response.", userId: userId, interactionId: interactionId);
+    }
+  }
+
+  Future<Snowflake> createFollowup(MessageBuilder builder) async {
+    try {
+      return (await interaction.createFollowup(builder)).id;
+    } catch (e) {
+      Logger.warn("Context", "Unable to create followup to user $userId and interaction $interactionId: $e");
+      throw ResponseException("Unable to create followup.", userId: userId, interactionId: interactionId);
+    }
+  }
+
+  Future<void> updateFollowup(Snowflake id, MessageUpdateBuilder builder) async {
+    try {
+      await interaction.updateFollowup(id, builder);
+    } catch (e) {
+      Logger.warn("Context", "Unable to update followup $id for user $userId and interaction $interactionId: $e");
+      throw ResponseException("Unable to update followup.", userId: userId, interactionId: interactionId);
+    }
+  }
+
+  Future<void> deleteFollowup(Snowflake id) async {
+    try {
+      await interaction.deleteFollowup(id);
+    } catch (e) {
+      Logger.warn("Context", "Unable to delete followup $id for user $userId and interaction $interactionId: $e");
+      throw ResponseException("Unable to delete followup.", userId: userId, interactionId: interactionId);
     }
   }
 }

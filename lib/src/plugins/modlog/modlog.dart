@@ -22,7 +22,7 @@ final class ModlogPlugin extends DiscordPlugin {
     return [
       .new("core", "Core", [
         .new("test", "Test modlogs."),
-        .new("scopes", "When scopes are changed.", required: true),
+        .new("scopes", "When scopes are changed.", isRequired: true),
       ]),
     ];
   }
@@ -38,65 +38,66 @@ final class ModlogPlugin extends DiscordPlugin {
 
         if (user == null || guild == null) return;
         if (isIgnored(bot.store, user.id) || !BotPermissions.isAdmin(bot.store, guild.id, user.id)) return;
-        if (!data.customId.startsWith("modlog-")) return;
 
-        final groupName = data.customId.replaceFirst("modlog-", "");
-        final group = bot.modlog.groups.firstWhereOrNull((x) => x.name == groupName);
-        Logger.print("Modlog", "Changing modlog scopes with ${group?.name} (${data.customId}) for user ${user.id} and guild ${guild.id}");
+        if (data.customId.startsWith("modlog-")) {
+          final groupName = data.customId.replaceFirst("modlog-", "");
+          final group = bot.modlog.groups.firstWhereOrNull((x) => x.name == groupName);
+          Logger.print("Modlog", "Changing modlog scopes with ${group?.name} (${data.customId}) for user ${user.id} and guild ${guild.id}");
 
-        if (group == null) {
-          await interaction.respond(.new(content: "Invalid group name: `$groupName`", flags: MessageFlags.ephemeral));
-          return;
-        }
-
-        final settings = ModlogSettings(bot.store, guild.id);
-        final current = settings.scopes.get();
-        final old = current.length;
-
-        bool isEnabled(String scope) {
-          for (final x in data.components) {
-            final component = x is SubmittedLabelComponent ? x.component : x;
-
-            if (component is! SubmittedCheckboxGroupComponent) continue;
-            if (component.values.contains(scope)) return true;
+          if (group == null) {
+            await interaction.respond(.new(content: "Invalid group name: `$groupName`", flags: MessageFlags.ephemeral));
+            return;
           }
 
-          return false;
-        }
+          final settings = ModlogSettings(bot.store, guild.id);
+          final current = settings.scopes.get();
+          final old = current.length;
 
-        for (final scope in group.scopes) {
-          current.remove(scope.fullName);
-          if (scope.required) continue;
+          bool isEnabled(String scope) {
+            for (final x in data.components) {
+              final component = x is SubmittedLabelComponent ? x.component : x;
 
-          if (isEnabled(scope.fullName)) {
-            current.add(scope.fullName);
+              if (component is! SubmittedCheckboxGroupComponent) continue;
+              if (component.values.contains(scope)) return true;
+            }
+
+            return false;
           }
+
+          for (final scope in group.scopes) {
+            current.remove(scope.fullName);
+            if (scope.required) continue;
+
+            if (isEnabled(scope.fullName)) {
+              current.add(scope.fullName);
+            }
+          }
+
+          settings.scopes.set(current);
+
+          await Modlog.fromBot(
+            bot,
+            client: client,
+            guildId: guild.id,
+          ).create(.new(
+            "core.scopes",
+            severity: .log,
+            title: "Modlog Scopes Changed",
+            fields: {
+              "Amount": "$old => ${current.length}",
+            },
+            attachments: [
+              .new(data: utf8.encode(current.join(", ")), fileName: "scopes.txt"),
+            ]
+          ));
+
+          await interaction.respond(.new(
+            content: "Set modlog scopes!\n**$old** enabled -> **${current.length}** enabled\n-# Not including required scopes.\n\nAll scopes:\n-# **Bold** = enabled.\n${group.scopes.map((scope) {
+              final enabled = current.contains(scope.fullName);
+              return enabled ? "**`${scope.fullName}`**" : scope.fullName.toDiscordCodeString();
+            }).join(", ")}",
+          ));
         }
-
-        settings.scopes.set(current);
-
-        await Modlog.fromBot(
-          bot,
-          client: client,
-          guildId: guild.id,
-        ).create(.new(
-          "core.scopes",
-          severity: .log,
-          title: "Modlog Scopes Changed",
-          fields: {
-            "Amount": "$old => ${current.length}",
-          },
-          attachments: [
-            .new(data: utf8.encode(current.join(", ")), fileName: "scopes.txt"),
-          ]
-        ));
-
-        await interaction.respond(.new(
-          content: "Set modlog scopes!\n**$old** enabled -> **${current.length}** enabled\n-# Not including required scopes.\n\nAll scopes:\n-# **Bold** = enabled.\n${group.scopes.map((scope) {
-            final enabled = current.contains(scope.fullName);
-            return enabled ? "**`${scope.fullName}`**" : scope.fullName.toDiscordCodeString();
-          }).join(", ")}",
-        ));
       });
     });
   }
@@ -104,7 +105,9 @@ final class ModlogPlugin extends DiscordPlugin {
 
 final class ModlogCommands extends TopLevelParentCommand {
   @override
-  TopLevelCommandInfo get info => .new(name: "modlog", description: "Manage the modlog system.");
+  TopLevelCommandInfo get info => .new(name: "modlog", description: "Manage the modlog system.", contexts: [
+    .guild,
+  ]);
 
   @override
   CommandData build(DiscordBot bot) {
@@ -210,7 +213,7 @@ ${enabled.map((x) => x.fullName.toDiscordCodeString()).join(", ")}
                 value: scope.fullName,
                 description: [
                   scope.description,
-                  if (scope.required) "This option cannot be turned off."
+                  if (scope.required) "This option cannot be turned off.",
                 ].join(" "),
                 defaultValue: scope.required ? true : enabled.contains(scope.fullName),
               );
@@ -219,6 +222,54 @@ ${enabled.map((x) => x.fullName.toDiscordCodeString()).join(", ")}
         );
       }),
     ]));
+  }
+
+  @Subcommand("save", "Send a file with all enabled modlog scopes.", permissionsRequired: .admin, needsGuild: true)
+  void save(DiscordContext context) async {
+    final settings = ModlogSettings(context.store, context.guildId!);
+    final scopes = settings.scopes.get();
+
+    await context.respond(.new(
+      content: "**${scopes.length}** scopes enabled.",
+      attachments: [
+        .new(data: utf8.encode(scopes.join(",")), fileName: "scopes.txt"),
+      ],
+    ));
+  }
+
+  @Subcommand("load", "Load modlog scopes from an input.", permissionsRequired: .admin, needsGuild: true)
+  void load(
+    DiscordContext context,
+    @AttachmentOption("scopes", "String of all enabled scopes.") String data,
+  ) async {
+    final all = context.bot.modlog.all;
+    final settings = ModlogSettings(context.store, context.guildId!);
+    final List<String> scopes = [];
+
+    for (final scope in data.split(",")) {
+      if (all.any((x) => x.fullName == scope)) {
+        scopes.add(scope);
+      } else {
+        return await context.respond(.new(
+          content: "Invalid scope: `$scope`",
+        ));
+      }
+    }
+
+    settings.scopes.set(scopes);
+    await context.respond(.new(content: "Saved **${scopes.length}** modlog scopes!"));
+  }
+
+  @Subcommand("allscopes", "Send a file with all possible modlog scopes.")
+  void allScopes(DiscordContext context) async {
+    final scopes = context.bot.modlog.all;
+
+    await context.respond(.new(
+      content: "**${scopes.length}** possible scopes.",
+      attachments: [
+        .new(data: utf8.encode(scopes.map((x) => x.fullName).join(",")), fileName: "allscopes.txt"),
+      ],
+    ));
   }
 
   @Subcommand("clear", "Clear all modlog scopes.", permissionsRequired: .admin, needsGuild: true)
