@@ -129,7 +129,12 @@ final class Modlog {
       }
     }
 
-    // TODO: Implement queueing
+    final scope = modlog.lookup(report.eventId);
+    if (scope == null) return "No scope found by ID";
+
+    if (scope.batched) {
+      // TODO
+    }
 
     final message = MessageBuilder(
       embeds: [report.toEmbed()],

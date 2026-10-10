@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:discord/discord.dart';
 
 final class ModlogEventsPlugin extends DiscordPlugin {
@@ -14,11 +16,11 @@ final class ModlogEventsPlugin extends DiscordPlugin {
         .new("attachment", "When messages are sent with attachments."),
       ]),
       .new("member", "Members", [
-        .new("timeout", "When a member is timed out (or timed in)."),
         .new("add", "When a user joins the guild."),
         .new("remove", "When a user leaves the guild."),
         .new("ban", "When a user is banned."),
         .new("unban", "When a user is unbanned."),
+        .new("timeout", "When a member is timed out (or timed in)."),
       ]),
       .new("thread", "Threads", [
         .new("members", "When member/members are updated in a thread."),
@@ -82,6 +84,28 @@ final class ModlogEventsPlugin extends DiscordPlugin {
             "Embeds/attachments": "${message?.embeds.length} embeds, ${message?.attachments.length} attachments",
           },
           severity: .log,
+        ));
+      });
+
+      client.onThreadMembersUpdate.listen((event) async {
+        final modlog = Modlog.fromBot(bot, client: client, guildId: event.guildId);
+
+        final added = event.addedMembers;
+        final removed = event.removedMemberIds;
+
+        await modlog.create(.new(
+          "thread.members",
+          title: "Thread Members Updated",
+          fields: {
+            "Thread": "${event.thread.toMention()} (`${event.id.toDiscordCodeString()}`)",
+            "Changed": "${added?.length ?? 0} added, ${removed?.length ?? 0} removed",
+            "New member count": event.memberCount.toDiscordCodeString(),
+          },
+          severity: .log,
+          attachments: [
+            if (added != null) .new(data: utf8.encode(added.map((x) => x.userId).join(", ")), fileName: "added.txt"),
+            if (removed != null) .new(data: utf8.encode(removed.join(", ")), fileName: "removed.txt"),
+          ],
         ));
       });
     });
