@@ -119,20 +119,22 @@ final class ModlogCommands extends TopLevelParentCommand {
     final settings = ModlogSettings(context.store, context.guildId!);
     final scopes = settings.scopes.get() + context.bot.modlog.allRequiredString;
 
-    await context.respond(.new(
-      content: """
+    await context.respondWithPagination(.new(
+      color: Colors.green,
+      title: "Modlog Info",
+      description: """
 - Current modlog channel: ${settings.channel.get()?.toChannelMention() ?? "**Not set**"}
 - Enabled scopes: **${scopes.length}**
+      """.trim(),
+      pages: EmbedPage.fromFields(context.bot.modlog.groups.mapToList((group) {
+        final enabled = group.scopes.where((x) => x.required || scopes.contains(x.fullName));
 
-${context.bot.modlog.groups.map((group) {
-  final enabled = group.scopes.where((x) => x.required || scopes.contains(x.fullName));
-
-  return """
-**${group.prettyName}** (`${group.name}`): **${enabled.length}/${group.scopes.length}** enabled
-${enabled.map((x) => x.fullName.toDiscordCodeString()).join(", ")}
-  """.trim();
-}).join("\n\n")}
-      """.maxLength(2000, ellipsis: true).trim(),
+        return .new(
+          name: "${group.prettyName} (`${group.name}`): ${enabled.length}/${group.scopes.length} enabled",
+          value: enabled.map((x) => x.fullName.toDiscordCodeString()).join(", "),
+          isInline: false,
+        );
+      })),
     ));
   }
 

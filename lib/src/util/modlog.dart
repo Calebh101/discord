@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:discord/discord.dart';
 
 enum ModlogSeverity {
@@ -42,20 +43,24 @@ final class ModlogScope {
   final String name;
   final String fullName;
   final String description;
-  final bool required;
 
-  const new({required this.name, required this.fullName, required this.description, required this.required});
+  final bool required;
+  final bool batched;
+
+  const new({required this.name, required this.fullName, required this.description, required this.required, required this.batched});
 }
 
 final class ModlogScopeData {
   final String name;
   final String description;
-  final bool isRequired;
 
-  const new(this.name, this.description, {this.isRequired = false});
+  final bool isRequired;
+  final bool isBatched;
+
+  const new(this.name, this.description, {this.isRequired = false, this.isBatched = false});
 
   ModlogScope build(ModlogGroup parent) {
-    return .new(name: name, fullName: [parent.name, name].join("."), description: description, required: isRequired);
+    return .new(name: name, fullName: [parent.name, name].join("."), description: description, required: isRequired, batched: isBatched);
   }
 }
 
@@ -69,6 +74,12 @@ final class ModlogStore {
     if (group.scopes.length > maxChildren) throw ModlogRegistrationError("Group '${group.name}' has more than $maxChildren children (${group.scopes.length}). If you need more than $maxChildren children, consider splitting your group up into multiple groups.");
 
     groups.add(group);
+  }
+
+  ModlogScope? lookup(String id) {
+    final parts = id.split(".");
+    final group = groups.firstWhereOrNull((x) => x.name == parts.first);
+    return group?.scopes.firstWhereOrNull((x) => x.fullName == id);
   }
 
   List<ModlogScope> get all {
@@ -117,6 +128,8 @@ final class Modlog {
         return "No triggers enabled.";
       }
     }
+
+    // TODO: Implement queueing
 
     final message = MessageBuilder(
       embeds: [report.toEmbed()],

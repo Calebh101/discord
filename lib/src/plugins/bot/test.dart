@@ -11,6 +11,24 @@ final class TestCommands extends SubcommandGroupCommand {
     return buildCommand(commandOptions(bot));
   }
 
+  @Subcommand("pagination", "Start a pagination session.")
+  void pagination(DiscordContext context) async {
+    await context.respondWithPagination(.new(
+      title: "Sigh...",
+      pages: [
+        .new(fields: [
+          .new(name: "A field", value: "Hi", isInline: true),
+        ]),
+        .new(fields: [
+          .new(name: "A field 2", value: "Hello", isInline: false),
+        ]),
+        .new(fields: [
+          .new(name: "Another field", value: "Hi again", isInline: false),
+        ]),
+      ],
+    ));
+  }
+
   @Subcommand("permsall", ".all", permissionsRequired: .all)
   void permsAll(DiscordContext context) async {
     await context.respond(.new(content: "Success!"));

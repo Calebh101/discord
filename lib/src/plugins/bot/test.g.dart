@@ -10,6 +10,23 @@ extension on TestCommands {
   List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
+        name: "pagination",
+        function: pagination,
+        builder: .subCommand(
+          name: "pagination",
+          description: "Start a pagination session.",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: false,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "permsall",
         function: permsAll,
         builder: .subCommand(

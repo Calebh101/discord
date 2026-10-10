@@ -58,6 +58,18 @@ final class Kyle extends DiscordBot {
           } catch (_) {}
         }
       });
+
+      client.updatePresence(.new(
+        since: .now(),
+        status: .online,
+        isAfk: false,
+        activities: [
+          .new(name: [
+            "Holding down the server",
+            if (dev) "(dev)",
+          ].join(" "), type: .game),
+        ],
+      ));
     });
   }
 }

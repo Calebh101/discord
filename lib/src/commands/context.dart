@@ -51,7 +51,7 @@ final class DiscordContext {
 
   Future<void> respond(MessageBuilder builder) async {
     try {
-      myResponse = await interaction.respond(builder);
+      myResponse = await interaction.respond(builder, withResponse: true);
       myResponseMessage = myResponse?.resource?.message;
     } catch (e) {
       Logger.warn("Context", "Error responding to user $userId and interaction $interactionId: $e");
@@ -93,5 +93,15 @@ final class DiscordContext {
       Logger.warn("Context", "Unable to delete followup $id for user $userId and interaction $interactionId: $e");
       throw ResponseException("Unable to delete followup.", userId: userId, interactionId: interactionId);
     }
+  }
+
+  Future<void> respondWithPagination(PaginatedEmbedBuilder builder) async {
+    await startPagination(client: client, bot: bot, builder: builder, userId: userId, onCreate: (message) async {
+      await respond(message);
+      if (myResponseMessage == null) throw ResponseException("Response message was null. (${message.runtimeType}, ${myResponse.runtimeType}, ${myResponseMessage.runtimeType})", userId: userId, interactionId: interactionId);
+      return myResponseMessage!;
+    }, onEdit: (message) async {
+      await updateOriginalResponse(message);
+    });
   }
 }

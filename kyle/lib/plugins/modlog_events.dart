@@ -7,9 +7,24 @@ final class ModlogEventsPlugin extends DiscordPlugin {
   @override
   List<ModlogGroup> modlogGroups(DiscordBot bot, ModlogStore modlog) {
     return [
-      .new("message", "Message", [
+      .new("message", "Messages", [
         .new("edit", "When a message was edited."),
         .new("delete", "When a message was deleted."),
+        .new("bulkdelete", "When messages are bulk-deleted."),
+        .new("attachment", "When messages are sent with attachments."),
+      ]),
+      .new("member", "Members", [
+        .new("timeout", "When a member is timed out (or timed in)."),
+        .new("add", "When a user joins the guild."),
+        .new("remove", "When a user leaves the guild."),
+        .new("ban", "When a user is banned."),
+        .new("unban", "When a user is unbanned."),
+      ]),
+      .new("thread", "Threads", [
+        .new("members", "When member/members are updated in a thread."),
+      ]),
+      .new("auditlog", "Audit Logs", [
+        .new("create", "When a new audit log entry is added.", isBatched: true),
       ]),
     ];
   }

@@ -4,6 +4,7 @@ import 'package:discord/discord.dart';
 import 'package:discord/src/plugins/bot/admin.dart';
 import 'package:discord/src/plugins/bot/owner.dart';
 import 'package:discord/src/plugins/bot/test.dart';
+import 'package:discord/src/util/pagination.dart';
 import 'package:system_info2/system_info2.dart';
 
 part 'bot.g.dart';
@@ -59,6 +60,7 @@ final class BotPlugin extends DiscordPlugin {
   @override
   void onReady(DiscordBot bot) {
     bot.clients.run((client) {
+      initializePagination(bot, client);
       final Set<Snowflake> knownGuilds = {};
 
       client.onReady.listen((ReadyEvent event) {
