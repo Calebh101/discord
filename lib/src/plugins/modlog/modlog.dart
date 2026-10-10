@@ -91,12 +91,16 @@ final class ModlogPlugin extends DiscordPlugin {
             ]
           ));
 
-          await interaction.respond(.new(
-            content: "Set modlog scopes!\n**$old** enabled -> **${current.length}** enabled\n-# Not including required scopes.\n\nAll scopes:\n-# **Bold** = enabled.\n${group.scopes.map((scope) {
-              final enabled = current.contains(scope.fullName);
-              return enabled ? "**`${scope.fullName}`**" : scope.fullName.toDiscordCodeString();
-            }).join(", ")}",
-          ));
+          try {
+            await interaction.respond(.new(
+              content: "Set modlog scopes!\n**$old** enabled -> **${current.length}** enabled\n-# Not including required scopes.\n\nAll scopes:\n-# **Bold** = enabled.\n${group.scopes.map((scope) {
+                final enabled = current.contains(scope.fullName);
+                return enabled ? "**`${scope.fullName}`**" : scope.fullName.toDiscordCodeString();
+              }).join(", ")}",
+            ));
+          } catch (e) {
+            Logger.warn("Modlog", "Unable to respond to user ${user.id} and interaction ${interaction.id}: $e");
+          }
         }
       });
     });

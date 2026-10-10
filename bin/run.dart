@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:discord/discord.dart';
 
 const int maxCrashes = 20;
-const Duration crashResetTimer = Duration(minutes: 30);
+const Duration crashResetTimer = .new(minutes: 10);
 
 int crashes = 0;
 
