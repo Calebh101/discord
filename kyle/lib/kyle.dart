@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:discord/discord.dart';
 import 'package:discord/plugins.dart';
+import 'package:kyle/plugins/jarvis/jarvis.dart';
 import 'package:kyle/plugins/modlog_events.dart';
 
 final class Kyle extends DiscordBot {
@@ -15,16 +16,15 @@ final class Kyle extends DiscordBot {
     CorePlugin(),
     ModlogPlugin(),
     ModlogEventsPlugin(),
+    JarvisPlugin(),
   ];
 
   @override
-  FutureOr<void> onTimeToLoadClients() async {
-    await clients.createClients((token) {
-      return Nyxx.connectGateway(
-        token,
-        GatewayIntents.all,
-      );
-    });
+  Future<NyxxGateway> onCreateClient(String token) async {
+    return await Nyxx.connectGateway(
+      token,
+      GatewayIntents.all,
+    );
   }
 
   static String formatLatency(Duration latency) {
@@ -41,7 +41,11 @@ final class Kyle extends DiscordBot {
         if (author is! User) return;
         if (author.id == client.user.id) return;
 
-        if (message.content.contains(client.user.toMention())) {
+        if (message.content.trim() == client.user.toMention()) {
+          try {
+            await message.react(.new(name: "👍", id: null));
+          } catch (_) {}
+        } else if (message.content.contains(client.user.toMention())) {
           try {
             final latency = client.httpHandler.latency;
             final realLatency = client.httpHandler.realLatency;

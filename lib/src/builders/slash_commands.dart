@@ -367,7 +367,7 @@ final class SingleSlashCommandGenerator extends GeneratorForSuperclass<TopLevelS
 
     return """
 extension on ${element.name} {
-  List<OptionData>? get commandOptions => ${options != null ? """
+  List<OptionData>? commandOptions(DiscordBot bot) => ${options != null ? """
     [
       ${options?.map((x) {
         return "() {${x.build()}}()";

@@ -23,8 +23,9 @@ abstract class DiscordBot {
 
   List<DiscordPlugin> get plugins => [];
 
+  Future<NyxxGateway> onCreateClient(String token);
+
   FutureOr<void> onAboutToLoad() {}
-  FutureOr<void> onTimeToLoadClients() {}
   FutureOr<void> onReady() {}
 
   @nonVirtual
@@ -58,7 +59,7 @@ abstract class DiscordBot {
     Logger.print("Commands", "Generated ${results.length} top-level commands!");
 
     await clients.loadWithTokens(tokenFilePath);
-    await onTimeToLoadClients();
+    await clients.createClients(onCreateClient);
 
     final builders = commands.commands.mapToList((command) {
       return command.builder;

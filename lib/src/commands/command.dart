@@ -1,10 +1,20 @@
 import 'package:discord/discord.dart';
-import 'package:localpkg/localpkg.dart';
 import 'package:meta/meta.dart';
 
 sealed class CommandEntity<T> {
   CommandInfo get info;
 
+  /// For `TopLevelParentCommand` or `SubcommandGroupCommand`:
+  ///
+  /// ```dart
+  /// return buildCommand(commandOptions(bot));
+  /// ```
+  ///
+  /// For `TopLevelSingleCommand`:
+  ///
+  /// ```dart
+  /// return buildCommand(commandOptions(bot), entryPoint);
+  /// ```
   T build(DiscordBot bot);
 }
 

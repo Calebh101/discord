@@ -23,6 +23,7 @@ final class ModlogEventsPlugin extends DiscordPlugin {
         .new("ban", "When a user is banned."),
         .new("unban", "When a user is unbanned."),
         .new("timeout", "When a member is timed out (or timed in)."),
+        .new("nickname", "When a member changes their server nickname."),
       ]),
       .new("thread", "Threads", [
         .new("members", "When member/members are updated in a thread."),
@@ -59,61 +60,7 @@ final class ModlogEventsPlugin extends DiscordPlugin {
           severity: .verbose,
         ));
 
-        for (int i = 0; i < event.message.attachments.length; i++) {
-          const int max = 10 * 1024 * 1024; // 10 MB
-          const int maxFilesPerMessage = 10;
-
-          final attachment = event.message.attachments[i];
-
-          try {
-            Logger.print("Moderation", "Uploading attachment ${attachment.fileName}... (session: $session)");
-            final List<AttachmentBuilder> attachments = [];
-
-            final response = await http.get(attachment.url);
-            if (response.statusCode >= 400) throw Exception("Invalid response ${response.statusCode}: ${response.body}");
-            final data = response.bodyBytes;
-
-            if (data.length > max) {
-              for (int start = 0, j = 0; start < data.length; start += max, j++) {
-                final end = min(start + max, data.length);
-                attachments.add(.new(data: data.sublist(start, end), fileName: "$i-$session-$j.${attachment.fileName.split(".").lastOrNull ?? ""}"));
-              }
-            } else {
-              attachments.add(.new(data: data, fileName: "$i-$session.${attachment.fileName.split(".").lastOrNull ?? "txt"}"));
-            }
-
-            for (int c = 0; c < attachments.length; c += maxFilesPerMessage) {
-              final end = attachments.length <= c + maxFilesPerMessage ? attachments.length : c + maxFilesPerMessage;
-
-              final result = await modlog.sendMessage(.new(
-                content: [
-                  "- Attachment: ${i + 1}/${event.message.attachments.length} ($i)",
-                  "- URL: <${attachment.url}>",
-                  "- File name: `${attachment.fileName}`",
-                  "- Size: ${data.length} bytes",
-                  "- Session: `$session`",
-                  "- Pieces: ${attachments.length}",
-                  "- Chunk: ${c + 1} - $end / ${attachments.length}",
-                ].join("\n"),
-                attachments: attachments.sublist(c, end),
-              ));
-
-              Logger.print("Moderation", "Attachment chunk $c/${attachments.length - 1} (+$maxFilesPerMessage) ${attachment.fileName} result (session $session, ${data.length} bytes): ${result.runtimeType}");
-            }
-          } catch (e) {
-            Logger.warn("Moderation", "Error with attachment ${attachment.url} (session $session, ${attachment.fileName}): $e");
-
-            await modlog.sendMessage(.new(
-              content: [
-                "**Attachment send failed!**",
-                "- URL: ${attachment.url}",
-                "- Attachment: ${i + 1}/${event.message.attachments.length} ($i)",
-                "- File name: `${attachment.fileName}`",
-                "- Session: `$session`",
-              ].join("\n"),
-            ));
-          }
-        }
+        await uploadAttachments(modlog: modlog, session: session, attachments: event.message.attachments);
       });
 
       client.onMessageUpdate.listen((event) async {
@@ -146,8 +93,9 @@ final class ModlogEventsPlugin extends DiscordPlugin {
 
         if (event.message.attachments.isEmpty || !modlog.anyEnabled(["message.attachments"])) return;
         final session = Random.secure().nextInt(10000);
+
         final changed = event.message.attachments.where((attachment) => !(old?.attachments.any((x) => x.hash == attachment.hash) ?? false)).length; // How many attachments have been added or edited, by comparing existing hashes
-        if (changed < 0) return;
+        if (changed <= 0) return;
 
         modlog.create(.new(
           "message.attachments",
@@ -163,62 +111,7 @@ final class ModlogEventsPlugin extends DiscordPlugin {
           severity: .verbose,
         ));
 
-        for (int i = 0; i < event.message.attachments.length; i++) {
-          const int max = 10 * 1024 * 1024; // 10 MB
-          const int maxFilesPerMessage = 10;
-
-          final attachment = event.message.attachments[i];
-          if (old?.attachments.any((x) => x.hash == attachment.hash) ?? false) continue;
-
-          try {
-            Logger.print("Moderation", "Uploading attachment ${attachment.fileName}... (session: $session)");
-            final List<AttachmentBuilder> attachments = [];
-
-            final response = await http.get(attachment.url);
-            if (response.statusCode >= 400) throw Exception("Invalid response ${response.statusCode}: ${response.body}");
-            final data = response.bodyBytes;
-
-            if (data.length > max) {
-              for (int start = 0, j = 0; start < data.length; start += max, j++) {
-                final end = min(start + max, data.length);
-                attachments.add(.new(data: data.sublist(start, end), fileName: "$i-$session-$j.${attachment.fileName.split(".").lastOrNull ?? ""}"));
-              }
-            } else {
-              attachments.add(.new(data: data, fileName: "$i-$session.${attachment.fileName.split(".").lastOrNull ?? "txt"}"));
-            }
-
-            for (int c = 0; c < attachments.length; c += maxFilesPerMessage) {
-              final end = attachments.length <= c + maxFilesPerMessage ? attachments.length : c + maxFilesPerMessage;
-
-              final result = await modlog.sendMessage(.new(
-                content: [
-                  "- Attachment: ${i + 1}/${event.message.attachments.length} ($i)",
-                  "- URL: <${attachment.url}>",
-                  "- File name: `${attachment.fileName}`",
-                  "- Size: ${data.length} bytes",
-                  "- Session: `$session`",
-                  "- Pieces: ${attachments.length}",
-                  "- Chunk: ${c + 1} - $end / ${attachments.length}",
-                ].join("\n"),
-                attachments: attachments.sublist(c, end),
-              ));
-
-              Logger.print("Moderation", "Attachment chunk $c/${attachments.length - 1} (+$maxFilesPerMessage) ${attachment.fileName} result (session $session, ${data.length} bytes): ${result.runtimeType}");
-            }
-          } catch (e) {
-            Logger.warn("Moderation", "Error with attachment ${attachment.url} (session $session, ${attachment.fileName}): $e");
-
-            await modlog.sendMessage(.new(
-              content: [
-                "**Attachment send failed!**",
-                "- URL: ${attachment.url}",
-                "- Attachment: ${i + 1}/${event.message.attachments.length} ($i)",
-                "- File name: `${attachment.fileName}`",
-                "- Session: `$session`",
-              ].join("\n"),
-            ));
-          }
-        }
+        await uploadAttachments(modlog: modlog, session: session, attachments: event.message.attachments, old: old?.attachments);
       });
 
       client.onMessageDelete.listen((event) async {
@@ -403,21 +296,41 @@ ${old.mapTo((id, message) {
         final modlog = Modlog.fromBot(bot, client: client, guildId: event.guildId);
         final member = event.member;
 
-        final timeout = member.communicationDisabledUntil;
-        final old = event.oldMember?.communicationDisabledUntil;
+        await () async {
+          final timeout = member.communicationDisabledUntil;
+          final old = event.oldMember?.communicationDisabledUntil;
 
-        if (old == timeout) return;
+          if (old == timeout) return;
 
-        await modlog.create(.new(
-          "member.timeout",
-          title: "Member Timeout Updated",
-          fields: {
-            "Target": member.toMention(),
-            "Old": old.toDiscordCodeBlock(),
-            "New": timeout.toDiscordCodeBlock(),
-          },
-          severity: .severe,
-        ));
+          await modlog.create(.new(
+            "member.timeout",
+            title: "Member Timeout Updated",
+            fields: {
+              "Target": member.toMention(),
+              "Old": old.toDiscordCodeBlock(),
+              "New": timeout.toDiscordCodeBlock(),
+            },
+            severity: .severe,
+          ));
+        }();
+
+        await () async {
+          final nickname = member.nick;
+          final old = event.oldMember?.nick;
+
+          if (old == nickname) return;
+
+          await modlog.create(.new(
+            "member.nickname",
+            title: "Member Nickname Updated",
+            fields: {
+              "Target": member.toMention(),
+              "Old": old.toDiscordCodeBlock(),
+              "New": nickname.toDiscordCodeBlock(),
+            },
+            severity: .log,
+          ));
+        }();
       });
 
       client.onGuildAuditLogCreate.listen((event) async {
@@ -435,7 +348,7 @@ ${old.mapTo((id, message) {
           "auditlog.create",
           title: "Audit Log Entry",
           fields: {
-            "Type": entry.actionType.value.toDiscordCodeString(),
+            "Type": "${entry.actionType.value} ${entry.actionType.name}".toDiscordCodeBlock(),
             "ID": entry.id.toDiscordCodeBlock(),
             "Author": entry.user?.toMention() ?? "Not provided",
             if (target != null) "Target": "${target.toDiscordCodeBlock()}\n${[
@@ -460,12 +373,71 @@ ${old.mapTo((id, message) {
 
             if (changes != null && changes.length <= 1024) "Changes": changes,
           },
-          severity: .log,
+          severity: .verbose,
           attachments: [
             if (changes != null && changes.length > 1024) .new(data: utf8.encode(changes), fileName: "changes.txt"),
           ],
         ));
       });
     });
+  }
+
+  Future<void> uploadAttachments({required Modlog modlog, required int session, required List<Attachment> attachments, List<Attachment>? old}) async {
+    for (int i = 0; i < attachments.length; i++) {
+      const int max = 10 * 1024 * 1024; // 10 MB
+      const int maxFilesPerMessage = 10;
+
+      final attachment = attachments[i];
+      if (old?.any((x) => x.hash == attachment.hash) ?? false) continue;
+
+      try {
+        Logger.print("Moderation", "Uploading attachment ${attachment.fileName}... (session: $session)");
+        final List<AttachmentBuilder> files = [];
+
+        final response = await http.get(attachment.url);
+        if (response.statusCode >= 400) throw Exception("Invalid response ${response.statusCode}: ${response.body}");
+        final data = response.bodyBytes;
+
+        if (data.length > max) {
+          for (int start = 0, j = 0; start < data.length; start += max, j++) {
+            final end = min(start + max, data.length);
+            files.add(.new(data: data.sublist(start, end), fileName: "$i-$session-$j.${attachment.fileName.split(".").lastOrNull ?? ""}"));
+          }
+        } else {
+          files.add(.new(data: data, fileName: "$i-$session.${attachment.fileName.split(".").lastOrNull ?? "txt"}"));
+        }
+
+        for (int c = 0; c < files.length; c += maxFilesPerMessage) {
+          final end = files.length <= c + maxFilesPerMessage ? files.length : c + maxFilesPerMessage;
+
+          final result = await modlog.sendMessage(.new(
+            content: [
+              "- Attachment: ${i + 1}/${files.length} ($i)",
+              "- URL: <${attachment.url}>",
+              "- File name: `${attachment.fileName}`",
+              "- Size: ${data.length} bytes",
+              "- Session: `$session`",
+              "- Pieces: ${files.length}",
+              "- Chunk: ${c + 1} - $end / ${files.length}",
+            ].join("\n"),
+            attachments: files.sublist(c, end),
+          ));
+
+          Logger.print("Moderation", "Attachment chunk $c/${files.length - 1} (+$maxFilesPerMessage) ${attachment.fileName} result (session $session, ${data.length} bytes): ${result.runtimeType}");
+        }
+      } catch (e) {
+        Logger.warn("Moderation", "Error with attachment ${attachment.url} (session $session, ${attachment.fileName}): $e");
+
+        await modlog.sendMessage(.new(
+          content: [
+            "**Attachment send failed!**",
+            "- URL: ${attachment.url}",
+            "- Attachment: ${i + 1}/${attachments.length} ($i)",
+            "- File name: `${attachment.fileName}`",
+            "- Session: `$session`",
+          ].join("\n"),
+        ));
+      }
+    }
   }
 }

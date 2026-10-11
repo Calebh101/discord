@@ -4,6 +4,7 @@ library;
 export 'src/constants/constants.dart';
 export 'src/constants/annotations.dart';
 export 'src/constants/colors.dart';
+export 'src/constants/generated_constants.dart';
 
 export 'src/core/bot.dart';
 export 'src/core/logger.dart';

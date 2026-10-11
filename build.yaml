@@ -3,6 +3,8 @@ targets:
     builders:
       discord:slash_commands:
         enabled: true
+      discord:constants:
+        enabled: true
 
 builders:
   slash_commands:
@@ -16,3 +18,13 @@ builders:
     build_to: cache
     applies_builders:
       - source_gen:combining_builder
+
+  constants:
+    import: "package:discord/src/builders/constants_builders.dart"
+    builder_factories:
+      - constantsBuilder
+    build_extensions:
+      $lib$:
+        - src/constants/generated_constants.dart
+    auto_apply: none
+    build_to: source
