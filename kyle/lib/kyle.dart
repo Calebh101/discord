@@ -12,7 +12,7 @@ final class Kyle extends DiscordBot {
 
   @override
   List<DiscordPlugin> get plugins => [
-    BotPlugin(),
+    CorePlugin(),
     ModlogPlugin(),
     ModlogEventsPlugin(),
   ];

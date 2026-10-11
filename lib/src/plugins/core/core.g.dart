@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'bot.dart';
+part of 'core.dart';
 
 // **************************************************************************
 // ParentSlashCommandGenerator

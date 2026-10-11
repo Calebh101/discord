@@ -1,17 +1,16 @@
 import 'dart:io';
 
 import 'package:discord/discord.dart';
-import 'package:discord/src/plugins/bot/admin.dart';
-import 'package:discord/src/plugins/bot/owner.dart';
-import 'package:discord/src/plugins/bot/test.dart';
-import 'package:discord/src/util/pagination.dart';
+import 'package:discord/src/plugins/core/admin.dart';
+import 'package:discord/src/plugins/core/owner.dart';
+import 'package:discord/src/plugins/core/test.dart';
 import 'package:system_info2/system_info2.dart';
 
-part 'bot.g.dart';
+part 'core.g.dart';
 
-final class BotPlugin extends DiscordPlugin {
+final class CorePlugin extends DiscordPlugin {
   @override
-  DiscordPluginInfo get info => .new("bot");
+  DiscordPluginInfo get info => .new("core");
 
   @override
   List<TopLevelCommand> commands(DiscordBot bot) {
