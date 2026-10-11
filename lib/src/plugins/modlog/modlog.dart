@@ -235,6 +235,8 @@ final class ModlogCommands extends TopLevelParentCommand {
     final settings = ModlogSettings(context.store, context.guildId!);
     final scopes = settings.scopes.get();
 
+    await context.acknowledge();
+
     await context.respond(.new(
       content: "**${scopes.length}** scopes enabled.",
       attachments: [
@@ -269,6 +271,7 @@ final class ModlogCommands extends TopLevelParentCommand {
   @Subcommand("allscopes", "Send a file with all possible modlog scopes.")
   void allScopes(DiscordContext context) async {
     final scopes = context.bot.modlog.all;
+    await context.acknowledge();
 
     await context.respond(.new(
       content: "**${scopes.length}** possible scopes.",

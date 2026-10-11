@@ -12,8 +12,8 @@ final class ModlogEventsPlugin extends DiscordPlugin {
       .new("message", "Messages", [
         .new("edit", "When a message was edited."),
         .new("delete", "When a message was deleted."),
-        .new("bulkdelete", "When messages are bulk-deleted."),
-        .new("attachment", "When messages are sent with attachments."),
+        .new("bulkdelete", "When messages are bulk-deleted."), // TODO
+        .new("attachments", "When messages are sent with attachments."), // TODO
       ]),
       .new("member", "Members", [
         .new("add", "When a user joins the guild."),
@@ -105,6 +105,146 @@ final class ModlogEventsPlugin extends DiscordPlugin {
           attachments: [
             if (added != null) .new(data: utf8.encode(added.map((x) => x.userId).join(", ")), fileName: "added.txt"),
             if (removed != null) .new(data: utf8.encode(removed.join(", ")), fileName: "removed.txt"),
+          ],
+        ));
+      });
+
+      client.onGuildMemberAdd.listen((event) async {
+        final modlog = Modlog.fromBot(bot, client: client, guildId: event.guildId);
+        final member = event.member;
+
+        await modlog.create(.new(
+          "member.add",
+          title: "Member Added (Joined)",
+          fields: {
+            "ID": member.id.toDiscordCodeBlock(),
+            "Username": member.user?.username.toDiscordCodeString() ?? "None provided",
+            "Nickname": member.user?.globalName?.toDiscordCodeString() ?? "None provided",
+            "Mention": member.toMention(),
+          },
+          severity: .good,
+        ));
+      });
+
+      client.onGuildMemberRemove.listen((event) async {
+        final modlog = Modlog.fromBot(bot, client: client, guildId: event.guildId);
+        final user = event.user;
+        final member = event.removedMember;
+
+        await modlog.create(.new(
+          "member.remove",
+          title: "Member Removed (Left)",
+          fields: {
+            "ID": user.id.toDiscordCodeBlock(),
+            "Username": user.username.toDiscordCodeString(),
+            "Nickname": user.globalName?.toDiscordCodeString() ?? "None provided",
+            "Server nickname": member?.nick.toDiscordCodeBlock() ?? "None provided",
+            "Mention": user.toMention(),
+          },
+          severity: .log,
+        ));
+      });
+
+      client.onGuildBanAdd.listen((event) async {
+        final modlog = Modlog.fromBot(bot, client: client, guildId: event.guildId);
+        final user = event.user;
+        final member = client.guilds[event.guildId].members.cache[user.id]; // Try to get from cache directly
+
+        await modlog.create(.new(
+          "member.ban",
+          title: "Member Banned",
+          fields: {
+            "ID": user.id.toDiscordCodeBlock(),
+            "Username": user.username.toDiscordCodeString(),
+            "Nickname": user.globalName?.toDiscordCodeString() ?? "None provided",
+            "Server nickname": member?.nick.toDiscordCodeBlock() ?? "None provided",
+            "Mention": user.toMention(),
+          },
+          severity: .severe,
+        ));
+      });
+
+      client.onGuildBanRemove.listen((event) async {
+        final modlog = Modlog.fromBot(bot, client: client, guildId: event.guildId);
+        final user = event.user;
+
+        await modlog.create(.new(
+          "member.unban",
+          title: "Member Unbanned",
+          fields: {
+            "ID": user.id.toDiscordCodeBlock(),
+            "Username": user.username.toDiscordCodeString(),
+            "Nickname": user.globalName?.toDiscordCodeString() ?? "None provided",
+            "Mention": user.toMention(),
+          },
+          severity: .severe,
+        ));
+      });
+
+      client.onGuildMemberUpdate.listen((event) async {
+        final modlog = Modlog.fromBot(bot, client: client, guildId: event.guildId);
+        final member = event.member;
+
+        final timeout = member.communicationDisabledUntil;
+        final old = event.oldMember?.communicationDisabledUntil;
+
+        if (old == timeout) return;
+
+        await modlog.create(.new(
+          "member.timeout",
+          title: "Member Timeout Updated",
+          fields: {
+            "Target": member.toMention(),
+            "Old": old.toDiscordCodeBlock(),
+            "New": timeout.toDiscordCodeBlock(),
+          },
+          severity: .severe,
+        ));
+      });
+
+      client.onGuildAuditLogCreate.listen((event) async {
+        final modlog = Modlog.fromBot(bot, client: client, guildId: event.guildId);
+        final entry = event.entry;
+
+        final options = entry.options;
+        final target = entry.targetId;
+
+        final changes = entry.changes?.map((change) {
+          return "- `${change.key}`: `${change.oldValue}` -> `${change.newValue}`";
+        }).join("\n");
+
+        await modlog.create(.new(
+          "auditlog.create",
+          title: "Audit Log Entry",
+          fields: {
+            "Type": entry.actionType.value.toDiscordCodeString(),
+            "ID": entry.id.toDiscordCodeBlock(),
+            "Author": entry.user?.toMention() ?? "Not provided",
+            if (target != null) "Target": "${target.toDiscordCodeBlock()}\n${[
+              target.toUserMention(),
+              target.toRoleMention(),
+              target.toChannelMention(),
+            ].join(", ")}\n-# Trying one until it works",
+            "Reason": entry.reason?.maxLength(1018, ellipsis: true).toDiscordCodeBlock() ?? "Not provided",
+
+            if (options != null) ...{
+              "Members removed": "${options.membersRemoved} after ${options.deleteMemberDays} days",
+              "AutoMod trigger": "Rule ${options.autoModerationRuleName.toDiscordCodeString()} after trigger ${options.autoModerationTriggerType.toDiscordCodeString()}",
+              "Application ID": ?options.applicationId?.toDiscordCodeBlock(),
+              "Message ID": ?options.messageId?.toDiscordCodeBlock(),
+              "Channel ID": ?options.channelId?.toDiscordCodeBlock(),
+              if (options.channelId != null) "Link": discordLink(event.guildId, options.channelId!).toString(),
+              "Targets": ?options.count,
+              "Integration Type": ?options.integrationType?.toDiscordCodeBlock(),
+              "Overwrite Type": ?options.overwriteType?.value.toDiscordCodeBlock(),
+              "Role Name": ?options.roleName?.toDiscordCodeBlock(),
+            },
+
+            if (changes != null && changes.length <= 1024) "Changes": changes,
+          },
+          severity: .log,
+          attachments: [
+            if (changes != null && changes.length > 1024) .new(data: utf8.encode(changes), fileName: "changes.txt"),
           ],
         ));
       });
