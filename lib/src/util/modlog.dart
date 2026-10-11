@@ -120,6 +120,14 @@ final class Modlog {
     return settings.channel.get();
   }
 
+  bool anyEnabled(List<String> triggers) {
+    if (settings.scopes.get().any((x) => triggers.contains(x))) {
+      return true;
+    }
+
+    return false;
+  }
+
   Future<String?> create(ModlogEvent report) async {
     if (channelId == null) return "No channel set.";
 
