@@ -25,6 +25,9 @@ final class ModlogEventsPlugin extends DiscordPlugin {
         .new("timeout", "When a member is timed out (or timed in)."),
         .new("nickname", "When a member changes their server nickname."),
       ]),
+      .new("user", "Users", [
+        .new("update", "When a user changes their global nickname, username, or avatar."), // TODO
+      ]),
       .new("thread", "Threads", [
         .new("members", "When member/members are updated in a thread."),
       ]),
@@ -332,6 +335,30 @@ ${old.mapTo((id, message) {
           ));
         }();
       });
+
+      /*
+      // onUserUpdate seems to be only for the current user.
+
+      client.onUserUpdate.listen((event) async {
+        final user = event.user;
+        final old = event.oldUser;
+
+        final changes = {
+          "Username": [old?.username, user.username],
+          "Display name": [old?.globalName, user.globalName],
+          "Avatar hash": [old?.avatarHash, user.avatarHash],
+        }.map((key, values) {
+          final changed = values[0] != values[1];
+          if (changed == false) return .new(key, null);
+
+          return .new(key, values.map((x) {
+            return x.toDiscordCodeString();
+          }).join(" => "));
+        }).entries.whereType<MapEntry<String, String>>();
+
+        if (changes.isEmpty) return;
+      });
+      */
 
       client.onGuildAuditLogCreate.listen((event) async {
         final modlog = Modlog.fromBot(bot, client: client, guildId: event.guildId);
