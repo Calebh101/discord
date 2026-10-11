@@ -24,9 +24,7 @@ final class ModlogEventsPlugin extends DiscordPlugin {
         .new("unban", "When a user is unbanned."),
         .new("timeout", "When a member is timed out (or timed in)."),
         .new("nickname", "When a member changes their server nickname."),
-      ]),
-      .new("user", "Users", [
-        .new("update", "When a user changes their global nickname, username, or avatar."), // TODO
+        .new("update", "When a member changes their global nickname, username, or avatar."),
       ]),
       .new("thread", "Threads", [
         .new("members", "When member/members are updated in a thread."),
@@ -330,6 +328,36 @@ ${old.mapTo((id, message) {
               "Target": member.toMention(),
               "Old": old.toDiscordCodeBlock(),
               "New": nickname.toDiscordCodeBlock(),
+            },
+            severity: .log,
+          ));
+        }();
+
+        await () async {
+          final user = member.user;
+          final old = event.oldMember?.user;
+
+          if (user == null) return;
+
+          final changes = {
+            for (final (_, key, value) in {
+              "Username": [old?.username, user.username],
+              "Display name": [old?.globalName, user.globalName],
+              "Avatar hash": [old?.avatarHash, user.avatarHash],
+            }.entriesAsRecords)
+            if (value[0] != value[1])
+            key: value.map((x) => x.toDiscordCodeString()).join(" => "),
+          };
+
+          if (changes.isEmpty) return;
+
+          await modlog.create(.new(
+            "member.update",
+            title: "Member Updated",
+            fields: {
+              "Target": member.toMention(),
+              "Changes": changes.length.toDiscordCodeString(),
+              ...changes,
             },
             severity: .log,
           ));
