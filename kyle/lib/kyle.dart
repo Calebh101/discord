@@ -17,6 +17,7 @@ final class Kyle extends DiscordBot {
     ModlogPlugin(),
     ModlogEventsPlugin(),
     JarvisPlugin(),
+    StatusPlugin(),
   ];
 
   @override
