@@ -8,7 +8,53 @@ final Map<String, SlashCommandsPlugin> plugins = {
   "SnowflakeOption": SnowflakePlugin(),
   "EnumOption": EnumPlugin(),
   "MessageOption": RecentMessagePlugin(),
+  "MemberOption": MemberPlugin(),
 };
+
+final class MemberPlugin extends SlashCommandsPlugin {
+  @override
+  CommandOptionBase build({required int i, required FormalParameterElement param, required DartObject annotation}) {
+    final name = field(annotation, "name")?.toStringValue();
+    final description = field(annotation, "description")?.toStringValue();
+
+    final nameL = localizations(annotation, "nameLocalizations");
+    final descL = localizations(annotation, "descriptionLocalizations");
+
+    return MemberCommandOptionInfo(name: name!, description: description!, nameLocalizations: nameL, descriptionLocalizations: descL, isRequired: isRequired(param));
+  }
+}
+
+final class MemberCommandOptionInfo extends CommandOptionBase {
+  final String name;
+  final String description;
+  final bool isRequired;
+
+  final Map<String, String>? nameLocalizations;
+  final Map<String, String>? descriptionLocalizations;
+
+  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired});
+
+  @override
+  String build() {
+    return """
+return OptionData(name: "$name", builder: () {${buildBuilder()}}(), converter: (context, id) async {
+  try {
+    return await context.guild!.members.get(.parse(id));
+  } catch (e) {
+    Logger.warn("Member", "Invalid member from ID \$id (\${id.runtimeType}) and guild \${context.guildId}: \$e");
+    throw CommandParseError("We couldn't find that member.");
+  }
+});
+""".trim();
+  }
+
+  @override
+  String buildBuilder() {
+    return """
+return CommandOptionBuilder(type: .user, name: "$name", description: "$description", isRequired: $isRequired);
+""".trim();
+  }
+}
 
 final class SnowflakePlugin extends SlashCommandsPlugin {
   @override

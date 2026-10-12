@@ -120,6 +120,13 @@ final class UserOption extends Option<User> {
   }) : super(type: .user);
 }
 
+final class MemberOption extends Option<Member> {
+  const new(super.name, super.description, {
+    super.nameLocalizations,
+    super.descriptionLocalizations,
+  }) : super(type: .user);
+}
+
 final class RoleOption extends Option<Role> {
   const new(super.name, super.description, {
     super.nameLocalizations,

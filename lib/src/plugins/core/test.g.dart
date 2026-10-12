@@ -10,6 +10,57 @@ extension on TestCommands {
   List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
+        name: "member",
+        function: member,
+        builder: .subCommand(
+          name: "member",
+          description: "Get a member.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .user,
+                name: "member",
+                description: "A member.",
+                isRequired: true,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData(
+              name: "member",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .user,
+                  name: "member",
+                  description: "A member.",
+                  isRequired: true,
+                );
+              }(),
+              converter: (context, id) async {
+                try {
+                  return await context.guild!.members.get(.parse(id));
+                } catch (e) {
+                  Logger.warn(
+                    "Member",
+                    "Invalid member from ID $id (${id.runtimeType}) and guild ${context.guildId}: $e",
+                  );
+                  throw CommandParseError("We couldn't find that member.");
+                }
+              },
+            );
+          }(),
+        ],
+        requiredPerms: .parse(0),
+        needsGuild: false,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "pagination",
         function: pagination,
         builder: .subCommand(

@@ -11,6 +11,14 @@ final class TestCommands extends SubcommandGroupCommand {
     return buildCommand(commandOptions(bot));
   }
 
+  @Subcommand("member", "Get a member.")
+  void member(
+    DiscordContext context,
+    @MemberOption("member", "A member.") Member member,
+  ) async {
+    await context.respond(.new(content: "Member `${member.id}`"));
+  }
+
   @Subcommand("pagination", "Start a pagination session.")
   void pagination(DiscordContext context) async {
     await context.respondWithPagination(.new(
