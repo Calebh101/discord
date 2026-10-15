@@ -4,6 +4,12 @@ import 'package:discord/discord.dart';
 
 part 'tags.g.dart';
 
+enum TagType {
+  user,
+  guild,
+  ;
+}
+
 final class TagsPlugin extends DiscordPlugin {
   @override
   DiscordPluginInfo get info => .new("tags");
@@ -19,8 +25,8 @@ final class TagsPlugin extends DiscordPlugin {
   List<ModlogGroup> modlogGroups(DiscordBot bot, ModlogStore modlog) {
     return [
       .new("tag", "Tags", [
-        .new("create", "When a guild tag is created."),
-        .new("edit", "When a guild tag is edited."),
+        .new("set", "When a guild tag is set, whether created or edited."),
+        .new("rename", "When a guild tag is renamed."),
         .new("delete", "When a guild tag is deleted."),
       ]),
     ];
@@ -37,14 +43,6 @@ final class TagsPlugin extends DiscordPlugin {
 final class TagsCommand extends TopLevelParentCommand {
   @override
   TopLevelCommandInfo get info => .new(name: "tags", description: "Stuff about tags.");
-
-  @override
-  List<SubcommandGroupCommand> subcommandGroups(DiscordBot bot) {
-    return [
-      TagsSetCommand(),
-      TagsDeleteCommand(),
-    ];
-  }
 
   @override
   CommandData build(DiscordBot bot) {
@@ -67,7 +65,7 @@ final class TagsCommand extends TopLevelParentCommand {
     final tag = tags[name];
 
     if (tag == null) {
-      await context.respond(.new(
+      return await context.respond(.new(
         content: "This tag doesn't exist.\nRemember that names are case sensitive!",
       ), ephemeral: .ephemeral);
     }
@@ -77,68 +75,85 @@ final class TagsCommand extends TopLevelParentCommand {
       allowedMentions: .new(),
     ));
   }
-}
 
-final class TagsSetCommand extends SubcommandGroupCommand {
-  @override
-  CommandInfo get info => .new(name: "set", description: "Set a tag.");
-
-  @override
-  OptionData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
-  }
-
-  @Subcommand("user", "Set a user tag.")
-  void user(
+  @Subcommand("set", "Set a tag.")
+  void set(
     DiscordContext context,
-    @StringOption("name", "Name of your tag.", minLength: 1, maxLength: 50) String name,
+    @EnumOption<TagType>("type", "Type of the tag.") TagType type,
+    @StringOption("name", "Name of your tag.", minLength: 1, maxLength: 50, autocomplete: Autocomplete<TagsAutocomplete>()) String name,
     @StringOption("value", "Value of your tag.", minLength: 1, maxLength: 1500) String value,
   ) async {
-    final settings = TagsUserSettings(context.store, context.userId);
-    final current = settings.tags.get();
+    if (type == .guild) {
+      if (context.guild == null) {
+        return await context.respond(.new(
+          content: "This command needs to be ran in a guild.",
+        ), ephemeral: .ifNotDm);
+      }
+
+      if (!context.hasPerm("tags.manage")) {
+        return await context.respond(.new(
+          content: "You aren't allowed to manage guild tags!\nYou need the `tags.manage` permission.",
+        ), ephemeral: .ephemeral);
+      }
+    }
+
+    final setting = switch (type) {
+      .user => TagsUserSettings(context.store, context.userId).tags,
+      .guild => TagsGuildSettings(context.store, context.guildId!).tags,
+    };
+
+    final current = setting.get();
+    final modlog = Modlog.fromContext(context);
+
+    if (type == .guild) {
+      await modlog.create(.new(
+        "tag.set",
+        severity: .log,
+        title: "Guild Tag Created/Edited",
+        fields: {
+          "event": current.containsKey(name) ? "edited" : "created",
+          "author": context.user.toMention(),
+          "name": name.toDiscordCodeBlock(),
+          "value": value.maxLength(1018, ellipsis: true).toDiscordCodeBlock(),
+        },
+      ));
+    }
 
     current[name] = value;
-    settings.tags.set(current);
+    setting.set(current);
 
     await context.respond(.new(
-      content: "User tag set!",
+      content: "${type == .guild ? "Guild" : "User"} tag set!",
     ), ephemeral: .ifNotDm);
   }
 
-  @Subcommand("guild", "Set a guild tag.", needsGuild: true, otherPerms: ["tags.manage"])
-  void guild(
+  @Subcommand("delete", "Delete a tag.")
+  void delete(
     DiscordContext context,
-    @StringOption("name", "Name of your tag.", minLength: 1, maxLength: 50) String name,
-    @StringOption("value", "Value of your tag.", minLength: 1, maxLength: 1500) String value,
+    @EnumOption<TagType>("type", "Type of the tag.") TagType type,
+    @StringOption("name", "Name of your tag.", minLength: 1, maxLength: 50, autocomplete: Autocomplete<TagsAutocomplete>()) String name,
   ) async {
-    final settings = TagsGuildSettings(context.store, context.guildId!);
-    final current = settings.tags.get();
+    if (type == .guild) {
+      if (context.guild == null) {
+        return await context.respond(.new(
+          content: "This command needs to be ran in a guild.",
+        ), ephemeral: .ifNotDm);
+      }
 
-    current[name] = value;
-    settings.tags.set(current);
+      if (!context.hasPerm("tags.manage")) {
+        return await context.respond(.new(
+          content: "You aren't allowed to manage guild tags!\nYou need the `tags.manage` permission.",
+        ), ephemeral: .ephemeral);
+      }
+    }
 
-    await context.respond(.new(
-      content: "Guild tag set!",
-    ));
-  }
-}
+    final setting = switch (type) {
+      .user => TagsUserSettings(context.store, context.userId).tags,
+      .guild => TagsGuildSettings(context.store, context.guildId!).tags,
+    };
 
-final class TagsDeleteCommand extends SubcommandGroupCommand {
-  @override
-  CommandInfo get info => .new(name: "delete", description: "Delete a tag.");
-
-  @override
-  OptionData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
-  }
-
-  @Subcommand("user", "Delete a user tag.")
-  void user(
-    DiscordContext context,
-    @StringOption("name", "Name of your tag.", minLength: 1, maxLength: 50, autocomplete: Autocomplete<UserTagsAutocomplete>()) String name,
-  ) async {
-    final settings = TagsUserSettings(context.store, context.userId);
-    final current = settings.tags.get();
+    final current = setting.get();
+    final modlog = Modlog.fromContext(context);
 
     if (!current.containsKey(name)) {
       return await context.respond(.new(
@@ -146,34 +161,86 @@ final class TagsDeleteCommand extends SubcommandGroupCommand {
       ), ephemeral: .ephemeral);
     }
 
-    current.remove(name);
-    settings.tags.set(current);
-
-    await context.respond(.new(
-      content: "User tag deleted!",
-    ), ephemeral: .ifNotDm);
-  }
-
-  @Subcommand("guild", "Delete a guild tag.", needsGuild: true, otherPerms: ["tags.manage"])
-  void guild(
-    DiscordContext context,
-    @StringOption("name", "Name of your tag.", minLength: 1, maxLength: 50, autocomplete: Autocomplete<GuildTagsAutocomplete>()) String name,
-  ) async {
-    final settings = TagsGuildSettings(context.store, context.guildId!);
-    final current = settings.tags.get();
-
-    if (!current.containsKey(name)) {
-      return await context.respond(.new(
-        content: "This tag doesn't exist.",
-      ), ephemeral: .ephemeral);
+    if (type == .guild) {
+      await modlog.create(.new(
+        "tag.delete",
+        severity: .log,
+        title: "Guild Tag Deleted",
+        fields: {
+          "author": context.user.toMention(),
+          "name": name.toDiscordCodeBlock(),
+        },
+      ));
     }
 
     current.remove(name);
-    settings.tags.set(current);
+    setting.set(current);
 
     await context.respond(.new(
-      content: "Guild tag deleted!",
-    ));
+      content: "${type == .guild ? "Guild" : "User"} tag deleted!",
+    ), ephemeral: .ifNotDm);
+  }
+
+  @Subcommand("rename", "Rename a tag.")
+  void rename(
+    DiscordContext context,
+    @EnumOption<TagType>("type", "Type of the tag.") TagType type,
+    @StringOption("old-name", "Current name of your tag.", minLength: 1, maxLength: 50, autocomplete: Autocomplete<TagsAutocomplete>()) String old,
+    @StringOption("new-name", "New name of your tag.", minLength: 1, maxLength: 50) String target,
+  ) async {
+    if (type == .guild) {
+      if (context.guild == null) {
+        return await context.respond(.new(
+          content: "This command needs to be ran in a guild.",
+        ), ephemeral: .ifNotDm);
+      }
+
+      if (!context.hasPerm("tags.manage")) {
+        return await context.respond(.new(
+          content: "You aren't allowed to manage guild tags!\nYou need the `tags.manage` permission.",
+        ), ephemeral: .ephemeral);
+      }
+    }
+
+    final setting = switch (type) {
+      .user => TagsUserSettings(context.store, context.userId).tags,
+      .guild => TagsGuildSettings(context.store, context.guildId!).tags,
+    };
+
+    final current = setting.get();
+    final modlog = Modlog.fromContext(context);
+
+    if (!current.containsKey(old)) {
+      return await context.respond(.new(
+        content: "Tag `$old` doesn't exist.",
+      ), ephemeral: .ephemeral);
+    }
+
+    if (current.containsKey(target)) {
+      return await context.respond(.new(
+        content: "Tag `$target` already exists.",
+      ), ephemeral: .ephemeral);
+    }
+
+    if (type == .guild) {
+      await modlog.create(.new(
+        "tag.rename",
+        severity: .log,
+        title: "Guild Tag Renamed",
+        fields: {
+          "author": context.user.toMention(),
+          "old": old.toDiscordCodeBlock(),
+          "new": target.toDiscordCodeBlock(),
+        },
+      ));
+    }
+
+    current[target] = current.remove(old) ?? "";
+    setting.set(current);
+
+    await context.respond(.new(
+      content: "${type == .guild ? "Guild" : "User"} tag renamed to `$target`!",
+    ), ephemeral: .ifNotDm);
   }
 }
 
@@ -201,35 +268,7 @@ final class TagsAutocomplete extends AutocompleteHandler<String> {
       ...?guildSettings?.tags.get().map((k, _) => .new(k, "guild")),
     };
 
-    final candidates = tags.entries.where((x) => input.isEmpty || x.key.startsWith(input));
+    final candidates = tags.entries.where((x) => input.isEmpty || x.key.toLowerCase().startsWith(input));
     return candidates.mapToList((x) => .new(name: "${x.key} (${x.value})", value: x.key));
-  }
-}
-
-final class GuildTagsAutocomplete extends AutocompleteHandler<String> {
-  @override
-  FutureOr<List<CommandOptionChoiceBuilder<String>>?> handle(AutocompleteContext<String> context) {
-    final settings = context.guildId != null ? TagsGuildSettings(context.store, context.guildId!) : null;
-    final input = context.value?.trim().toLowerCase() ?? "";
-    final tags = settings?.tags.get().keys;
-
-    if (tags == null) {
-      return [];
-    }
-
-    final candidates = tags.where((x) => input.isEmpty || x.startsWith(input));
-    return candidates.mapToList((x) => .new(name: x, value: x));
-  }
-}
-
-final class UserTagsAutocomplete extends AutocompleteHandler<String> {
-  @override
-  FutureOr<List<CommandOptionChoiceBuilder<String>>?> handle(AutocompleteContext<String> context) {
-    final settings = TagsUserSettings(context.store, context.userId);
-    final input = context.value?.trim().toLowerCase() ?? "";
-    final tags = settings.tags.get().keys;
-
-    final candidates = tags.where((x) => input.isEmpty || x.startsWith(input));
-    return candidates.mapToList((x) => .new(name: x, value: x));
   }
 }
