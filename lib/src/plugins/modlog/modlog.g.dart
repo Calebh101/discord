@@ -21,7 +21,7 @@ extension on ModlogCommands {
         ),
         autocomplete: null,
         options: null,
-        requiredPerms: .parse(0),
+        requiredPerms: .parse(2),
         needsGuild: true,
       );
     }(),

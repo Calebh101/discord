@@ -4,6 +4,7 @@ import 'package:discord/discord.dart';
 import 'package:discord/plugins.dart';
 import 'package:kyle/plugins/jarvis/jarvis.dart';
 import 'package:kyle/plugins/modlog_events.dart';
+import 'package:kyle/plugins/tags/tags.dart';
 
 final class Kyle extends DiscordBot {
   new({super.dev});
@@ -15,9 +16,11 @@ final class Kyle extends DiscordBot {
   List<DiscordPlugin> get plugins => [
     CorePlugin(),
     ModlogPlugin(),
-    ModlogEventsPlugin(),
-    JarvisPlugin(),
     StatusPlugin(),
+
+    ModlogEventsPlugin(),
+    TagsPlugin(),
+    JarvisPlugin(),
   ];
 
   @override

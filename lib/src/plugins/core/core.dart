@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:discord/discord.dart';
 import 'package:discord/src/plugins/core/admin.dart';
 import 'package:discord/src/plugins/core/owner.dart';
+import 'package:discord/src/plugins/core/perms.dart';
 import 'package:discord/src/plugins/core/test.dart';
 import 'package:system_info2/system_info2.dart';
 
@@ -16,6 +17,14 @@ final class CorePlugin extends DiscordPlugin {
   List<TopLevelCommand> commands(DiscordBot bot) {
     return [
       BotCommands(),
+    ];
+  }
+
+  @override
+  List<String>? setupText(DiscordBot bot) {
+    return [
+      "Someone needs to claim the bot with `/bot admin claim`.",
+      "Bot admins can be added with `/bot admin admin`.",
     ];
   }
 
@@ -119,6 +128,7 @@ final class BotCommands extends TopLevelParentCommand {
     if (bot.dev) TestCommands(),
     BotAdminCommands(),
     BotOwnerCommands(),
+    if (bot.permissions.isNotEmpty) PermsCommands(),
   ];
 
   static String formatLatency(Duration latency) {
@@ -140,6 +150,26 @@ final class BotCommands extends TopLevelParentCommand {
     await context.respond(MessageBuilder(content: "${context.user.toMention()}, pong!\n\n${keys.entries.map((x) {
       return "> ${x.key}: **${x.value}**";
     }).join("\n")}"));
+  }
+
+  @Subcommand("setup", "Helpful tips for setting up the bot for your guild!")
+  void setup(DiscordContext context) async {
+    final Map<String, List<String>> results = {};
+
+    for (final plugin in context.bot.plugins) {
+      final x = plugin.setupText(context.bot);
+      if (x == null) continue;
+      results[plugin.info.id] = x;
+    }
+
+    await context.respondWithPagination(.new(
+      title: "Bot Setup",
+      pages: EmbedPage.fromFields(results.mapToList((id, items) {
+        return .new(name: id.toDiscordCodeString(), value: items.map((x) {
+          return "- $x";
+        }).join("\n"), isInline: false);
+      })),
+    ));
   }
 
   @Subcommand("attributes", "List attributes for a user.")

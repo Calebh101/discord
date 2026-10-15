@@ -11,15 +11,38 @@ abstract class AutocompleteHandler<T> {
   FutureOr<List<CommandOptionChoiceBuilder<T>>?> handle(AutocompleteContext<T> context);
 
   @nonVirtual
-  AutocompleteContext<T> createContext(DiscordBot bot, ApplicationCommandAutocompleteInteraction interaction, T? value) {
-    return .new(bot: bot, interaction: interaction, value: value);
+  Future<AutocompleteContext<T>?> createContext(DiscordBot bot, NyxxGateway client, ApplicationCommandAutocompleteInteraction interaction, T? value) async {
+    final user = interaction.user ?? interaction.member?.user;
+
+    final channel = await tryCatchA(() async {
+      return await interaction.channel?.get() as TextChannel;
+    });
+
+    if (user == null || channel == null) return null;
+    return .new(bot: bot, client: client, interaction: interaction, user: user, channel: channel, value: value);
   }
 }
 
 final class AutocompleteContext<T> {
+  final int max = 25;
   final DiscordBot bot;
+  final NyxxGateway client;
   final ApplicationCommandAutocompleteInteraction interaction;
+  final User user;
+  final TextChannel channel;
   final T? value;
 
-  const new({required this.bot, required this.interaction, required this.value});
+  const new({required this.bot, required this.client, required this.interaction, required this.user, required this.channel, required this.value});
+
+  KVStore get store => bot.store;
+
+  Member? get member => interaction.member;
+  Message? get message => interaction.message;
+
+  PartialGuild? get guild => interaction.guild;
+
+  Snowflake get userId => user.id;
+  Snowflake get channelId => channel.id;
+  Snowflake? get guildId => interaction.guildId;
+  Snowflake get interactionId => interaction.id;
 }

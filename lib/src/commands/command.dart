@@ -32,7 +32,7 @@ abstract class TopLevelSingleCommand extends TopLevelCommand {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: entryPoint, requiredPerms: requiredPermissions, needsGuild: info.needsGuild);
+    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: entryPoint, requiredPerms: requiredPermissions, needsGuild: info.needsGuild, otherPerms: info.otherPerms);
   }
 }
 
@@ -45,7 +45,7 @@ abstract class TopLevelParentCommand extends TopLevelCommand {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: null, requiredPerms: .all, needsGuild: info.needsGuild);
+    return .new(builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: null, requiredPerms: .all, needsGuild: info.needsGuild, otherPerms: info.otherPerms);
   }
 }
 
@@ -66,8 +66,9 @@ class CommandInfo {
   final Map<Locale, String>? nameLocalizations;
   final Map<Locale, String>? descriptionLocalizations;
   final bool needsGuild;
+  final List<String>? otherPerms;
 
-  const new({required this.name, required this.description, this.nameLocalizations, this.descriptionLocalizations, this.needsGuild = false});
+  const new({required this.name, required this.description, this.nameLocalizations, this.descriptionLocalizations, this.needsGuild = false, this.otherPerms});
 }
 
 final class TopLevelCommandInfo extends CommandInfo {
@@ -77,5 +78,5 @@ final class TopLevelCommandInfo extends CommandInfo {
   final List<ApplicationIntegrationType>? integrationTypes;
   final List<InteractionContextType>? contexts;
 
-  new({required super.name, required super.description, super.nameLocalizations, super.descriptionLocalizations, this.defaultMemberPermissions, this.isNsfw, this.integrationTypes, this.contexts}) : type = .chatInput;
+  new({required super.name, required super.description, super.nameLocalizations, super.descriptionLocalizations, super.otherPerms, this.defaultMemberPermissions, this.isNsfw, this.integrationTypes, this.contexts}) : type = .chatInput;
 }

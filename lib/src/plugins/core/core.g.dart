@@ -27,6 +27,23 @@ extension on BotCommands {
     }(),
     () {
       return OptionData(
+        name: "setup",
+        function: setup,
+        builder: .subCommand(
+          name: "setup",
+          description: "Helpful tips for setting up the bot for your guild!",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: false,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "attributes",
         function: attributes,
         builder: .subCommand(

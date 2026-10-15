@@ -53,10 +53,11 @@ final class SubcommandInfo extends CommandInfo {
   final String functionName;
   final int perms;
   final bool needsGuild;
+  final List<String>? otherPerms;
 
   List<CommandOptionBase>? options;
 
-  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.functionName, this.options, required this.perms, required this.needsGuild});
+  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.functionName, this.options, required this.perms, required this.needsGuild, required this.otherPerms});
 
   void addOption(CommandOptionBase option) {
     options ??= [];
@@ -66,7 +67,7 @@ final class SubcommandInfo extends CommandInfo {
   @override
   String build() {
     return """
-return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(parseLocalizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(parseLocalizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms), needsGuild: $needsGuild);
+return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(parseLocalizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(parseLocalizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms), needsGuild: $needsGuild, otherPerms: ${jsonEncode(otherPerms)});
 """.trim();
   }
 }
@@ -155,9 +156,10 @@ String? generateForParent(ClassElement element, BuildStep buildStep, bool topLev
 
     final name = field("name")?.toStringValue();
     final description = field("description")?.toStringValue();
+    final needsGuild = field("needsGuild")?.toBoolValue() ?? false;
 
     final perms = getFieldRecursive(field("permissionsRequired")!, "value")!.toIntValue()!;
-    final needsGuild = field("needsGuild")?.toBoolValue() ?? false;
+    final otherPerms = field("otherPerms")?.toListValue()?.map((x) => x.toStringValue()).whereType<String>().toList();
 
     final nameL = localizations("nameLocalizations");
     final descL = localizations("descriptionLocalizations");
@@ -170,6 +172,7 @@ String? generateForParent(ClassElement element, BuildStep buildStep, bool topLev
       functionName: method.displayName,
       perms: perms,
       needsGuild: needsGuild,
+      otherPerms: otherPerms,
     );
 
     commands.add(command);

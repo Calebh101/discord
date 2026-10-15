@@ -14,58 +14,6 @@ final class CommandParseError implements Exception {
   }
 }
 
-final class CommandData {
-  final ApplicationCommandBuilder builder;
-  final List<OptionData>? options;
-  final Function? function;
-  final BotPermissions requiredPerms;
-  final bool needsGuild;
-
-  const new({required this.builder, required this.options, required this.function, required this.requiredPerms, required this.needsGuild});
-}
-
-final class OptionData {
-  final String name;
-  final CommandOptionBuilder builder;
-  final List<OptionData>? options;
-  final AutocompleteHandler Function()? autocomplete;
-  final Function? function;
-  final FutureOr<dynamic> Function(DiscordContext context, dynamic value)? converter;
-  final BotPermissions requiredPerms;
-  final bool needsGuild;
-
-  const new({required this.name, required this.builder, this.autocomplete, this.function, this.options, this.converter, this.requiredPerms = .all, this.needsGuild = false});
-
-  @override
-  String toString() {
-    return "OptionData(name: $name, type: ${builder.type.value}, function: ${function.runtimeType}, options: $options, autocomplete: ${autocomplete.runtimeType})";
-  }
-}
-
-final class RegistryData {
-  final String name;
-  final int level; // 0 is start
-  final Function? function;
-  final List<OptionData>? options;
-  final BotPermissions permsRequired;
-  final bool needsGuild;
-
-  const new({required this.name, required this.level, required this.function, required this.options, required this.permsRequired, required this.needsGuild});
-
-  factory fromCommandData(CommandData command) {
-    return .new(name: command.builder.name, level: 0, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild);
-  }
-
-  factory fromOptionData(OptionData command, int level) {
-    return .new(name: command.name, level: level, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild);
-  }
-
-  @override
-  String toString() {
-    return "RegistryData(name: $name, level: $level, function: ${function.runtimeType}, options: $options)";
-  }
-}
-
 class CommandsStore {
   final Map<String, RegistryData> registry = {};
   late final List<CommandData> commands;
@@ -144,13 +92,38 @@ class CommandsStore {
       final data = interaction.data;
       final user = interaction.user ?? interaction.member?.user;
 
-      if (user != null && !allowed(user.id, interaction.guildId)) {
+      final channel = await tryCatchA(() async {
+        return await interaction.channel?.get() as TextChannel;
+      });
+
+      Future<void> respond(String content) async {
+        try {
+          await interaction.respond(.new(content: content, flags: MessageFlags.ephemeral));
+        } catch (e) {
+          Logger.warn("Commands", "Unable to respond to user ${user?.id} and channel ${channel?.id}: $e");
+        }
+
+        return;
+      }
+
+      if (user == null) {
+        Logger.warn("Commands", "User is null! ${interaction.user.runtimeType}, ${interaction.member.runtimeType}, ${interaction.member?.user.runtimeType}");
+        await respond("You don't exist?\nWe couldn't find a user associated with this interaction.");
+        return;
+      } else if (!allowed(user.id, interaction.guildId)) {
         Logger.print("Commands", "Ignored: ${user.id}/${interaction.guildId}");
+        return;
+      }
+
+      if (channel == null) {
+        Logger.warn("Commands", "Channel is null! ${interaction.channelId}, ${interaction.channelId.runtimeType}, ${interaction.channel.runtimeType}");
+        await respond("Uh oh!\nWe couldn't find a valid channel for this interaction!");
         return;
       }
 
       final List<String> path = [data.name];
       final child1 = data.options?.firstWhereOrNull((x) => x.type == .subCommand || x.type == .subCommandGroup);
+
       var subcommand = child1;
 
       if (child1 != null) {
@@ -167,23 +140,7 @@ class CommandsStore {
       final info = registry[path.join(".")];
       final function = info?.function;
 
-      Future<void> respond(String content) async {
-        try {
-          await interaction.respond(.new(content: content, flags: MessageFlags.ephemeral));
-        } catch (e) {
-          Logger.warn("Commands", "Unable to respond to user ${user?.id}: $e");
-        }
-
-        return;
-      }
-
-      if (user == null) {
-        Logger.warn("Commands", "User is null! ${interaction.user.runtimeType}, ${interaction.member.runtimeType}, ${interaction.member?.user.runtimeType}");
-        respond("You don't exist?\nWe couldn't find a user associated with this interaction.");
-        return;
-      }
-
-      Logger.print("Commands", "Handling command $path (${info?.permsRequired.name}) for user ${user.id}:${interaction.guildId} (${user.username})...");
+      Logger.print("Commands", "Handling command $path (${[info?.permsRequired.name, ...?info?.otherPerms].join(",")}) for user ${user.id} (${user.username}) (interaction: ${interaction.guildId}) (channel: ${interaction.channelId})...");
 
       if (info == null) {
         Logger.warn("Commands", "Invalid command: $path");
@@ -202,7 +159,26 @@ class CommandsStore {
       }
 
       switch (info.permsRequired) {
-        case .all: break;
+        case .all:
+          if (info.otherPerms?.isNotEmpty ?? false) {
+            final roles = interaction.member?.roleIds;
+            final guild = interaction.guildId;
+
+            if (roles == null || guild == null) {
+              return await respond("This command needs to be run in a guild.");
+            }
+
+            if (BotPermissions.isAdmin(bot.store, guild, user.id)) {
+              break;
+            }
+
+            for (final String perm in info.otherPerms ?? []) {
+              if (bot.permissions.hasPerm(bot.store, perm, user.id, roles)) continue;
+              return await respond("You can't execute this command, you don't have the permission `$perm`!");
+            }
+          }
+
+          break;
 
         case .owner:
           final isOwner = BotPermissions.isOwner(bot.store, user.id);
@@ -225,7 +201,13 @@ class CommandsStore {
       }
 
       try {
-        final context = DiscordContext(interaction: interaction, bot: bot, client: client, user: user);
+        final context = DiscordContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel);
+
+        for (final p in bot.plugins) {
+          final x = await p.onCommand(context);
+          if (!x) return;
+        }
+
         final List<dynamic> args = [];
 
         for (final expected in info.options ?? <OptionData>[]) {
@@ -282,7 +264,7 @@ class CommandsStore {
       }
 
       final info = registry[path.join(".")];
-      if (bot.dev) Logger.print("Autocomplete", "Handling command $path for user ${user.id}:${interaction.guildId} (${user.username})");
+      if (bot.dev) Logger.print("Autocomplete", "Handling command $path for user ${user.id} (${user.username}) (interaction: ${interaction.guildId}) (channel: ${interaction.channelId})...");
 
       if (info == null) {
         Logger.warn("Autocomplete", "Invalid command: $path\nNo registry entry.");
@@ -299,11 +281,18 @@ class CommandsStore {
       }
 
       try {
-        final context = handler.createContext(bot, interaction, focused?.value);
+        final context = await handler.createContext(bot, client, interaction, focused?.value);
+        if (context == null) return Logger.warn("Autocomplete", "Context could not be created. ${user.id}, ${interaction.guildId}, ${interaction.channelId}");
+
+        for (final p in bot.plugins) {
+          final x = await p.onAutocomplete(context);
+          if (!x) return;
+        }
+
         final result = await handler.handle(context);
 
         if (result == null) return;
-        await interaction.respond(result);
+        await interaction.respond(result.maxLength(context.max));
       } catch (e, s) {
         Logger.warn("Autocomplete", "Error with command $path: $e\n$s");
       }

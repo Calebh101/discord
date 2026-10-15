@@ -7,12 +7,14 @@ final class Subcommand {
   final Map<String, String>? descriptionLocalizations;
   final BotPermissions permissionsRequired;
   final bool needsGuild;
+  final List<String>? otherPerms;
 
   const new(this.name, this.description, {
     this.nameLocalizations,
     this.descriptionLocalizations,
     this.permissionsRequired = .all,
     this.needsGuild = false,
+    this.otherPerms,
   });
 }
 

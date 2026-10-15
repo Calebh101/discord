@@ -26,6 +26,7 @@ export 'src/commands/choice.dart';
 export 'src/commands/context.dart';
 export 'src/commands/store.dart';
 export 'src/commands/errors.dart';
+export 'src/commands/data.dart';
 
 export 'src/autocomplete/base.dart';
 export 'src/autocomplete/extras.dart';
