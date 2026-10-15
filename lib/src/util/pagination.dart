@@ -286,7 +286,7 @@ class PaginatedEmbedBuilder {
     this.image,
     this.thumbnail,
     this.author,
-    required this.pages,
+    this.pages = const [],
   });
 
   EmbedBuilder build(int page, {List<String> extraFooterElements = const []}) {

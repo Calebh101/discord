@@ -243,6 +243,11 @@ abstract class EntitySettings {
   }
 }
 
+T? ifGuild<T extends EntitySettings>(Snowflake? guildId, T Function(Snowflake id) callback) {
+  if (guildId != null) return callback(guildId);
+  return null;
+}
+
 abstract class BotSettings extends EntitySettings {
   new(super.store) : super(id: "_", scope: .bot);
 

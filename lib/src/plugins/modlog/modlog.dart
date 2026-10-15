@@ -182,7 +182,7 @@ final class ModlogCommands extends TopLevelParentCommand {
     @StringOption("group", "Modlog group name.", autocomplete: Autocomplete<ModlogGroupAutocomplete>()) String groupName,
   ) async {
     final group = context.bot.modlog.groups.firstWhereOrNull((x) => x.name == groupName.toLowerCase().trim());
-    if (group == null) return await context.respond(.new(content: "Group doesn't exist: `$groupName`"), ephemeral: .ifNotDm);
+    if (group == null) return await context.respond(.new(content: "Group doesn't exist: `$groupName`"), ephemeral: .ephemeral);
 
     final settings = ModlogSettings(context.store, context.guildId!);
     final enabled = settings.scopes.get();
@@ -291,7 +291,7 @@ final class ModlogCommands extends TopLevelParentCommand {
 
     if (groupName != null) {
       final group = context.bot.modlog.groups.firstWhereOrNull((x) => x.name == groupName.toLowerCase().trim());
-      if (group == null) return await context.respond(.new(content: "Group doesn't exist: `$groupName`"), ephemeral: .ifNotDm);
+      if (group == null) return await context.respond(.new(content: "Group doesn't exist: `$groupName`"), ephemeral: .ephemeral);
 
       final removed = scopes.removeWhereWithCount((scope) {
         return group.scopes.any((x) => scope == x.fullName);

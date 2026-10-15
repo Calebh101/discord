@@ -23,7 +23,7 @@ final class PermsCommands extends SubcommandGroupCommand {
 
     await context.respond(.new(
       content: "Permission `$id`: ${perm.description}",
-    ), ephemeral: .ifNotDm);
+    ));
   }
 
   @Subcommand("allow", "Allow a role to use this permission.", permissionsRequired: .admin, needsGuild: true)
@@ -85,7 +85,7 @@ final class PermsCommands extends SubcommandGroupCommand {
     await context.respond(.new(
       content: "Role ${role.toMention()} ${allowed ? "**is**" : "is **not**"} allowed for permission `$id`.",
       allowedMentions: .new(),
-    ), ephemeral: .ifNotDm);
+    ));
   }
 
   @Subcommand("list", "List all available permissions.")

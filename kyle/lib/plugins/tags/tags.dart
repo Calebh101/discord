@@ -10,6 +10,14 @@ enum TagType {
   ;
 }
 
+MessageBuilder getBuilder(String key, String value, {Snowflake? reply}) {
+  return .new(
+    content: value,
+    allowedMentions: .new(),
+    referencedMessage: reply != null ? .reply(messageId: reply) : null,
+  );
+}
+
 final class TagsPlugin extends DiscordPlugin {
   @override
   DiscordPluginInfo get info => .new("tags");
@@ -37,6 +45,37 @@ final class TagsPlugin extends DiscordPlugin {
     return [
       TagsCommand(),
     ];
+  }
+
+  @override
+  void onReady(DiscordBot bot) {
+    bot.clients.run((client) {
+      client.onMessageCreate.listen((event) async {
+        final user = event.message.author;
+        final guild = event.guild;
+        final content = event.message.content;
+
+        if (guild == null || user is! User) return;
+        if (isIgnored(bot.store, user.id)) return;
+
+        final settings = TagsGuildSettings(bot.store, event.guildId!);
+        final prefix = settings.prefix.get();
+
+        if (prefix == null) return;
+        if (!content.startsWith(prefix)) return;
+
+        final tags = {
+          ...TagsUserSettings(bot.store, user.id).tags.get(),
+          ...settings.tags.get(),
+        };
+
+        final key = event.message.content.replaceFirst(prefix, "");
+        final value = tags[key];
+
+        if (value == null) return;
+        await event.message.channel.sendMessage(getBuilder(key, value, reply: event.message.id));
+      });
+    });
   }
 }
 
@@ -70,9 +109,40 @@ final class TagsCommand extends TopLevelParentCommand {
       ), ephemeral: .ephemeral);
     }
 
-    await context.respond(.new(
-      content: tag,
-      allowedMentions: .new(),
+    await context.respond(getBuilder(
+      name, tag,
+    ));
+  }
+
+  @Subcommand("list", "List all tags.")
+  void list(
+    DiscordContext context,
+    @EnumOption<TagType>("type", "Type of the tag.") TagType type,
+  ) async {
+    if (type == .guild) {
+      if (context.guildId == null) {
+        return await context.respond(.new(
+          content: "This command needs to be ran in a guild.",
+        ), ephemeral: .ephemeral);
+      }
+    }
+
+    final tags = switch (type) {
+      .user => TagsUserSettings(context.store, context.userId).tags,
+      .guild => TagsGuildSettings(context.store, context.guildId!).tags,
+    }.get();
+
+    if (tags.isEmpty) {
+      return await context.respond(.new(
+        content: "You have no ${type == .guild ? "guild" : "user"} tags.",
+      ), ephemeral: .ifNotDm);
+    }
+
+    await context.respondWithPagination(.new(
+      title: "All ${tags.length} ${type == .guild ? "Guild" : "user"} Tags",
+      pages: EmbedPage.fromFields(tags.mapToList((name, value) {
+        return .new(name: name, value: value.maxLength(100, ellipsis: true), isInline: false);
+      })),
     ));
   }
 
@@ -84,10 +154,10 @@ final class TagsCommand extends TopLevelParentCommand {
     @StringOption("value", "Value of your tag.", minLength: 1, maxLength: 1500) String value,
   ) async {
     if (type == .guild) {
-      if (context.guild == null) {
+      if (context.guildId == null) {
         return await context.respond(.new(
           content: "This command needs to be ran in a guild.",
-        ), ephemeral: .ifNotDm);
+        ), ephemeral: .ephemeral);
       }
 
       if (!context.hasPerm("tags.manage")) {
@@ -103,9 +173,10 @@ final class TagsCommand extends TopLevelParentCommand {
     };
 
     final current = setting.get();
-    final modlog = Modlog.fromContext(context);
 
     if (type == .guild) {
+      final modlog = Modlog.fromContext(context);
+
       await modlog.create(.new(
         "tag.set",
         severity: .log,
@@ -124,7 +195,7 @@ final class TagsCommand extends TopLevelParentCommand {
 
     await context.respond(.new(
       content: "${type == .guild ? "Guild" : "User"} tag set!",
-    ), ephemeral: .ifNotDm);
+    ));
   }
 
   @Subcommand("delete", "Delete a tag.")
@@ -134,10 +205,10 @@ final class TagsCommand extends TopLevelParentCommand {
     @StringOption("name", "Name of your tag.", minLength: 1, maxLength: 50, autocomplete: Autocomplete<TagsAutocomplete>()) String name,
   ) async {
     if (type == .guild) {
-      if (context.guild == null) {
+      if (context.guildId == null) {
         return await context.respond(.new(
           content: "This command needs to be ran in a guild.",
-        ), ephemeral: .ifNotDm);
+        ), ephemeral: .ephemeral);
       }
 
       if (!context.hasPerm("tags.manage")) {
@@ -153,7 +224,6 @@ final class TagsCommand extends TopLevelParentCommand {
     };
 
     final current = setting.get();
-    final modlog = Modlog.fromContext(context);
 
     if (!current.containsKey(name)) {
       return await context.respond(.new(
@@ -162,6 +232,8 @@ final class TagsCommand extends TopLevelParentCommand {
     }
 
     if (type == .guild) {
+      final modlog = Modlog.fromContext(context);
+
       await modlog.create(.new(
         "tag.delete",
         severity: .log,
@@ -178,7 +250,7 @@ final class TagsCommand extends TopLevelParentCommand {
 
     await context.respond(.new(
       content: "${type == .guild ? "Guild" : "User"} tag deleted!",
-    ), ephemeral: .ifNotDm);
+    ));
   }
 
   @Subcommand("rename", "Rename a tag.")
@@ -189,10 +261,10 @@ final class TagsCommand extends TopLevelParentCommand {
     @StringOption("new-name", "New name of your tag.", minLength: 1, maxLength: 50) String target,
   ) async {
     if (type == .guild) {
-      if (context.guild == null) {
+      if (context.guildId == null) {
         return await context.respond(.new(
           content: "This command needs to be ran in a guild.",
-        ), ephemeral: .ifNotDm);
+        ), ephemeral: .ephemeral);
       }
 
       if (!context.hasPerm("tags.manage")) {
@@ -208,7 +280,6 @@ final class TagsCommand extends TopLevelParentCommand {
     };
 
     final current = setting.get();
-    final modlog = Modlog.fromContext(context);
 
     if (!current.containsKey(old)) {
       return await context.respond(.new(
@@ -223,6 +294,8 @@ final class TagsCommand extends TopLevelParentCommand {
     }
 
     if (type == .guild) {
+      final modlog = Modlog.fromContext(context);
+
       await modlog.create(.new(
         "tag.rename",
         severity: .log,
@@ -240,7 +313,45 @@ final class TagsCommand extends TopLevelParentCommand {
 
     await context.respond(.new(
       content: "${type == .guild ? "Guild" : "User"} tag renamed to `$target`!",
-    ), ephemeral: .ifNotDm);
+    ));
+  }
+
+  @Subcommand("get-prefix", "Get the tag prefix.", needsGuild: true)
+  void getPrefix(DiscordContext context) async {
+    final settings = TagsGuildSettings(context.store, context.guildId!);
+    final prefix = settings.prefix.get();
+
+    if (prefix == null) {
+      return await context.respond(.new(
+        content: "No prefix set.",
+      ));
+    }
+
+    return await context.respond(.new(
+      content: "Tag prefix currently set to:\n${prefix.toDiscordCodeBlock()}",
+    ));
+  }
+
+  @Subcommand("set-prefix", "Set the tag prefix.", needsGuild: true, permissionsRequired: .admin)
+  void setPrefix(
+    DiscordContext context,
+    @StringOption("prefix", "The prefix to use.", minLength: 1, maxLength: 20) String? prefix,
+  ) async {
+    final settings = TagsGuildSettings(context.store, context.guildId!);
+
+    if (prefix == null) {
+      settings.prefix.delete();
+
+      return await context.respond(.new(
+        content: "Prefix reset.",
+      ));
+    }
+
+    settings.prefix.set(prefix);
+
+    return await context.respond(.new(
+      content: "Prefix set to:\n${prefix.toDiscordCodeBlock()}",
+    ));
   }
 }
 
@@ -248,6 +359,7 @@ final class TagsGuildSettings extends GuildSettings {
   new(super.store, super.id);
 
   SettingsObjectNotNull<Map<String, String>> get tags => .map(this, "tags");
+  SettingsObject<String> get prefix => .new(this, "tagsPrefix");
 }
 
 final class TagsUserSettings extends UserSettings {
