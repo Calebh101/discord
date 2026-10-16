@@ -28,6 +28,9 @@ final class Kyle extends DiscordBot {
     return await Nyxx.connectGateway(
       token,
       GatewayIntents.all,
+      options: .new(
+        plugins: nyxxPlugins,
+      ),
     );
   }
 

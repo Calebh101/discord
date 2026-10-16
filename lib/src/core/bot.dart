@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:discord/discord.dart';
+import 'package:discord/src/other/retry_plugin.dart';
 import 'package:meta/meta.dart';
 
 final class DiscordBotSettings extends BotSettings {
@@ -31,6 +32,11 @@ abstract class DiscordBot {
   String get dbFilePath;
 
   List<DiscordPlugin> get plugins => [];
+
+  @mustCallSuper
+  List<NyxxPlugin<NyxxGateway>> get nyxxPlugins => [
+    RetryPlugin(),
+  ];
 
   Future<NyxxGateway> onCreateClient(String token);
 

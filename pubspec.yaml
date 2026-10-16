@@ -1,5 +1,5 @@
 name: discord
-description: A starting point for Dart libraries or applications.
+description: A library for easily making a Discord bot with nyxx using slash commands.
 version: 1.0.0
 publish_to: none
 
@@ -12,11 +12,7 @@ dependencies:
       url: https://github.com/Calebh101/localpkg-dart
       ref: main
 
-  nyxx:
-    git:
-      url: https://github.com/Calebh101/nyxx.git
-      ref: main
-
+  nyxx: ^6.9.1
   analyzer: ^14.4.0
   build: ^4.0.11
   collection: ^1.19.1
@@ -28,6 +24,7 @@ dependencies:
   http: ^1.6.0
   dart_style: ^3.0.0
   crypto: ^3.0.7
+  retry: ^3.1.2
 
 dev_dependencies:
   build_runner: ^2.16.1
