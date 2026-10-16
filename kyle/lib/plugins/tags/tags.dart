@@ -10,9 +10,13 @@ enum TagType {
   ;
 }
 
-MessageBuilder getBuilder(String key, String value, {Snowflake? reply}) {
+MessageBuilder getBuilder(String key, String value, {required User user, Snowflake? reply}) {
   return .new(
-    content: value,
+    content: """
+Tag `$key` invoked by ${user.toMention()}:
+
+${value.maxLength(1900, ellipsis: true)}
+    """.trim(),
     allowedMentions: .new(),
     referencedMessage: reply != null ? .reply(messageId: reply) : null,
   );
@@ -53,7 +57,8 @@ final class TagsPlugin extends DiscordPlugin {
       client.onMessageCreate.listen((event) async {
         final user = event.message.author;
         final guild = event.guild;
-        final content = event.message.content;
+        final message = event.message;
+        final content = message.content;
 
         if (guild == null || user is! User) return;
         if (isIgnored(bot.store, user.id)) return;
@@ -69,11 +74,16 @@ final class TagsPlugin extends DiscordPlugin {
           ...settings.tags.get(),
         };
 
-        final key = event.message.content.replaceFirst(prefix, "");
+        final key = content.replaceFirst(prefix, "");
         final value = tags[key];
 
         if (value == null) return;
-        await event.message.channel.sendMessage(getBuilder(key, value, reply: event.message.id));
+
+        await event.message.channel.sendMessage(getBuilder(
+          key, value,
+          user: user,
+          reply: event.message.reference?.messageId ?? message.id,
+        ));
       });
     });
   }
@@ -111,6 +121,7 @@ final class TagsCommand extends TopLevelParentCommand {
 
     await context.respond(getBuilder(
       name, tag,
+      user: context.user,
     ));
   }
 
