@@ -34,6 +34,7 @@ final class DiscordContext {
   Snowflake get userId => user.id;
   Snowflake get channelId => channel.id;
   Snowflake? get guildId => interaction.guildId;
+  Snowflake get clientId => client.user.id;
   Snowflake get interactionId => interaction.id;
 
   InteractionCallbackResponse? myResponse;

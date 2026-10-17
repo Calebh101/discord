@@ -5,18 +5,18 @@ import 'package:discord/discord.dart';
 import 'package:meta/meta.dart';
 import 'package:sqlite3/sqlite3.dart';
 
-enum Scope {
-  bot("bot"),
-  guild("guild"),
-  user("user"),
-  userPerGuild("upg"),
-  channel("channel"),
-  message("message"),
-  role("role"),
-  ;
-
+final class Scope {
   final String id;
   const new(this.id);
+
+  static const bot = Scope("bot");
+  static const client = Scope("client");
+  static const guild = Scope("guild");
+  static const user = Scope("user");
+  static const userPerGuild = Scope("userPerGuild");
+  static const channel = Scope("channel");
+  static const message = Scope("message");
+  static const role = Scope("role");
 }
 
 class KVStore {
@@ -255,6 +255,10 @@ abstract class BotSettings extends EntitySettings {
   Future<bool> init() async {
     return true;
   }
+}
+
+abstract class ClientSettings extends EntitySettings {
+  new(super.store, Snowflake id) : super(id: id.toString(), scope: .client);
 }
 
 abstract class GuildSettings extends EntitySettings {

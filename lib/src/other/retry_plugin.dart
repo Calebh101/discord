@@ -9,7 +9,9 @@ final class RetryPlugin extends NyxxPlugin<NyxxGateway> {
   Future<HttpResponse> interceptRequest(NyxxGateway client, HttpRequest request, Future<HttpResponse> Function(HttpRequest) next) async {
     return await retry(
       () async {
-        return await super.interceptRequest(client, request, next);
+        final response = await super.interceptRequest(client, request, next);
+        if (response is HttpResponseError && response.statusCode == 503) throw response;
+        return response;
       },
       retryIf: (e) {
         return

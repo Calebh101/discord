@@ -146,7 +146,7 @@ final class TagsCommand extends TopLevelParentCommand {
     if (tags.isEmpty) {
       return await context.respond(.new(
         content: "You have no ${type == .guild ? "guild" : "user"} tags.",
-      ), ephemeral: .ifNotDm);
+      ));
     }
 
     await context.respondWithPagination(.new(
