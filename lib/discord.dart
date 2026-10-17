@@ -3,6 +3,7 @@ library;
 
 export 'src/constants/constants.dart';
 export 'src/constants/annotations.dart';
+export 'src/constants/enums.dart';
 export 'src/constants/colors.dart';
 export 'src/constants/generated_constants.dart';
 

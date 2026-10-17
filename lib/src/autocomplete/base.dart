@@ -45,4 +45,6 @@ final class AutocompleteContext<T> {
   Snowflake get channelId => channel.id;
   Snowflake? get guildId => interaction.guildId;
   Snowflake get interactionId => interaction.id;
+
+  Locale? get locale => interaction.locale;
 }

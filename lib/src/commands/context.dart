@@ -37,6 +37,8 @@ final class DiscordContext {
   Snowflake get clientId => client.user.id;
   Snowflake get interactionId => interaction.id;
 
+  Locale? get locale => interaction.locale;
+
   InteractionCallbackResponse? myResponse;
   Message? myResponseMessage;
 
