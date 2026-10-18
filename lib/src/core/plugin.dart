@@ -10,7 +10,17 @@ abstract class DiscordPlugin {
   /// Stores that will be ready at the time this is ran:
   /// - modlog
   /// - permissions
+  /// - converters
   List<TopLevelCommand> commands(DiscordBot bot) => [];
+
+  /// This is ran when it's time to register converters for the bot.
+  ///
+  /// Stores that will be ready at the time this is ran:
+  /// - modlog
+  /// - permissions
+  /// - commands
+  /// - clients
+  List<DiscordConverter> converters(DiscordBot bot) => [];
 
   /// This is ran when it's time to register terminal commands for the terminal handler.
   ///
@@ -43,6 +53,7 @@ abstract class DiscordPlugin {
   /// - modlog
   /// - permissions
   /// - commands
+  /// - converters
   /// - clients
   void onReady(DiscordBot bot) {}
 

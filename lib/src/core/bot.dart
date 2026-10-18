@@ -20,6 +20,7 @@ abstract class DiscordBot {
   late final TerminalHandler terminal;
 
   final commands = CommandsStore();
+  final converters = ConvertersStore();
   final clients = ClientStore<NyxxGateway>();
   final modlog = ModlogStore();
   final permissions = PermissionsStore();
@@ -61,6 +62,12 @@ abstract class DiscordBot {
       }
 
       await p.onLoad(this);
+    }
+
+    for (final p in plugins) {
+      for (final c in p.converters(this)) {
+        converters.register(c);
+      }
     }
 
     for (final p in plugins) {

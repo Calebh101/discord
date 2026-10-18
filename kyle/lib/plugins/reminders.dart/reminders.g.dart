@@ -96,7 +96,7 @@ extension on RemindersCommand {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "when",
               builder: () {
                 return CommandOptionBuilder(
@@ -117,7 +117,7 @@ extension on RemindersCommand {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "what",
               builder: () {
                 return CommandOptionBuilder(
@@ -173,7 +173,7 @@ extension on RemindersCommand {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<int>(
               name: "id",
               builder: () {
                 return CommandOptionBuilder(

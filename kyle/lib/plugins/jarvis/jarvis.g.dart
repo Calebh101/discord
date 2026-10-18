@@ -9,7 +9,7 @@ part of 'jarvis.dart';
 extension on JarvisCommand {
   List<OptionData>? commandOptions(DiscordBot bot) => [
     () {
-      return OptionData(
+      return OptionData<String>(
         name: "body",
         builder: () {
           return CommandOptionBuilder(

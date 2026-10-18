@@ -23,6 +23,7 @@ extension on ModlogCommands {
         options: null,
         requiredPerms: .parse(2),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     () {
@@ -55,7 +56,7 @@ extension on ModlogCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "body",
               builder: () {
                 return CommandOptionBuilder(
@@ -78,6 +79,7 @@ extension on ModlogCommands {
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     () {
@@ -110,7 +112,7 @@ extension on ModlogCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<GuildTextChannel>(
               name: "channel",
               builder: () {
                 return CommandOptionBuilder(
@@ -133,6 +135,7 @@ extension on ModlogCommands {
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     () {
@@ -165,7 +168,7 @@ extension on ModlogCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "group",
               builder: () {
                 return CommandOptionBuilder(
@@ -188,6 +191,7 @@ extension on ModlogCommands {
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     () {
@@ -205,6 +209,7 @@ extension on ModlogCommands {
         options: null,
         requiredPerms: .parse(2),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     () {
@@ -237,7 +242,7 @@ extension on ModlogCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "scopes",
               builder: () {
                 return CommandOptionBuilder(
@@ -260,6 +265,7 @@ extension on ModlogCommands {
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     () {
@@ -277,6 +283,7 @@ extension on ModlogCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -309,7 +316,7 @@ extension on ModlogCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "group",
               builder: () {
                 return CommandOptionBuilder(
@@ -332,6 +339,7 @@ extension on ModlogCommands {
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     ...subcommandGroups(bot).map((x) => x.build(bot)),

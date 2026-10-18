@@ -20,7 +20,14 @@ final class MemberPlugin extends SlashCommandsPlugin {
     final nameL = localizations(annotation, "nameLocalizations");
     final descL = localizations(annotation, "descriptionLocalizations");
 
-    return MemberCommandOptionInfo(name: name!, description: description!, nameLocalizations: nameL, descriptionLocalizations: descL, isRequired: isRequired(param));
+    return MemberCommandOptionInfo(
+      name: name!,
+      description: description!,
+      nameLocalizations: nameL,
+      descriptionLocalizations: descL,
+      isRequired: isRequired(param),
+      resultType: param.type.getDisplayString(withNullability: false),
+    );
   }
 }
 
@@ -28,16 +35,17 @@ final class MemberCommandOptionInfo extends CommandOptionBase {
   final String name;
   final String description;
   final bool isRequired;
+  final String resultType;
 
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
 
-  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired});
+  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.resultType});
 
   @override
   String build() {
     return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}(), converter: (context, id) async {
+return OptionData<$resultType>(name: "$name", builder: () {${buildBuilder()}}(), converter: (context, id) async {
   try {
     return await context.guild!.members.get(.parse(id));
   } catch (e) {
@@ -61,13 +69,15 @@ final class SnowflakePlugin extends SlashCommandsPlugin {
   CommandOptionBase build({required int i, required FormalParameterElement param, required DartObject annotation}) {
     final result = processBasicOption(param: param, annotation: annotation);
 
-    result.converterText = """(_, value) {
-try {
-  return Snowflake.parse(value);
-} catch (_) {
-  throw CommandParseError("Invalid snowflake (ID).");
+    result.converterText = """
+(_, value) {
+  try {
+    return Snowflake.parse(value);
+  } catch (_) {
+    throw CommandParseError("Invalid snowflake (ID).");
+  }
 }
-    }""".trim();
+    """.trim();
 
     return result;
   }
@@ -106,6 +116,7 @@ final class EnumPlugin extends SlashCommandsPlugin {
       enumName: enumName,
       nameField: nameField,
       valueField: valueField,
+      resultType: param.type.getDisplayString(withNullability: false),
     );
   }
 }
@@ -118,16 +129,17 @@ final class EnumCommandOptionInfo extends CommandOptionBase {
   final String enumName;
   final String nameField;
   final String valueField;
+  final String resultType;
 
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
 
-  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.enumName, required this.nameField, required this.valueField});
+  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.enumName, required this.nameField, required this.valueField, required this.resultType});
 
   @override
   String build() {
     return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}(), converter: (_, value) {
+return OptionData<$resultType>(name: "$name", builder: () {${buildBuilder()}}(), converter: (_, value) {
   return $enumName.values.firstWhere((x) => x.$valueField == value);
 });
 """.trim();
@@ -158,6 +170,7 @@ final class RecentMessagePlugin extends SlashCommandsPlugin {
       nameLocalizations: nameL,
       descriptionLocalizations: descL,
       isRequired: isRequired(param),
+      resultType: param.type.getDisplayString(withNullability: false),
     );
   }
 }
@@ -166,16 +179,17 @@ final class RecentMessagePluginInfo extends CommandOptionBase {
   final String name;
   final String description;
   final bool isRequired;
+  final String resultType;
 
   final Map<String, String>? nameLocalizations;
   final Map<String, String>? descriptionLocalizations;
 
-  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired});
+  new({required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.resultType});
 
   @override
   String build() {
     return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: () => MessageAutocompleteHandler(), converter: (context, value) async {
+return OptionData<$resultType>(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: () => MessageAutocompleteHandler(), converter: (context, value) async {
   final channel = context.channel;
   if (channel is! PartialTextChannel) throw CommandParseError("The channel must be a text channel.");
 

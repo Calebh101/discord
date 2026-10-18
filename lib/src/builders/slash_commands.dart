@@ -97,14 +97,15 @@ final class CommandOptionInfo<T> extends CommandOptionBase {
   final num? maxValue;
 
   final String? autocompleteName;
+  final String resultType;
   String? converterText;
 
-  new({required this.type, required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.choices, required this.channelTypes, required this.minLength, required this.maxLength, required this.minValue, required this.maxValue, required this.autocompleteName});
+  new({required this.type, required this.name, required this.description, required this.nameLocalizations, required this.descriptionLocalizations, required this.isRequired, required this.choices, required this.channelTypes, required this.minLength, required this.maxLength, required this.minValue, required this.maxValue, required this.autocompleteName, required this.resultType});
 
   @override
   String build() {
     return """
-return OptionData(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}${converterText != null ? ", converter: $converterText": ""});
+return OptionData<$resultType>(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}${converterText != null ? ", converter: $converterText": ""});
 """.trim();
   }
 
@@ -297,6 +298,7 @@ CommandOptionInfo processBasicOption({required FormalParameterElement param, req
     maxValue: maxValue,
     choices: choices,
     autocompleteName: autocompleteClassName,
+    resultType: param.type.getDisplayString(withNullability: false),
   );
 }
 

@@ -23,6 +23,7 @@ extension on BotCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -40,6 +41,7 @@ extension on BotCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -72,7 +74,7 @@ extension on BotCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<User>(
               name: "user",
               builder: () {
                 return CommandOptionBuilder(
@@ -95,6 +97,7 @@ extension on BotCommands {
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -112,6 +115,7 @@ extension on BotCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -159,7 +163,7 @@ extension on BotCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<bool>(
               name: "git-reset",
               builder: () {
                 return CommandOptionBuilder(
@@ -180,7 +184,7 @@ extension on BotCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<bool>(
               name: "restart",
               builder: () {
                 return CommandOptionBuilder(
@@ -203,6 +207,7 @@ extension on BotCommands {
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -235,7 +240,7 @@ extension on BotCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<bool>(
               name: "restart",
               builder: () {
                 return CommandOptionBuilder(
@@ -258,6 +263,7 @@ extension on BotCommands {
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -275,6 +281,7 @@ extension on BotCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     ...subcommandGroups(bot).map((x) => x.build(bot)),

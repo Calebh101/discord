@@ -13,7 +13,7 @@ final class CommandData {
   const new({required this.builder, required this.options, required this.function, required this.requiredPerms, required this.needsGuild, required this.otherPerms});
 }
 
-final class OptionData {
+final class OptionData<T> {
   final String name;
   final CommandOptionBuilder builder;
   final List<OptionData>? options;
@@ -25,6 +25,8 @@ final class OptionData {
   final List<String>? otherPerms;
 
   const new({required this.name, required this.builder, this.autocomplete, this.function, this.options, this.converter, this.requiredPerms = .all, this.needsGuild = false, this.otherPerms});
+
+  Type get type => T;
 
   @override
   String toString() {

@@ -53,7 +53,7 @@ extension on BotAdminCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<User>(
               name: "user",
               builder: () {
                 return CommandOptionBuilder(
@@ -74,7 +74,7 @@ extension on BotAdminCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<bool>(
               name: "ignore",
               builder: () {
                 return CommandOptionBuilder(
@@ -97,6 +97,7 @@ extension on BotAdminCommands {
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -144,7 +145,7 @@ extension on BotAdminCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<User>(
               name: "user",
               builder: () {
                 return CommandOptionBuilder(
@@ -165,7 +166,7 @@ extension on BotAdminCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<bool>(
               name: "admin",
               builder: () {
                 return CommandOptionBuilder(
@@ -188,6 +189,7 @@ extension on BotAdminCommands {
         ],
         requiredPerms: .parse(3),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -205,6 +207,7 @@ extension on BotAdminCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     () {
@@ -237,7 +240,7 @@ extension on BotAdminCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<bool>(
               name: "claim",
               builder: () {
                 return CommandOptionBuilder(
@@ -260,6 +263,7 @@ extension on BotAdminCommands {
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
   ];

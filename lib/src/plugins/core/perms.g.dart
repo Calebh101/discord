@@ -38,7 +38,7 @@ extension on PermsCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "perm",
               builder: () {
                 return CommandOptionBuilder(
@@ -61,6 +61,7 @@ extension on PermsCommands {
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -123,7 +124,7 @@ extension on PermsCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "perm",
               builder: () {
                 return CommandOptionBuilder(
@@ -144,7 +145,7 @@ extension on PermsCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<Role>(
               name: "role",
               builder: () {
                 return CommandOptionBuilder(
@@ -165,7 +166,7 @@ extension on PermsCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<bool>(
               name: "allow",
               builder: () {
                 return CommandOptionBuilder(
@@ -188,6 +189,7 @@ extension on PermsCommands {
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     () {
@@ -235,7 +237,7 @@ extension on PermsCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "perm",
               builder: () {
                 return CommandOptionBuilder(
@@ -256,7 +258,7 @@ extension on PermsCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<Role>(
               name: "role",
               builder: () {
                 return CommandOptionBuilder(
@@ -279,6 +281,7 @@ extension on PermsCommands {
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
+        otherPerms: null,
       );
     }(),
     () {
@@ -296,6 +299,7 @@ extension on PermsCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -313,6 +317,7 @@ extension on PermsCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
   ];

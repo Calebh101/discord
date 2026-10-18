@@ -31,7 +31,7 @@ extension on TestCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<Member>(
               name: "member",
               builder: () {
                 return CommandOptionBuilder(
@@ -57,6 +57,7 @@ extension on TestCommands {
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -74,6 +75,7 @@ extension on TestCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -91,6 +93,7 @@ extension on TestCommands {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -108,6 +111,7 @@ extension on TestCommands {
         options: null,
         requiredPerms: .parse(2),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -125,6 +129,7 @@ extension on TestCommands {
         options: null,
         requiredPerms: .parse(3),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -142,6 +147,7 @@ extension on TestCommands {
         options: null,
         requiredPerms: .parse(1),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -386,7 +392,7 @@ extension on TestCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<Channel>(
               name: "channel",
               builder: () {
                 return CommandOptionBuilder(
@@ -407,7 +413,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<TextChannel>(
               name: "text",
               builder: () {
                 return CommandOptionBuilder(
@@ -436,7 +442,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<GuildChannel>(
               name: "guild",
               builder: () {
                 return CommandOptionBuilder(
@@ -466,7 +472,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<DmChannel>(
               name: "dm",
               builder: () {
                 return CommandOptionBuilder(
@@ -487,7 +493,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<GroupDmChannel>(
               name: "group-dm",
               builder: () {
                 return CommandOptionBuilder(
@@ -508,7 +514,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<AnnouncementThread>(
               name: "announcement-thread",
               builder: () {
                 return CommandOptionBuilder(
@@ -529,7 +535,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<GuildAnnouncementChannel>(
               name: "guild-announcement",
               builder: () {
                 return CommandOptionBuilder(
@@ -550,7 +556,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<GuildCategory>(
               name: "guild-category",
               builder: () {
                 return CommandOptionBuilder(
@@ -571,7 +577,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<DirectoryChannel>(
               name: "guild-directory",
               builder: () {
                 return CommandOptionBuilder(
@@ -592,7 +598,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<ForumChannel>(
               name: "guild-forum",
               builder: () {
                 return CommandOptionBuilder(
@@ -613,7 +619,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<GuildMediaChannel>(
               name: "guild-media",
               builder: () {
                 return CommandOptionBuilder(
@@ -634,7 +640,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<GuildStageChannel>(
               name: "guild-stage",
               builder: () {
                 return CommandOptionBuilder(
@@ -655,7 +661,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<GuildTextChannel>(
               name: "guild-text",
               builder: () {
                 return CommandOptionBuilder(
@@ -676,7 +682,7 @@ extension on TestCommands {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<GuildVoiceChannel>(
               name: "guild-voice",
               builder: () {
                 return CommandOptionBuilder(
@@ -699,6 +705,7 @@ extension on TestCommands {
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
   ];

@@ -38,7 +38,7 @@ extension on BotOwnerCommands {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<Snowflake>(
               name: "id",
               builder: () {
                 return CommandOptionBuilder(
@@ -68,6 +68,7 @@ extension on BotOwnerCommands {
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
     () {
@@ -85,6 +86,7 @@ extension on BotOwnerCommands {
         options: null,
         requiredPerms: .parse(1),
         needsGuild: false,
+        otherPerms: null,
       );
     }(),
   ];

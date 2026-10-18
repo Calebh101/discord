@@ -41,9 +41,9 @@ class CommandsStore {
     return .parse(value);
   }
 
-  Future<dynamic> convert(DiscordContext context, InteractionOption? option, OptionData? data, ResolvedData? resolved) async {
+  Future<dynamic> _convert(DiscordContext context, InteractionOption? option, OptionData? data, ResolvedData? resolved) async {
     if (option == null || data == null) return null;
-    final value = option.value;
+    var value = option.value;
 
     if (data.converter != null) {
       try {
@@ -72,6 +72,27 @@ class CommandsStore {
       default:
         return value;
     }
+  }
+
+  Future<dynamic> convert(DiscordContext context, InteractionOption? option, OptionData data, ResolvedData? resolved) async {
+    // Get our value we're starting with.
+    final value = await _convert(context, option, data, resolved);
+
+    final initialType = value.runtimeType;
+    final resultType = data.type;
+
+    // If we're already at our target, we don't need to convert :)
+    if (initialType == resultType) return value;
+
+    // Look up a converter for these types.
+    final converter = context.bot.converters.lookup(initialType, resultType);
+
+    if (converter == null) {
+      Logger.warn("Commands", "Couldn't find converter to convert type $initialType to $resultType for user ${context.userId} and option '${data.name}'.");
+      throw UserFacingException("We couldn't find something we needed when running this command.");
+    }
+
+    return await converter.convert(context, resolved, value);
   }
 
   void listen(NyxxGateway client, DiscordBot bot) {

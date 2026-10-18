@@ -38,7 +38,7 @@ extension on TagsCommand {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "name",
               builder: () {
                 return CommandOptionBuilder(
@@ -100,7 +100,7 @@ extension on TagsCommand {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<TagType>(
               name: "type",
               builder: () {
                 return CommandOptionBuilder(
@@ -200,7 +200,7 @@ extension on TagsCommand {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<TagType>(
               name: "type",
               builder: () {
                 return CommandOptionBuilder(
@@ -229,7 +229,7 @@ extension on TagsCommand {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "name",
               builder: () {
                 return CommandOptionBuilder(
@@ -250,7 +250,7 @@ extension on TagsCommand {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "value",
               builder: () {
                 return CommandOptionBuilder(
@@ -327,7 +327,7 @@ extension on TagsCommand {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<TagType>(
               name: "type",
               builder: () {
                 return CommandOptionBuilder(
@@ -356,7 +356,7 @@ extension on TagsCommand {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "name",
               builder: () {
                 return CommandOptionBuilder(
@@ -448,7 +448,7 @@ extension on TagsCommand {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<TagType>(
               name: "type",
               builder: () {
                 return CommandOptionBuilder(
@@ -477,7 +477,7 @@ extension on TagsCommand {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "old-name",
               builder: () {
                 return CommandOptionBuilder(
@@ -498,7 +498,7 @@ extension on TagsCommand {
             );
           }(),
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "new-name",
               builder: () {
                 return CommandOptionBuilder(
@@ -572,7 +572,7 @@ extension on TagsCommand {
         autocomplete: null,
         options: [
           () {
-            return OptionData(
+            return OptionData<String>(
               name: "prefix",
               builder: () {
                 return CommandOptionBuilder(
