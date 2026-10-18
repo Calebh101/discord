@@ -309,12 +309,11 @@ final class ModlogCommands extends TopLevelParentCommand {
 final class ModlogGroupAutocomplete extends AutocompleteHandler<String> {
   @override
   FutureOr<List<CommandOptionChoiceBuilder<String>>?> handle(AutocompleteContext<String> context) {
-    final value = context.value?.toLowerCase().trim();
-    if (value == null) return [];
+    final value = context.value.toLowerCase().trim();
 
     final candidates = context.bot.modlog.groups
       .map((x) => x.name)
-      .where((x) => x.startsWith(value))
+      .where((x) => value.isEmpty || x.startsWith(value))
       .toList().maxLength(context.max);
 
     return candidates.mapToList((x) {

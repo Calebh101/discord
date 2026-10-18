@@ -127,7 +127,7 @@ final class PermsCommands extends SubcommandGroupCommand {
 final class PermsAutocomplete extends AutocompleteHandler<String> {
   @override
   FutureOr<List<CommandOptionChoiceBuilder<String>>?> handle(AutocompleteContext<String> context) {
-    final value = context.value?.trim().toLowerCase();
+    final value = context.value.trim().toLowerCase().nullIfEmpty;
     final perms = context.bot.permissions.all;
     final candidates = value == null ? perms : perms.where((x) => x.name.startsWith(value));
 

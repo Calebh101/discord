@@ -4,15 +4,45 @@ import 'package:any_date/any_date.dart';
 import 'package:chrono_dart/chrono_dart.dart';
 import 'package:collection/collection.dart';
 import 'package:discord/discord.dart';
-import 'package:jiffy/jiffy.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'reminders.g.dart';
 
+final durationRegex = RegExp(
+  r'(\d+)\s*(minutes?|mins?|min?|hours?|hrs?|hr?|days?|weeks?|[mhdw])',
+  caseSensitive: false,
+);
+
+DateTime? tryParseDuration(String input) {
+  final matches = durationRegex.allMatches(input);
+  if (matches.length < 2) return null;
+  Duration duration = .zero;
+
+  for (final match in matches) {
+    final n = int.parse(match.group(1)!);
+    final u = match.group(2)!.toLowerCase().trim();
+
+    duration += switch (u[0]) {
+      "m" => .new(minutes: n),
+      "h" => .new(hours: n),
+      "d" => .new(days: n),
+      "w" => .new(days: n * 7),
+      _ => .zero,
+    };
+  }
+
+  if (duration <= .zero) return null;
+  return .now().add(duration);
+}
+
 DateTime? parseFromLanguage(String text, Locale? locale) {
-  return AnyDate.fromLocale(locale?.identifier ?? "en-US").tryParse(text.trim()) ?? Chrono.parseDate(text.trim(), option: .new(
-    forwardDate: true,
-  ));
+  return
+    AnyDate.fromLocale(locale?.identifier ?? "en-US").tryParse(text.trim()) ??
+    tryParseDuration(text) ??
+    Chrono.parseDate(text.trim(), option: .new(
+      forwardDate: true,
+    ))
+  ;
 }
 
 final class Timestamp implements Comparable<Timestamp> {
@@ -28,9 +58,11 @@ final class Timestamp implements Comparable<Timestamp> {
     return .new(.parse(pieces[0]), .parse(pieces[1]), .parse(pieces[2]), .parse(pieces[3]));
   }
 
-  factory fromDateTime(DateTime data) {
-    final dayOfYear = DateTime.utc(data.year, data.month, data.day).difference(DateTime.utc(data.year)).inDays + 1;
-    return .new(data.year, dayOfYear, data.hour, data.minute);
+  factory fromDateTime(DateTime date) {
+    final data = date.toUtc();
+    final day = DateTime.utc(data.year, data.month, data.day).difference(DateTime.utc(data.year)).inDays + 1;
+
+    return .new(data.year, day, data.hour, data.minute);
   }
 
   factory now() {
@@ -38,7 +70,7 @@ final class Timestamp implements Comparable<Timestamp> {
   }
 
   DateTime toDateTime() {
-    return .new(year, 1, day, hour, minute);
+    return .utc(year, 1, day, hour, minute);
   }
 
   String serialize() {
@@ -104,6 +136,10 @@ final class RemindersPlugin extends DiscordPlugin {
           return x.key <= .now();
         }).map((x) => x.value).flattened;
 
+        if (reminders.isNotEmpty) {
+          Logger.print("Reminders", "Handling ${reminders.length} reminders");
+        }
+
         for (final reminder in reminders) {
           final url = Uri.parse("https://discord.com/channels/${[
             reminder.messageGuildId ?? "@me",
@@ -155,14 +191,33 @@ final class RemindersPlugin extends DiscordPlugin {
 final class RemindersAutocomplete extends AutocompleteHandler<String> {
   @override
   FutureOr<List<CommandOptionChoiceBuilder<String>>?> handle(AutocompleteContext<String> context) {
-    final value = context.value?.trim().nullIfEmpty;
+    final value = context.value.trim().nullIfEmpty;
     final date = DateTime.tryParse(value ?? "");
 
     String getName(DateTime date) {
-      return Jiffy.parseFromDateTime(date).fromNow();
+      final difference = Duration(
+        minutes: (date.difference(.now()).abs().inSeconds / 60).round(),
+      );
+
+      String? getPart(int value, int? factor, {required String singular, String? plural}) {
+        plural ??= "${singular}s";
+        final amount = factor != null ? value % factor : value;
+
+        if (amount <= 0) return null;
+        return "$amount ${amount == 1 ? singular : plural}";
+      }
+
+      final parts = [
+        ?getPart(difference.inDays, null, singular: "day"),
+        ?getPart(difference.inHours, 24, singular: "hour"),
+        ?getPart(difference.inMinutes, 60, singular: "minute"),
+      ];
+
+      if (parts.isEmpty) return "just now";
+      return "in ${parts.length >= 3 ? parts.join(", ") : parts.join(" and ")}";
     }
 
-    if (date != null) {
+    if (date != null && date.isAfter(.now())) {
       return [
         .new(name: getName(date), value: DateTime.now().toIso8601String()),
       ];
@@ -183,7 +238,7 @@ final class RemindersAutocomplete extends AutocompleteHandler<String> {
     if (result == null || result.isBefore(.now())) return [];
 
     return [
-      .new(name: Jiffy.parseFromDateTime(result).fromNow(), value: result.toIso8601String()),
+      .new(name: getName(result), value: result.toIso8601String()),
     ];
   }
 }
@@ -201,12 +256,12 @@ final class RemindersIDAutocomplete extends AutocompleteHandler<int> {
       });
     }
 
-    if (value == null || value < 0) {
+    if (value.isEmpty) {
       return process(reminders);
     }
 
     return process(reminders.where((reminder) {
-      return reminder.data.id == value || reminder.data.id.toString().startsWith(value.toString());
+      return reminder.data.id.toString() == value || reminder.data.id.toString().startsWith(value);
     }).toList());
   }
 }
@@ -249,7 +304,7 @@ final class RemindersCommand extends TopLevelParentCommand {
   @Subcommand("create", "Make a new reminder.")
   void create(
     DiscordContext context,
-    @StringOption("in", "When your reminder should happen.", autocomplete: Autocomplete<RemindersAutocomplete>()) String raw,
+    @StringOption("when", "When your reminder should happen.", autocomplete: Autocomplete<RemindersAutocomplete>()) String raw,
     @StringOption("what", "What you want to be reminded about.") String text,
   ) async {
     await context.acknowledge();
@@ -294,7 +349,7 @@ final class RemindersCommand extends TopLevelParentCommand {
     settings.saveReminder(timestamp, reminder);
 
     await context.respond(.new(
-      content: "Reminder set for ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you in DMs :)\nReminder #${reminder.id}",
+      content: "Reminder set for ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you in DMs :)\nReminder **#${reminder.id}**",
     ));
   }
 

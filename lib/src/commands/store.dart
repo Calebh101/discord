@@ -280,8 +280,13 @@ class CommandsStore {
         return;
       }
 
+      if (focused == null) {
+        Logger.warn("Autocomplete", "No item focused: $path");
+        return;
+      }
+
       try {
-        final context = await handler.createContext(bot, client, interaction, focused?.value);
+        final context = await handler.createContext(bot, client, interaction, focused.value);
         if (context == null) return Logger.warn("Autocomplete", "Context could not be created. ${user.id}, ${interaction.guildId}, ${interaction.channelId}");
 
         for (final p in bot.plugins) {

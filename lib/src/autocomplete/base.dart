@@ -11,7 +11,7 @@ abstract class AutocompleteHandler<T> {
   FutureOr<List<CommandOptionChoiceBuilder<T>>?> handle(AutocompleteContext<T> context);
 
   @nonVirtual
-  Future<AutocompleteContext<T>?> createContext(DiscordBot bot, NyxxGateway client, ApplicationCommandAutocompleteInteraction interaction, T? value) async {
+  Future<AutocompleteContext<T>?> createContext(DiscordBot bot, NyxxGateway client, ApplicationCommandAutocompleteInteraction interaction, String value) async {
     final user = interaction.user ?? interaction.member?.user;
 
     final channel = await tryCatchA(() async {
@@ -30,7 +30,7 @@ final class AutocompleteContext<T> {
   final ApplicationCommandAutocompleteInteraction interaction;
   final User user;
   final TextChannel channel;
-  final T? value;
+  final String value;
 
   const new({required this.bot, required this.client, required this.interaction, required this.user, required this.channel, required this.value});
 

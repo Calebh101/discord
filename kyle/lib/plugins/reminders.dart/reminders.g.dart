@@ -62,7 +62,7 @@ extension on RemindersCommand {
             () {
               return CommandOptionBuilder(
                 type: .new(3),
-                name: "in",
+                name: "when",
                 description: "When your reminder should happen.",
                 isRequired: true,
                 choices: null,
@@ -97,11 +97,11 @@ extension on RemindersCommand {
         options: [
           () {
             return OptionData(
-              name: "in",
+              name: "when",
               builder: () {
                 return CommandOptionBuilder(
                   type: .new(3),
-                  name: "in",
+                  name: "when",
                   description: "When your reminder should happen.",
                   isRequired: true,
                   choices: null,
