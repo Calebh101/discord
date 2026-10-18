@@ -369,7 +369,7 @@ final class RemindersCommand extends TopLevelParentCommand {
 
     if (settings.removeReminder(reminder.timestamp, reminder.data)) {
       await context.respond(.new(
-        content: "Deleted reminder #$id!",
+        content: "Deleted reminder **#$id**!",
       ));
     } else {
       Logger.warn("Reminders", "Couldn't delete reminder $id for user ${context.userId}.");

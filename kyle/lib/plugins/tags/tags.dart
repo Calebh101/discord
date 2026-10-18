@@ -384,7 +384,7 @@ final class TagsAutocomplete extends AutocompleteHandler<String> {
   FutureOr<List<CommandOptionChoiceBuilder<String>>?> handle(AutocompleteContext<String> context) {
     final userSettings = TagsUserSettings(context.store, context.userId);
     final guildSettings = context.guildId != null ? TagsGuildSettings(context.store, context.guildId!) : null;
-    final input = context.value?.trim().toLowerCase() ?? "";
+    final input = context.value.trim().toLowerCase();
 
     final tags = {
       ...userSettings.tags.get().map((k, _) => .new(k, "user")),
