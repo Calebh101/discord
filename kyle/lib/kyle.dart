@@ -4,6 +4,7 @@ import 'package:discord/discord.dart';
 import 'package:discord/plugins.dart';
 import 'package:kyle/plugins/jarvis/jarvis.dart';
 import 'package:kyle/plugins/modlog_events.dart';
+import 'package:kyle/plugins/reminders.dart/reminders.dart';
 import 'package:kyle/plugins/tags/tags.dart';
 
 final class Kyle extends DiscordBot {
@@ -20,6 +21,7 @@ final class Kyle extends DiscordBot {
 
     ModlogEventsPlugin(),
     TagsPlugin(),
+    RemindersPlugin(),
     JarvisPlugin(),
   ];
 

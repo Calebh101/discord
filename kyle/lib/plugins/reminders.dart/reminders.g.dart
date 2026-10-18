@@ -12,6 +12,7 @@ ReminderData _$ReminderDataFromJson(Map json) => ReminderData(
   userId: (json['userId'] as num).toInt(),
   messageId: (json['messageId'] as num).toInt(),
   messageChannelId: (json['messageChannelId'] as num).toInt(),
+  messageGuildId: (json['messageGuildId'] as num?)?.toInt(),
   targetChannelId: (json['targetChannelId'] as num?)?.toInt(),
 );
 
@@ -22,6 +23,7 @@ Map<String, dynamic> _$ReminderDataToJson(ReminderData instance) =>
       'userId': instance.userId,
       'messageId': instance.messageId,
       'messageChannelId': instance.messageChannelId,
+      'messageGuildId': instance.messageGuildId,
       'targetChannelId': instance.targetChannelId,
     };
 
@@ -31,6 +33,24 @@ Map<String, dynamic> _$ReminderDataToJson(ReminderData instance) =>
 
 extension on RemindersCommand {
   List<OptionData> commandOptions(DiscordBot bot) => [
+    () {
+      return OptionData(
+        name: "list",
+        function: list,
+        builder: .subCommand(
+          name: "list",
+          description: "List all of your reminders.",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: false,
+        otherPerms: null,
+      );
+    }(),
     () {
       return OptionData(
         name: "create",
@@ -125,17 +145,55 @@ extension on RemindersCommand {
     }(),
     () {
       return OptionData(
-        name: "list",
-        function: list,
+        name: "delete",
+        function: delete,
         builder: .subCommand(
-          name: "list",
-          description: "List all of your reminders.",
-          options: [],
+          name: "delete",
+          description: "Delete a reminder.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(4),
+                name: "id",
+                description: "ID of your reminder.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
           nameLocalizations: null,
           descriptionLocalizations: null,
         ),
         autocomplete: null,
-        options: null,
+        options: [
+          () {
+            return OptionData(
+              name: "id",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(4),
+                  name: "id",
+                  description: "ID of your reminder.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => RemindersIDAutocomplete(),
+            );
+          }(),
+        ],
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,

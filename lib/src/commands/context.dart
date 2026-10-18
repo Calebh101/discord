@@ -81,7 +81,9 @@ final class DiscordContext {
 
   Future<void> acknowledge({ResponseEphemeralMode ephemeral = .none}) async {
     try {
-      await interaction.acknowledge(isEphemeral: getEphemeral(ephemeral));
+      final response = await interaction.acknowledge(isEphemeral: getEphemeral(ephemeral), withResponse: true);
+      if (response != null) myResponse = response;
+      myResponseMessage = myResponse?.resource?.message;
     } catch (e) {
       Logger.warn("Context", "Error acknowledging interaction $interactionId with user $userId (ephemeral: ${ephemeral.name}): $e");
       throw ResponseException("Unable to acknowledge.", userId: userId, interactionId: interactionId);
@@ -96,7 +98,8 @@ final class DiscordContext {
           : MessageFlags.ephemeral;
       }
 
-      myResponse = await interaction.respond(builder, withResponse: true);
+      final response = await interaction.respond(builder, withResponse: true);
+      if (response != null) myResponse = response;
       myResponseMessage = myResponse?.resource?.message;
     } catch (e) {
       Logger.warn("Context", "Error responding to user $userId and interaction $interactionId: $e");

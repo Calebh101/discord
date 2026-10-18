@@ -9,6 +9,12 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'reminders.g.dart';
 
+DateTime? parseFromLanguage(String text, Locale? locale) {
+  return AnyDate.fromLocale(locale?.identifier ?? "en-US").tryParse(text.trim()) ?? Chrono.parseDate(text.trim(), option: .new(
+    forwardDate: true,
+  ));
+}
+
 final class Timestamp implements Comparable<Timestamp> {
   final int year;
   final int day;
@@ -42,14 +48,6 @@ final class Timestamp implements Comparable<Timestamp> {
       hour,
       minute,
     ].join(":");
-  }
-
-  bool isAfter(DateTime date) {
-    return toDateTime().isAfter(date);
-  }
-
-  bool isBefore(DateTime date) {
-    return toDateTime().isBefore(date);
   }
 
   @override
@@ -88,10 +86,70 @@ final class RemindersPlugin extends DiscordPlugin {
       RemindersCommand(),
     ];
   }
-}
 
-DateTime? parseFromLanguage(String text, Locale? locale) {
-  return AnyDate.fromLocale(locale?.identifier ?? "en-US").tryParse(text.trim()) ?? Chrono.parseDate(text.trim());
+  @override
+  void onReady(DiscordBot bot) {
+    Logger.print("Reminders", "Startup second: ${DateTime.now().second}");
+
+    Timer.periodic(.new(minutes: 1), (_) async {
+      bot.clients.run((client) async {
+        final settings = RemindersClientSettings(bot.store, client.user.id);
+        final data = settings.reminders.get();
+
+        if (data.isEmpty) {
+          return;
+        }
+
+        final reminders = data.entries.where((x) {
+          return x.key <= .now();
+        }).map((x) => x.value).flattened;
+
+        for (final reminder in reminders) {
+          final url = Uri.parse("https://discord.com/channels/${[
+            reminder.messageGuildId ?? "@me",
+            reminder.messageChannelId,
+            reminder.messageId,
+          ].join("/")}");
+
+          try {
+            if (isIgnored(bot.store, .parse(reminder.userId))) continue;
+
+            final userId = Snowflake.parse(reminder.userId);
+            final channelId = reminder.targetChannelId != null ? Snowflake.parse(reminder.targetChannelId!) : null;
+
+            final channel = channelId != null ? await client.channels.get(channelId) as TextChannel : await client.users.createDm(userId);
+
+            await channel.sendMessage(.new(embeds: [
+              .new(
+                title: "You asked me to remind you...",
+                description: reminder.name,
+                url: url,
+                footer: .new(text: "Reminder #${reminder.id}"),
+              ),
+            ]));
+          } catch (e) {
+            Logger.warn("Reminders", "Unable to send reminder ${reminder.id} for user ${reminder.userId} in channel ${reminder.targetChannelId}: $e");
+
+            try {
+              final channel = await client.users.createDm(.parse(reminder.userId));
+
+              await channel.sendMessage(.new(
+                content: "You asked me to remind you in ${reminder.targetChannelId?.toChannelMention() ?? "**here**"}...\n${reminder.name.toDiscordCodeBlock()}\n**Where**: $url\n-# This is a fallback message. Your reminder was not able to be successfully delivered first try.",
+              ));
+            } catch (e) {
+              Logger.warn("Reminders", "Unable to send backup message for reminder ${reminder.userId}, aborting: $e");
+            }
+          }
+        }
+
+        data.removeWhere((timestamp, _) {
+          return timestamp <= .now();
+        });
+
+        settings.reminders.set(data);
+      });
+    });
+  }
 }
 
 final class RemindersAutocomplete extends AutocompleteHandler<String> {
@@ -100,30 +158,56 @@ final class RemindersAutocomplete extends AutocompleteHandler<String> {
     final value = context.value?.trim().nullIfEmpty;
     final date = DateTime.tryParse(value ?? "");
 
+    String getName(DateTime date) {
+      return Jiffy.parseFromDateTime(date).fromNow();
+    }
+
     if (date != null) {
       return [
-        .new(name: Jiffy.parseFromDateTime(date).toNow(), value: DateTime.now().toIso8601String()),
+        .new(name: getName(date), value: DateTime.now().toIso8601String()),
       ];
     }
 
     if (value == null) {
-      String v(Duration duration) {
-        return DateTime.now().add(duration).toIso8601String();
-      }
-
       return [
-        .new(name: "In 1 hour", value: v(.new(hours: 1))),
-        .new(name: "In 1 day", value: v(.new(days: 1))),
-        .new(name: "In 1 week", value: v(.new(days: 7))),
-      ];
+        Duration(hours: 1),
+        Duration(days: 1),
+        Duration(days: 7),
+      ].mapToList((duration) {
+        final date = DateTime.now().add(duration);
+        return .new(name: getName(date), value: date.toIso8601String());
+      });
     }
 
     final result = parseFromLanguage(value, context.locale);
     if (result == null || result.isBefore(.now())) return [];
 
     return [
-      .new(name: Jiffy.parseFromDateTime(result).toNow(), value: result.toIso8601String()),
+      .new(name: Jiffy.parseFromDateTime(result).fromNow(), value: result.toIso8601String()),
     ];
+  }
+}
+
+final class RemindersIDAutocomplete extends AutocompleteHandler<int> {
+  @override
+  FutureOr<List<CommandOptionChoiceBuilder<int>>?> handle(AutocompleteContext<int> context) {
+    final settings = RemindersClientSettings(context.store, context.clientId);
+    final reminders = settings.findReminders((x) => x.data.userId == context.userId.value);
+    final value = context.value;
+
+    List<CommandOptionChoiceBuilder<int>> process(List<ReminderInfo> reminders) {
+      return reminders.maxLength(25).mapToList((reminder) {
+        return .new(name: "#${reminder.data.id}: ${reminder.data.name.maxLength(25, ellipsis: true)}", value: reminder.data.id);
+      });
+    }
+
+    if (value == null || value < 0) {
+      return process(reminders);
+    }
+
+    return process(reminders.where((reminder) {
+      return reminder.data.id == value || reminder.data.id.toString().startsWith(value.toString());
+    }).toList());
   }
 }
 
@@ -134,59 +218,6 @@ final class RemindersCommand extends TopLevelParentCommand {
   @override
   CommandData build(DiscordBot bot) {
     return buildCommand(commandOptions(bot));
-  }
-
-  @Subcommand("create", "Make a new reminder.")
-  void create(
-    DiscordContext context,
-    @StringOption("in", "When your reminder should happen.", autocomplete: Autocomplete<RemindersAutocomplete>()) String raw,
-    @StringOption("what", "What you want to be reminded about.") String text,
-  ) async {
-    final date = DateTime.tryParse(raw.trim()) ?? parseFromLanguage(text, context.locale);
-
-    if (date == null) {
-      return await context.respond(.new(
-        content: "We couldn't parse that date...\nIf using a relative timestamp (like `in a week`), please note that only en-US is supported for now.\nHowever, you can still use dates like `August 13, 2025`, which can change based on your locale!\nIf all else fails, you can enter a raw ISO 8601 UTC timestamp.",
-      ));
-    }
-
-    final timestamp = Timestamp.fromDateTime(date);
-
-    if (timestamp.isBefore(.now())) {
-      return await context.respond(.new(
-        content: "Your date can't be in the past...",
-      ));
-    }
-
-    await context.respond(.new(
-      content: "Creating your reminder for ${date.toDiscordTimestamp(.shortDateTime)}...",
-    ));
-
-    final message = context.myResponseMessage;
-    final settings = RemindersClientSettings(context.store, context.clientId);
-
-    if (message == null) {
-      Logger.warn("Reminders", "Response message not found after response: ${context.myResponse.runtimeType}, ${context.myResponse?.resource.runtimeType}, ${context.myResponse?.resource?.message.runtimeType}");
-
-      return await context.updateOriginalResponse(.new(
-        content: "Hmm... we couldn't finish creating your reminder. That's weird.",
-      ));
-    }
-
-    final reminder = ReminderData(
-      id: settings.nextId(),
-      name: text,
-      userId: context.userId.value,
-      messageId: message.id.value,
-      messageChannelId: message.channelId.value,
-      targetChannelId: null,
-    );
-
-    settings.saveReminder(timestamp, reminder);
-
-    await context.updateOriginalResponse(.new(
-      content: "Reminder set for ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you in DMs :)",
-    ));
   }
 
   @Subcommand("list", "List all of your reminders.")
@@ -214,6 +245,85 @@ final class RemindersCommand extends TopLevelParentCommand {
       })),
     ));
   }
+
+  @Subcommand("create", "Make a new reminder.")
+  void create(
+    DiscordContext context,
+    @StringOption("in", "When your reminder should happen.", autocomplete: Autocomplete<RemindersAutocomplete>()) String raw,
+    @StringOption("what", "What you want to be reminded about.") String text,
+  ) async {
+    await context.acknowledge();
+    final date = DateTime.tryParse(raw.trim()) ?? parseFromLanguage(raw, context.locale);
+    Logger.print("Reminders", "Parsed string '${raw.trim()}' and locale ${context.locale?.identifier} to ${date?.toIso8601String()}");
+
+    if (date == null) {
+      return await context.respond(.new(
+        content: "We couldn't parse that date...\nIf using a relative timestamp (like `in a week`), please note that only en-US is supported for now.\nHowever, you can still use dates like `August 13, 2025`, which can change based on your locale!\nIf all else fails, you can enter a raw ISO 8601 UTC timestamp.",
+      ), ephemeral: .ephemeral);
+    }
+
+    final timestamp = Timestamp.fromDateTime(date);
+
+    if (timestamp <= .now()) {
+      return await context.respond(.new(
+        content: "Your date can't be in the past...",
+      ), ephemeral: .ephemeral);
+    }
+
+    final message = context.myResponseMessage;
+    final settings = RemindersClientSettings(context.store, context.clientId);
+
+    if (message == null) {
+      Logger.warn("Reminders", "Response message not found after response: ${context.myResponse.runtimeType}, ${context.myResponse?.resource.runtimeType}, ${context.myResponse?.resource?.message.runtimeType}");
+
+      return await context.respond(.new(
+        content: "Hmm... we couldn't create your reminder. That's weird.",
+      ), ephemeral: .ephemeral);
+    }
+
+    final reminder = ReminderData(
+      id: settings.nextId(),
+      name: text,
+      userId: context.userId.value,
+      messageId: message.id.value,
+      messageChannelId: message.channelId.value,
+      messageGuildId: context.guildId?.value,
+      targetChannelId: null,
+    );
+
+    settings.saveReminder(timestamp, reminder);
+
+    await context.respond(.new(
+      content: "Reminder set for ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you in DMs :)\nReminder #${reminder.id}",
+    ));
+  }
+
+  @Subcommand("delete", "Delete a reminder.")
+  void delete(
+    DiscordContext context,
+    @IntOption("id", "ID of your reminder.", autocomplete: Autocomplete<RemindersIDAutocomplete>()) int id,
+  ) async {
+    final settings = RemindersClientSettings(context.store, context.clientId);
+    final reminder = settings.findReminder((x) => x.data.userId == context.userId.value && x.data.id == id);
+
+    if (reminder == null) {
+      return await context.respond(.new(
+        content: "We couldn't find reminder `$id`.",
+      ), ephemeral: .ephemeral);
+    }
+
+    if (settings.removeReminder(reminder.timestamp, reminder.data)) {
+      await context.respond(.new(
+        content: "Deleted reminder #$id!",
+      ));
+    } else {
+      Logger.warn("Reminders", "Couldn't delete reminder $id for user ${context.userId}.");
+
+      await context.respond(.new(
+        content: "We couldn't delete that reminder for some reason...",
+      ), ephemeral: .ephemeral);
+    }
+  }
 }
 
 final class RemindersClientSettings extends ClientSettings {
@@ -221,15 +331,15 @@ final class RemindersClientSettings extends ClientSettings {
 
   SettingsObjectNotNull<int> get currentId => .new(this, "currentReminderId", () => 0);
 
-  SettingsObjectNotNull<Map<String, List<ReminderData>>> get reminders => .map(
+  SettingsObjectNotNull<Map<Timestamp, List<ReminderData>>> get reminders => .map(
     this, "reminders",
+    encodeKey: (x) => x.serialize(),
+    decodeKey: (x) => .parse(x),
     encodeValue: (x) => x.mapToList((x) => x.toJson()),
     decodeValue: (x) => (x as List?)?.mapToList((y) => .fromJson(y)) ?? [],
   );
 
-  Iterable<ReminderInfo> get allReminders => reminders.get().mapTo((k, reminders) {
-    final timestamp = Timestamp.parse(k);
-
+  Iterable<ReminderInfo> get allReminders => reminders.get().mapTo((timestamp, reminders) {
     return reminders.map((reminder) {
       return ReminderInfo(reminder, timestamp);
     });
@@ -252,23 +362,28 @@ final class RemindersClientSettings extends ClientSettings {
   void saveReminder(Timestamp timestamp, ReminderData reminder) {
     final data = reminders.get();
 
-    if (data.containsKey(timestamp.serialize())) {
-      data[timestamp.serialize()]!.add(reminder);
+    if (data.containsKey(timestamp)) {
+      data[timestamp]!.add(reminder);
     } else {
-      data[timestamp.serialize()] = [reminder];
+      data[timestamp] = [reminder];
     }
 
     reminders.set(data);
   }
 
-  void saveReminders(Map<String, List<ReminderData>> items) {
-    final now = Timestamp.now();
+  bool removeReminder(Timestamp timestamp, ReminderData reminder) {
+    final data = reminders.get();
+    final list = data[timestamp];
 
-    items.removeWhere((_, v) => v.isEmpty);
-    items.removeWhere((k, _) => now < .parse(k));
+    if (list == null || list.isEmpty) {
+      return false;
+    }
 
-    if (items.isEmpty) return reminders.delete();
-    reminders.set(items);
+    final count = list.removeWhereWithCount((x) => x.id == reminder.id);
+    if (count <= 0) return false;
+
+    reminders.set(data);
+    return true;
   }
 }
 
@@ -279,6 +394,7 @@ final class ReminderData {
   final int userId;
   final int messageId;
   final int messageChannelId;
+  final int? messageGuildId;
   final int? targetChannelId;
 
   const new({
@@ -287,6 +403,7 @@ final class ReminderData {
     required this.userId,
     required this.messageId,
     required this.messageChannelId,
+    required this.messageGuildId,
     required this.targetChannelId,
   });
 
