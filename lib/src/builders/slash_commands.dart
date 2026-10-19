@@ -16,7 +16,7 @@ import 'package:discord/src/commands/context.dart';
 import 'package:discord/src/other/generator_for_superclass.dart';
 
 final List<String> allAnnotationNames = [
-  "StringOption", "IntOption", "NumOption", "BoolOption",
+  "StringOption", "IntOption", "DoubleOption", "BoolOption",
   "UserOption", "RoleOption", "MentionableOption",
   "AttachmentOption",
   "ChannelOption", "TextChannelOption", "GuildChannelOption",
@@ -39,6 +39,10 @@ Builder commandBuilder(BuilderOptions options) {
 Map<Locale, String>? parseLocalizations(Map<String, String>? input) {
   if (input == null) return null;
   return input.map((k, v) => .new(.parse(k), v));
+}
+
+bool isRequired(FormalParameterElement param) {
+  return param.type.nullabilitySuffix != .question;
 }
 
 sealed class CommandInfo {

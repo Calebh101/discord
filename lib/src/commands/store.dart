@@ -75,8 +75,8 @@ class CommandsStore {
   }
 
   Future<dynamic> convert(DiscordContext context, InteractionOption? option, OptionData data, ResolvedData? resolved) async {
-    // Get our value we're starting with.
     final value = await _convert(context, option, data, resolved);
+    if (value == null) return value;
 
     final initialType = value.runtimeType;
     final resultType = data.type;
@@ -292,12 +292,12 @@ class CommandsStore {
         return;
       }
 
-      final focused = subcommand?.options?.firstWhereOrNull((x) => x.isFocused == true);
+      final focused = (subcommand?.options ?? data.options)?.firstWhereOrNull((x) => x.isFocused == true);
       final option = info.options?.firstWhereOrNull((x) => x.name == focused?.name);
       final handler = option?.autocomplete?.call();
 
       if (handler == null) {
-        Logger.warn("Autocomplete", "Invalid command: $path\nSomething was null.\n${[subcommand, focused, option, handler].map((x) => x.runtimeType).join(", ")}");
+        Logger.warn("Autocomplete", "Invalid command: $path\nSomething was null.\n${[data, subcommand, focused, option, handler].map((x) => x.runtimeType).join(", ")}");
         return;
       }
 

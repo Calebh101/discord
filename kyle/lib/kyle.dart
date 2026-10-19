@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:discord/discord.dart';
 import 'package:discord/plugins.dart';
 import 'package:kyle/plugins/jarvis/jarvis.dart';
+import 'package:kyle/plugins/math/math.dart';
 import 'package:kyle/plugins/modlog_events.dart';
+import 'package:kyle/plugins/mrbeast/mrbeast.dart';
 import 'package:kyle/plugins/reminders/reminders.dart';
 import 'package:kyle/plugins/tags/tags.dart';
 
@@ -22,7 +24,9 @@ final class Kyle extends DiscordBot {
     ModlogEventsPlugin(),
     TagsPlugin(),
     RemindersPlugin(),
+    MathPlugin(),
     JarvisPlugin(),
+    MrBeastPlugin(),
   ];
 
   @override

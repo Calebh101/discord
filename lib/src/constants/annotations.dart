@@ -88,7 +88,7 @@ final class IntOption extends Option<int> {
   }) : super(type: .integer);
 }
 
-final class NumOption extends Option<double> {
+final class DoubleOption extends Option<double> {
   const new(super.name, super.description, {
     super.nameLocalizations,
     super.descriptionLocalizations,
