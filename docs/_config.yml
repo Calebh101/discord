@@ -1,0 +1,7 @@
+title: Discord Package Docs
+remote_theme: just-the-docs/just-the-docs
+color_scheme: dark
+favicon_ico: /favicon.png
+
+plugins:
+  - jekyll-remote-theme
