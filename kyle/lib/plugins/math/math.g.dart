@@ -10,6 +10,96 @@ extension on MathCommand {
   List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
+        name: "channel",
+        function: getChannel,
+        builder: .subCommand(
+          name: "channel",
+          description: "Get the math channel.",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: true,
+        otherPerms: null,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "set-channel",
+        function: setChannel,
+        builder: .subCommand(
+          name: "set-channel",
+          description: "Set the math channel.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(7),
+                name: "channel",
+                description: "Channel to set it to.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: [
+                  .new(1),
+                  .new(3),
+                  .new(10),
+                  .new(5),
+                  .new(13),
+                  .new(0),
+                  .new(2),
+                ],
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<TextChannel>(
+              name: "channel",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(7),
+                  name: "channel",
+                  description: "Channel to set it to.",
+                  isRequired: false,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: [
+                    .new(1),
+                    .new(3),
+                    .new(10),
+                    .new(5),
+                    .new(13),
+                    .new(0),
+                    .new(2),
+                  ],
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+        otherPerms: null,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "calculate",
         function: calculate,
         builder: .subCommand(

@@ -12,9 +12,9 @@ final class ConvertersStore {
     converters.add(converter);
   }
 
-  DiscordConverter? lookup(Type initialType, Type resultType) {
+  DiscordConverter? lookup(Object? object, Type initialType, Type resultType) {
     return converters.firstWhereOrNull((x) {
-      return x.initialType == initialType && x.resultType == resultType;
+      return x.isInitialType(object) && x.resultType == resultType && !x.isResultType(object);
     });
   }
 }
@@ -24,6 +24,14 @@ abstract class DiscordConverter<I, R> {
 
   Type get initialType => I;
   Type get resultType => R;
+
+  bool isInitialType(Object? object) {
+    return object is I;
+  }
+
+  bool isResultType(Object? object) {
+    return object is R;
+  }
 
   FutureOr<R> convert(DiscordContext context, ResolvedData? resolved, I value);
 }

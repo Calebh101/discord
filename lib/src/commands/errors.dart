@@ -1,10 +1,21 @@
-class UserFacingException implements Exception {
-  final String message;
+class UnknownUserFacingException implements Exception {
+  final String userMessage;
 
-  new(this.message);
+  new(this.userMessage);
 
   @override
   String toString() {
-    return "ResponseException: $message";
+    return "UnknownUserFacingException: $userMessage";
+  }
+}
+
+class ExpectedUserFacingException implements Exception {
+  final String userMessage;
+
+  new(this.userMessage);
+
+  @override
+  String toString() {
+    return "ExpectedUserFacingException: $userMessage";
   }
 }

@@ -2,31 +2,33 @@ import 'dart:async';
 
 import 'package:discord/discord.dart';
 
-final class CommandData {
-  final ApplicationCommandBuilder builder;
+sealed class EntityData<T extends CreateBuilder> {
+  final T builder;
   final List<OptionData>? options;
-  final Function? function;
   final BotPermissions requiredPerms;
   final bool needsGuild;
   final List<String>? otherPerms;
+  final Function? function;
 
-  const new({required this.builder, required this.options, required this.function, required this.requiredPerms, required this.needsGuild, required this.otherPerms});
+  const new({required this.builder, required this.function, required this.needsGuild, required this.options, required this.otherPerms, required this.requiredPerms});
 }
 
-final class OptionData<T> {
-  final String name;
-  final CommandOptionBuilder builder;
-  final List<OptionData>? options;
-  final AutocompleteHandler Function()? autocomplete;
-  final Function? function;
-  final FutureOr<dynamic> Function(DiscordContext context, dynamic value)? converter;
-  final BotPermissions requiredPerms;
-  final bool needsGuild;
-  final List<String>? otherPerms;
+final class CommandData extends EntityData<ApplicationCommandBuilder> {
+  const new({required super.builder, required super.options, required super.function, required super.requiredPerms, required super.needsGuild, required super.otherPerms});
+}
 
-  const new({required this.name, required this.builder, this.autocomplete, this.function, this.options, this.converter, this.requiredPerms = .all, this.needsGuild = false, this.otherPerms});
+final class OptionData<T> extends EntityData<CommandOptionBuilder> {
+  final String name;
+  final AutocompleteHandler Function()? autocomplete;
+  final FutureOr<dynamic> Function(DiscordContext context, dynamic value)? converter;
+
+  const new({required this.name, required super.builder, this.autocomplete, super.function, super.options, this.converter, super.requiredPerms = .all, super.needsGuild = false, super.otherPerms});
 
   Type get type => T;
+
+  R runWithType<R>(R Function<X>() callback) {
+    return callback.call<T>();
+  }
 
   @override
   String toString() {
@@ -34,7 +36,7 @@ final class OptionData<T> {
   }
 }
 
-final class RegistryData {
+final class RegistryData<T> {
   final String name;
   final int level; // 0 is start
   final Function? function;
@@ -45,12 +47,14 @@ final class RegistryData {
 
   const new({required this.name, required this.level, required this.function, required this.options, required this.permsRequired, required this.needsGuild, required this.otherPerms});
 
-  factory fromCommandData(CommandData command) {
-    return .new(name: command.builder.name, level: 0, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild, otherPerms: command.otherPerms);
+  static RegistryData fromCommandData(CommandData command) {
+    return RegistryData(name: command.builder.name, level: 0, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild, otherPerms: command.otherPerms);
   }
 
-  factory fromOptionData(OptionData command, int level) {
-    return .new(name: command.name, level: level, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild, otherPerms: command.otherPerms);
+  static RegistryData fromOptionData<T>(OptionData command, int level) {
+    return command.runWithType(<R>() {
+      return RegistryData<R>(name: command.name, level: level, function: command.function, options: command.options, permsRequired: command.requiredPerms, needsGuild: command.needsGuild, otherPerms: command.otherPerms);
+    });
   }
 
   @override

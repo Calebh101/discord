@@ -1,14 +1,14 @@
 import 'package:discord/discord.dart';
 
-final class ResponseException extends UserFacingException {
+final class ResponseException extends UnknownUserFacingException {
   final Snowflake userId;
   final Snowflake interactionId;
 
-  new(super.message, {required this.userId, required this.interactionId});
+  new(super.userMessage, {required this.userId, required this.interactionId});
 
   @override
   String toString() {
-    return "ResponseException(userId=$userId, interactionId=$interactionId): $message";
+    return "ResponseException(userId=$userId, interactionId=$interactionId): $userMessage";
   }
 }
 

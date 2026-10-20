@@ -162,10 +162,12 @@ final class MrBeastCommand extends TopLevelSingleCommand {
 final class UriConverter extends DiscordConverter<String, Uri> {
   @override
   FutureOr<Uri> convert(DiscordContext context, ResolvedData? resolved, String value) {
-    try {
-      return .parse(value);
-    } catch (_) {
-      throw UserFacingException("Invalid URI.");
+    final uri = Uri.tryParse(value.trim());
+
+    if (uri == null || !(uri.scheme == 'http' || uri.scheme == 'https') || uri.host.isEmpty) {
+      throw ExpectedUserFacingException("Invalid URI.");
     }
+
+    return uri;
   }
 }

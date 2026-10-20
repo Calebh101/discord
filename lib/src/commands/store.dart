@@ -74,7 +74,7 @@ class CommandsStore {
     }
   }
 
-  Future<dynamic> convert(DiscordContext context, InteractionOption? option, OptionData data, ResolvedData? resolved) async {
+  Future<T?> convert<T>(DiscordContext context, InteractionOption? option, OptionData data, ResolvedData? resolved) async {
     final value = await _convert(context, option, data, resolved);
     if (value == null) return value;
 
@@ -82,17 +82,17 @@ class CommandsStore {
     final resultType = data.type;
 
     // If we're already at our target, we don't need to convert :)
-    if (initialType == resultType) return value;
+    if (value is T) return value;
 
     // Look up a converter for these types.
-    final converter = context.bot.converters.lookup(initialType, resultType);
+    final converter = context.bot.converters.lookup(value, initialType, resultType);
 
     if (converter == null) {
-      Logger.warn("Commands", "Couldn't find converter to convert type $initialType to $resultType for user ${context.userId} and option '${data.name}'.");
-      throw UserFacingException("We couldn't find something we needed when running this command.");
+      Logger.warn("Commands", "Couldn't find converter to convert type $initialType to $resultType ($T) for user ${context.userId} and option '${data.name}'.");
+      throw UnknownUserFacingException("We couldn't find something we needed when running this command.");
     }
 
-    return await converter.convert(context, resolved, value);
+    return await converter.convert(context, resolved, value) as T;
   }
 
   void listen(NyxxGateway client, DiscordBot bot) {
@@ -230,25 +230,34 @@ class CommandsStore {
         }
 
         final List<dynamic> args = [];
+        bool failed = false;
 
         for (final expected in info.options ?? <OptionData>[]) {
-          final given = options?.firstWhereOrNull((x) => x.name == expected.name);
+          final value = await expected.runWithType(<T>() async {
+            try {
+              final given = options?.firstWhereOrNull((x) => x.name == expected.name);
+              return await convert<T>(context, given, expected, data.resolved);
+            } on CommandParseError catch (e) {
+              await respond("We couldn't parse argument `${expected.name}`.\n${e.message}");
+              failed = true;
+              return null;
+            }
+          });
 
-          try {
-            args.add(await convert(context, given, expected, data.resolved));
-          } on CommandParseError catch (e) {
-            await respond("We couldn't parse argument `${expected.name}`.\n${e.message}");
-            return;
-          }
+          if (failed) return;
+          args.add(value);
         }
 
         await Function.apply(function, [
           context,
           ...args,
         ]);
-      } on UserFacingException catch (e) {
-        Logger.warn("Commands", "User-facing exception thrown on command ${path.join(".")} and user ${user.id}: $e");
-        await respond("There was an error running this command.\n${e.message}");
+      } on UnknownUserFacingException catch (e) {
+        Logger.warn("Commands", "Unknown ser-facing exception thrown on command ${path.join(".")} and user ${user.id}: $e");
+        await respond("There was an error running this command.\n${e.userMessage}");
+      } on ExpectedUserFacingException catch (e) {
+        Logger.print("Commands", "Expected user-facing exception thrown on command ${path.join(".")} and user ${user.id}: $e");
+        await respond(e.userMessage);
       } catch (e, s) {
         Logger.warn("Commands", "Unable to run command ${path.join(".")} and user ${user.id}: $e\n$s");
         await respond("There was an unexpected error running this command.\n${e.runtimeType.toDiscordCodeBlock()}");
