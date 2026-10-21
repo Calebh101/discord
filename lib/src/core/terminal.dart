@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:discord/discord.dart' hide Option;
-import 'package:localpkg/localpkg.dart';
 
 final class ExitCode {
   const ExitCode._();
@@ -22,8 +21,9 @@ final class TerminalCommand {
 }
 
 final class TerminalHandler {
-  final ClientStore<NyxxGateway> clients;
-  new(this.clients);
+  final DiscordBot bot;
+
+  new(this.bot);
 
   static bool isStdinLocked = false;
   final List<TerminalCommand> commands = [];
@@ -58,7 +58,7 @@ final class TerminalHandler {
         await close.call(ExitCode.restart);
       }),
       TerminalCommand(Char.from("p"), "Get latency stats.", () async {
-        clients.runIndexed((i, k, client) {
+        bot.clients.runIndexed((i, k, client) {
           final latency = client.httpHandler.latency;
           final realLatency = client.httpHandler.realLatency;
           final gatewayLatency = client.gateway.latency;
@@ -82,9 +82,13 @@ final class TerminalHandler {
       if (closing) return;
       closing = true;
 
+      for (final plugin in bot.plugins) {
+        await plugin.onClose(bot, code);
+      }
+
       try {
         Logger.print("Close", "Closing client...");
-        await Future.wait(clients.run((client) => client.close()));
+        await Future.wait(bot.clients.run((client) => client.close()));
       } catch (e) {
         Logger.warn("Close", "Unable to close client: $e");
       }

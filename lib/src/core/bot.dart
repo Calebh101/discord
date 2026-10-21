@@ -47,7 +47,7 @@ abstract class DiscordBot {
   @nonVirtual
   Future<void> start({Snowflake? devGuild}) async {
     Logger.print("Bot", "Starting...");
-    terminal = .new(clients);
+    terminal = .new(this);
     await terminal.init();
     Logger.print("Plugins", "Loading ${plugins.length} plugins...");
 
