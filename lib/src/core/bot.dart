@@ -45,7 +45,7 @@ abstract class DiscordBot {
   FutureOr<void> onReady() {}
 
   @nonVirtual
-  Future<void> start({Snowflake? devGuild}) async {
+  Future<void> start({Snowflake? devGuild, bool clearCommands = false}) async {
     Logger.print("Bot", "Starting...");
     terminal = .new(this);
     await terminal.init();
@@ -91,7 +91,11 @@ abstract class DiscordBot {
     await clients.loadWithTokens(tokenFilePath);
     await clients.createClients(onCreateClient);
 
-    final builders = commands.commands.mapToList((command) {
+    if (clients.clients.isEmpty) {
+      throw Exception("No clients loaded. Please make sure you created a proper tokens.json.");
+    }
+
+    final List<ApplicationCommandBuilder> builders = clearCommands ? [] : commands.commands.mapToList((command) {
       return command.builder;
     });
 

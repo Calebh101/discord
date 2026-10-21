@@ -14,8 +14,11 @@ final class MainTerminalCommand extends Command {
   @override
   String get name => "kyle";
 
-  @Flag("dev")
+  @Flag("dev", help: "Dev mode for the bot.")
   bool dev = false;
+
+  @Flag("clear", help: "Clear all commands.")
+  bool clearCommands = false;
 
   @Option("dev-guild", abbr: "g", help: "Development guild for commands.")
   String? devGuild;
@@ -37,6 +40,7 @@ final class MainTerminalCommand extends Command {
   HelpBuilder buildHelp() {
     return .new()
       ..addOptions(allOptions)
+      ..addSeparator()
       ..addFlags(allFlags)
       ;
   }
@@ -45,6 +49,6 @@ final class MainTerminalCommand extends Command {
   void onRun() async {
     Logger.print("Main", "Loading...");
     final bot = Kyle(dev: dev);
-    await bot.start(devGuild: devGuild != null ? .parse(devGuild!) : null);
+    await bot.start(devGuild: devGuild != null ? .parse(devGuild!) : null, clearCommands: clearCommands);
   }
 }
