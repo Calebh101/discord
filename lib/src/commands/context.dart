@@ -1,24 +1,12 @@
 import 'package:discord/discord.dart';
 
-final class ResponseException extends UnknownUserFacingException {
-  final Snowflake userId;
-  final Snowflake interactionId;
-
-  new(super.userMessage, {required this.userId, required this.interactionId});
-
-  @override
-  String toString() {
-    return "ResponseException(userId=$userId, interactionId=$interactionId): $userMessage";
-  }
-}
-
 enum ResponseEphemeralMode {
   ephemeral,
   none,
   ifNotDm,
 }
 
-final class DiscordContext {
+class DiscordContext {
   final ApplicationCommandInteraction interaction;
   final DiscordBot bot;
   final NyxxGateway client;
@@ -158,4 +146,17 @@ final class DiscordContext {
       await updateOriginalResponse(message);
     });
   }
+}
+
+class MessageContext extends DiscordContext {
+  final Message targetMessage;
+
+  new({required super.interaction, required super.bot, required super.client, required super.user, required super.channel, required this.targetMessage});
+}
+
+class UserContext extends DiscordContext {
+  final User targetUser;
+  final Member? targetMember;
+
+  new({required super.interaction, required super.bot, required super.client, required super.user, required super.channel, required this.targetUser, required this.targetMember});
 }

@@ -17,6 +17,11 @@ final class CorePlugin extends DiscordPlugin {
   List<TopLevelCommand> commands(DiscordBot bot) {
     return [
       BotCommands(),
+
+      if (bot.dev) ...[
+        TestMessageCommand(),
+        TestUserCommand(),
+      ],
     ];
   }
 
@@ -125,10 +130,13 @@ final class BotCommands extends TopLevelParentCommand {
 
   @override
   List<SubcommandGroupCommand> subcommandGroups(DiscordBot bot) => [
-    if (bot.dev) TestCommands(),
     BotAdminCommands(),
     BotOwnerCommands(),
     if (bot.permissions.isNotEmpty) PermsCommands(),
+
+    if (bot.dev) ...[
+      TestCommands(),
+    ],
   ];
 
   static String formatLatency(Duration latency) {

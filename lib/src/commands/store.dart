@@ -20,20 +20,24 @@ class CommandsStore {
 
   void buildRegistry() {
     for (final topLevelCommand in commands) {
-      registry[topLevelCommand.builder.name] = .fromCommandData(topLevelCommand);
+      registry[[topLevelCommand.commandType.value, topLevelCommand.builder.name].join(".")] = .fromCommandData(topLevelCommand);
 
       for (final option in (topLevelCommand.options ?? <OptionData>[])) {
         if (option.builder.type != .subCommand && option.builder.type != .subCommandGroup) continue;
-        registry[[topLevelCommand.builder.name, option.name].join(".")] = .fromOptionData(option, 1);
+        registry[[topLevelCommand.commandType.value, topLevelCommand.builder.name, option.name].join(".")] = .fromOptionData(option, 1);
 
         for (final subOption in (option.options ?? <OptionData>[])) {
           if (subOption.builder.type != .subCommand) continue;
-          registry[[topLevelCommand.builder.name, option.name, subOption.name].join(".")] = .fromOptionData(subOption, 2);
+          registry[[topLevelCommand.commandType.value, topLevelCommand.builder.name, option.name, subOption.name].join(".")] = .fromOptionData(subOption, 2);
         }
       }
     }
 
     Logger.print("Commands", "Built ${registry.length} registry entries!");
+  }
+
+  RegistryData? lookup(ApplicationCommandType type, List<String> path) {
+    return registry[[type.value, ...path].join(".")];
   }
 
   Snowflake snowflake(dynamic value) {
@@ -158,10 +162,10 @@ class CommandsStore {
       }
 
       final options = subcommand?.options ?? data.options;
-      final info = registry[path.join(".")];
+      final info = lookup(data.type, path);
       final function = info?.function;
 
-      Logger.print("Commands", "Handling command $path (${[info?.permsRequired.name, ...?info?.otherPerms].join(",")}) for user ${user.id} (${user.username}) (interaction: ${interaction.guildId}) (channel: ${interaction.channelId})...");
+      Logger.print("Commands", "Handling command $path (${data.type.value}) (${[info?.permsRequired.name, ...?info?.otherPerms].join(",")}) for user ${user.id} (${user.username}) (interaction: ${interaction.guildId}) (channel: ${interaction.channelId})...");
 
       if (info == null) {
         Logger.warn("Commands", "Invalid command: $path");
@@ -222,7 +226,12 @@ class CommandsStore {
       }
 
       try {
-        final context = DiscordContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel);
+        final context = switch (data.type) {
+          .chatInput => DiscordContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel),
+          .message => MessageContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel, targetMessage: await data.resolved!.messages![data.targetId!]!.get()),
+          .user => UserContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel, targetUser: await data.resolved!.users![data.targetId!]!.get(), targetMember: await data.resolved?.members?[data.targetId!]?.get()),
+          _ => throw UnimplementedError("Invalid command type: ${data.type}"),
+        };
 
         for (final p in bot.plugins) {
           final x = await p.onCommand(context);
@@ -293,7 +302,7 @@ class CommandsStore {
         return;
       }
 
-      final info = registry[path.join(".")];
+      final info = lookup(data.type, path);
       if (bot.dev) Logger.print("Autocomplete", "Handling command $path for user ${user.id} (${user.username}) (interaction: ${interaction.guildId}) (channel: ${interaction.channelId})...");
 
       if (info == null) {

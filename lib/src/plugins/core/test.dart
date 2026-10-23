@@ -11,52 +11,6 @@ final class TestCommands extends SubcommandGroupCommand {
     return buildCommand(commandOptions(bot));
   }
 
-  @Subcommand("member", "Get a member.")
-  void member(
-    DiscordContext context,
-    @MemberOption("member", "A member.") Member member,
-  ) async {
-    await context.respond(.new(content: "Member `${member.id}`"));
-  }
-
-  @Subcommand("pagination", "Start a pagination session.")
-  void pagination(DiscordContext context) async {
-    await context.respondWithPagination(.new(
-      title: "Sigh...",
-      pages: [
-        .new(fields: [
-          .new(name: "A field", value: "Hi", isInline: true),
-        ]),
-        .new(fields: [
-          .new(name: "A field 2", value: "Hello", isInline: false),
-        ]),
-        .new(fields: [
-          .new(name: "Another field", value: "Hi again", isInline: false),
-        ]),
-      ],
-    ));
-  }
-
-  @Subcommand("permsall", ".all", permissionsRequired: .all)
-  void permsAll(DiscordContext context) async {
-    await context.respond(.new(content: "Success!"));
-  }
-
-  @Subcommand("permsadmin", ".admin", permissionsRequired: .admin)
-  void permsAdmin(DiscordContext context) async {
-    await context.respond(.new(content: "Success!"));
-  }
-
-  @Subcommand("permsclaimer", ".claimer", permissionsRequired: .claimer)
-  void permsClaimer(DiscordContext context) async {
-    await context.respond(.new(content: "Success!"));
-  }
-
-  @Subcommand("permsowner", ".owner", permissionsRequired: .owner)
-  void permsOwner(DiscordContext context) async {
-    await context.respond(.new(content: "Success!"));
-  }
-
   @Subcommand("channels", "Test channel parameters.")
   void channels(
     DiscordContext context,
@@ -78,5 +32,29 @@ final class TestCommands extends SubcommandGroupCommand {
     await context.respond(.new(content: [?channel, ?textChannel, ?guildChannel, ?dmChannel, ?groupDmChannel, ?announcementThread, ?guildAnnouncementChannel, ?guildCategory, ?guildDirectoryChannel, ?guildForumChannel, ?guildMediaChannel, ?guildStageChannel, ?guildTextChannel, ?guildVoiceChannel,].map((channel) {
       return "- ${channel.runtimeType.toDiscordCodeString()} ${channel.id.toDiscordCodeString()} ${channel.toMention()}";
     }).join("\n").nullIfEmptyTrimmed ?? "No channels provided."));
+  }
+}
+
+final class TestMessageCommand extends MessageCommand {
+  @override
+  ContextMenuCommandInfo get info => .new(name: "Test");
+
+  @override
+  void onRun(MessageContext context) async {
+    await context.respond(.new(
+      content: "Message `${context.targetMessage.id}` by `${context.targetMessage.author.username}`:\n${context.targetMessage.content}",
+    ));
+  }
+}
+
+final class TestUserCommand extends UserCommand {
+  @override
+  ContextMenuCommandInfo get info => .new(name: "Test");
+
+  @override
+  void onRun(UserContext context) async {
+    await context.respond(.new(
+      content: "User `${context.targetUser.id}` (`${context.targetUser.username}`) (`${context.targetMember.runtimeType}`)",
+    ));
   }
 }
