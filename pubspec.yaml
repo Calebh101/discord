@@ -25,6 +25,7 @@ dependencies:
   dart_style: ^3.0.0
   crypto: ^3.0.7
   retry: ^3.1.2
+  path: ^1.9.1
 
 dev_dependencies:
   build_runner: ^2.16.1
