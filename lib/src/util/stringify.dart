@@ -62,6 +62,12 @@ extension MentionableToMention on CommandOptionMentionable {
   }
 }
 
+extension MessageAuthorToMention on MessageAuthor {
+  String toUserMention() {
+    return id.value.toUserMention();
+  }
+}
+
 extension EmojiFormat on Emoji {
   String format() {
     if (this is TextEmoji) return name!;

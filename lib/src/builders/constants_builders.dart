@@ -15,7 +15,7 @@ Builder constantsBuilder(BuilderOptions options) {
 }
 
 final class ConstantsBuilder implements Builder {
-  static final regex = RegExp(r'enum\s+AuditLogEvent\s*\{([A-Za-z0-9_=,\s]*)\}');
+  static final regex = RegExp(r'export\s+enum\s+AuditLogEvent\s*\{([\s\S]*?)\}');
 
   @override
   final buildExtensions = const {
@@ -24,7 +24,7 @@ final class ConstantsBuilder implements Builder {
 
   @override
   Future<void> build(BuildStep buildStep) async {
-    final response = await http.get(.parse("https://github.com/discordjs/discord-api-types/raw/35cd1b2aae8ce3dc169823e55e1a79b1a3f6db7c/payloads/v10/auditLog.ts"));
+    final response = await http.get(.parse("https://github.com/discordjs/discord-api-types/raw/main/payloads/v10/auditLog.ts"));
     if (response.statusCode >= 400) throw Exception("Invalid status code ${response.statusCode}: ${response.body}");
 
     final lines = regex.firstMatch(response.body)!.group(1)!.split(",").map((x) => x.trim()).where((x) => x.isNotEmpty);
@@ -46,12 +46,20 @@ final class ConstantsBuilder implements Builder {
     final output = """
 import 'package:discord/discord.dart';
 
+// Auto-generated, do not edit!
+// Last updated: ${DateTime.now().toIso8601String()}
+
 const auditLogEvents = ${jsonEncode(results)};
 
 extension GetAuditLogEvent on AuditLogEvent {
   /// Get the name of this audit log event in UpperCamelCase.
   String get name {
-    return auditLogEvents.entries.firstWhere((x) => x.value == value).key;
+    for (final e in auditLogEvents.entries) {
+      if (e.value == value) return e.key;
+    }
+
+    Logger.warn("AuditLogEvent", "Unknown event ID: \$value");
+    return "Unknown";
   }
 }
     """.trim();

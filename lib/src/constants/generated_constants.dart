@@ -1,5 +1,8 @@
 import 'package:discord/discord.dart';
 
+// Auto-generated, do not edit!
+// Last updated: 2026-10-24T14:48:58.868051
+
 const auditLogEvents = {
   "GuildUpdate": 1,
   "ChannelCreate": 10,
@@ -75,6 +78,11 @@ const auditLogEvents = {
 extension GetAuditLogEvent on AuditLogEvent {
   /// Get the name of this audit log event in UpperCamelCase.
   String get name {
-    return auditLogEvents.entries.firstWhere((x) => x.value == value).key;
+    for (final e in auditLogEvents.entries) {
+      if (e.value == value) return e.key;
+    }
+
+    Logger.warn("AuditLogEvent", "Unknown event ID: $value");
+    return "Unknown";
   }
 }
