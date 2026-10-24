@@ -130,6 +130,51 @@ extension on QuoteRuleCommand {
                 maxValue: null,
               );
             }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "exclude",
+                description: "Rules to exclude here, separated by commas.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(8),
+                name: "ping",
+                description: "The role to ping on new quotes.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "channels",
+                description: "The channels this rule applies to.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
           ],
           nameLocalizations: null,
           descriptionLocalizations: null,
@@ -219,6 +264,69 @@ extension on QuoteRuleCommand {
                     .new(0),
                     .new(2),
                   ],
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+          () {
+            return OptionData<String>(
+              name: "exclude",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "exclude",
+                  description: "Rules to exclude here, separated by commas.",
+                  isRequired: false,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+          () {
+            return OptionData<Role>(
+              name: "ping",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(8),
+                  name: "ping",
+                  description: "The role to ping on new quotes.",
+                  isRequired: false,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+          () {
+            return OptionData<List<PartialTextChannel>>(
+              name: "channels",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "channels",
+                  description: "The channels this rule applies to.",
+                  isRequired: false,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
                   minLength: null,
                   maxLength: null,
                   minValue: null,

@@ -32,6 +32,7 @@ final class QuotePlugin extends DiscordPlugin {
   List<DiscordConverter<dynamic, dynamic>> converters(DiscordBot bot) {
     return [
       EmojiConverter(),
+      TextChannelListConverter(),
     ];
   }
 
@@ -40,6 +41,22 @@ final class QuotePlugin extends DiscordPlugin {
     bot.clients.run((client) {
       //
     });
+  }
+}
+
+final class TextChannelListConverter extends DiscordConverter<String, List<PartialTextChannel>> {
+  @override
+  FutureOr<List<PartialTextChannel>> convert(DiscordContext context, ResolvedData? resolved, String value) {
+    final List<PartialTextChannel> channels = [];
+
+    for (final raw in value.split(RegExp(r"[\s+,/]")).where((x) => !x.isEmptyTrimmed).map((x) => x.trim())) {
+      final match = RegExp("<#([0-9]+)>").firstMatch(raw);
+      if (match == null) throw ExpectedUserFacingException("We couldn't parse channel `$raw`.");
+      final id = Snowflake.parse(match.group(1)!);
+      channels.add(context.client.channels[id] as PartialTextChannel);
+    }
+
+    return channels;
   }
 }
 
@@ -119,7 +136,14 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
     await context.respondWithPagination(.new(
       title: "All ${rules.length} Rules",
       pages: EmbedPage.fromFields(rules.mapToList((rule) {
-        return .new(name: rule.name, value: "- Count: ${rule.count}\n- Emoji: ${rule.emoji.format()}\n- Channel: ${rule.channel.toChannelMention()}", isInline: false);
+        return .new(name: rule.name, value: [
+          "Count: ${rule.count}",
+          "Emoji: ${rule.emoji.format()}",
+          "Channel: ${rule.channel.toChannelMention()}",
+          if (rule.pingRole != null) "Role ping: ${rule.pingRole?.toRoleMention()}",
+          if (rule.exclude?.isNotEmpty ?? false) "Excluded rules: ${rule.exclude?.map((x) => x.toDiscordCodeString()).join(", ")}",
+          if (rule.channels?.isNotEmpty ?? false) "Channels: ${rule.channels?.map((x) => x.toChannelMention()).join(", ")}"
+        ].map((x) => "- $x").join("\n").maxLength(1024, ellipsis: true), isInline: false);
       })),
     ));
   }
@@ -131,17 +155,32 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
     @IntOption("count", "How many reactions are required to quote.", minValue: 1) int count,
     @StringOption("emoji", "Emoji of your rule.") Emoji emoji,
     @TextChannelOption("channel", "The channel to post quotes for this rule in.") TextChannel channel,
+    @StringOption("exclude", "Rules to exclude here, separated by commas.") String? excludeRaw,
+    @RoleOption("ping", "The role to ping on new quotes.") Role? ping,
+    @StringOption("channels", "The channels this rule applies to.") List<PartialTextChannel>? channels,
   ) async {
     final settings = QuoteGuildSettings(context.store, context.guildId!);
     final rules = settings.rules.get();
     final existing = rules.firstWhereOrNull((x) => x.name == name.trim());
+
     final e = EmojiData.fromEmoji(emoji);
+    final exclude = excludeRaw?.split(",").mapToList((x) => x.trim());
 
     if (existing != null) {
       rules.removeWhere((x) => x.id == existing.id);
     }
 
-    final rule = QuoteRule(id: settings.nextId(), name: name, count: count, emoji: e, channels: null, channel: channel.id);
+    final rule = QuoteRule(
+      id: settings.nextId(),
+      name: name,
+      count: count,
+      emoji: e,
+      channels: channels?.mapToList((x) => x.id),
+      channel: channel.id,
+      exclude: exclude,
+      pingRole: ping?.id,
+    );
+
     rules.add(rule);
     settings.rules.set(rules);
 
@@ -205,14 +244,6 @@ final class QuoteGuildSettings extends GuildSettings {
     currentId.set(x + 1);
     return x + 1;
   }
-
-  QuoteRule? findRule(String name, EmojiData emoji, [int? count]) {
-    return rules.get().sorted((a, b) {
-      return a.count.compareTo(b.count);
-    }).firstWhereOrNull((rule) {
-      return rule.name == name && rule.emoji == emoji && (count == null || count >= rule.count);
-    });
-  }
 }
 
 final class QuoteRule({
@@ -223,11 +254,12 @@ final class QuoteRule({
   required final List<Snowflake>? channels,
   required final Snowflake channel,
   required final List<String>? exclude,
+  required final Snowflake? pingRole,
 }) {
   factory fromJson(Map data) {
     return .new(id: data["id"], name: data["name"], count: data["count"], emoji: .fromJson(data["emoji"]), channels: (data["channels"] as List?)?.mapToList((x) {
       return .parse(x);
-    }), channel: .new(data["channel"]), exclude: data["exclude"]);
+    }), channel: .new(data["channel"]), exclude: data["exclude"], pingRole: data["pingRole"] is int ? .new(data["pingRole"]) : null);
   }
 
   Map<String, Object?> toJson() => {
@@ -238,6 +270,7 @@ final class QuoteRule({
     "channels": ?channels?.mapToList((x) => x.value),
     "channel": channel.value,
     "exclude": ?exclude,
+    "pingRole": ?pingRole?.value,
   };
 }
 
