@@ -62,6 +62,20 @@ extension MentionableToMention on CommandOptionMentionable {
   }
 }
 
+extension EmojiFormat on Emoji {
+  String format() {
+    if (this is TextEmoji) return name!;
+    if (this is GuildEmoji) return format();
+    throw UnimplementedError("Invalid emoji type: $runtimeType");
+  }
+}
+
+extension GuildEmojiFormat on GuildEmoji {
+  String format() {
+    return "<${isAnimated == true ? "a": ""}:$name:$id>";
+  }
+}
+
 extension ToDiscordCodeBlock on Object? {
   String toDiscordCodeBlock({String? language}) {
     final x = toString().trim();

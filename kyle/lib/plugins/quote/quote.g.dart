@@ -10,10 +10,56 @@ extension on QuoteCommand {
   List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
-        name: "set-rule",
+        name: "info",
+        function: getInfo,
+        builder: .subCommand(
+          name: "info",
+          description: "Get info about the quoting system!",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: false,
+        otherPerms: null,
+      );
+    }(),
+    ...subcommandGroups(bot).map((x) => x.build(bot)),
+  ];
+}
+
+// **************************************************************************
+// SubcommandGroupGenerator
+// **************************************************************************
+
+extension on QuoteRuleCommand {
+  List<OptionData> commandOptions(DiscordBot bot) => [
+    () {
+      return OptionData(
+        name: "list",
+        function: getRules,
+        builder: .subCommand(
+          name: "list",
+          description: "List all rules.",
+          options: [],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: null,
+        requiredPerms: .parse(0),
+        needsGuild: true,
+        otherPerms: null,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "set",
         function: setRule,
         builder: .subCommand(
-          name: "set-rule",
+          name: "set",
           description: "Set a rule.",
           options: [
             () {
@@ -28,6 +74,21 @@ extension on QuoteCommand {
                 minLength: null,
                 maxLength: 50,
                 minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(4),
+                name: "count",
+                description: "How many reactions are required to quote.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: 1,
                 maxValue: null,
               );
             }(),
@@ -97,6 +158,27 @@ extension on QuoteCommand {
             );
           }(),
           () {
+            return OptionData<int>(
+              name: "count",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(4),
+                  name: "count",
+                  description: "How many reactions are required to quote.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: 1,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+          () {
             return OptionData<Emoji>(
               name: "emoji",
               builder: () {
@@ -152,6 +234,61 @@ extension on QuoteCommand {
         otherPerms: null,
       );
     }(),
-    ...subcommandGroups(bot).map((x) => x.build(bot)),
+    () {
+      return OptionData(
+        name: "delete",
+        function: deleteRule,
+        builder: .subCommand(
+          name: "delete",
+          description: "Delete a rule.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(4),
+                name: "id",
+                description: "Rule ID.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<int>(
+              name: "id",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(4),
+                  name: "id",
+                  description: "Rule ID.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => QuoteRulesAutocomplete(),
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+        otherPerms: null,
+      );
+    }(),
   ];
 }

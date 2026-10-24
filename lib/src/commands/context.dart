@@ -39,6 +39,10 @@ class DiscordContext {
     required this.channel,
   });
 
+  bool get inThread {
+    return channel is Thread;
+  }
+
   bool get isAdmin {
     if (guildId == null) return false;
     return BotPermissions.isAdmin(store, guildId!, userId);
