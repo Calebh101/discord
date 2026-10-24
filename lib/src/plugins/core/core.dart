@@ -26,6 +26,13 @@ final class CorePlugin extends DiscordPlugin {
   }
 
   @override
+  List<DiscordConverter<dynamic, dynamic>> converters(DiscordBot bot) {
+    return [
+      if (bot.dev) EmojiConverter(),
+    ];
+  }
+
+  @override
   List<String>? setupText(DiscordBot bot) {
     return [
       "Someone needs to claim the bot with `/bot admin claim`.",
@@ -71,7 +78,10 @@ final class CorePlugin extends DiscordPlugin {
   }
 
   @override
-  void onReady(DiscordBot bot) {
+  void onReady(DiscordBot bot) async {
+    // Load definitions early so converters don't fail later :)
+    await getEmojiDefinitions();
+
     bot.clients.run((client) {
       initializePagination(bot, client);
       final Set<Snowflake> knownGuilds = {};

@@ -16,6 +16,7 @@ extension MainTerminalCommandHelp on MainTerminalCommand {
     return UsageBuilder()
       ..addCustom(name)
       ..addFlag(flags.dev)
+      ..addFlag(flags.clearCommands)
       ..addOption(options.devGuild);
   }
 
@@ -34,7 +35,20 @@ extension MainTerminalCommandHelp on MainTerminalCommand {
   /// All Flags as a list of [FlagData],
   /// ordered from first provided to last provided.
   List<FlagData> get allFlags {
-    return [(name: "dev", help: null, abbr: null, negatable: false)];
+    return [
+      (
+        name: "dev",
+        help: "Dev mode for the bot.",
+        abbr: null,
+        negatable: false,
+      ),
+      (
+        name: "clear",
+        help: "Clear all commands.",
+        abbr: null,
+        negatable: false,
+      ),
+    ];
   }
 
   /// All options as a list of [OptionData],
@@ -71,8 +85,21 @@ extension MainTerminalCommandHelp on MainTerminalCommand {
 
   /// All flags as a type-safe record,
   /// in a similar structure to TypeScript's interfaces.
-  ({FlagData dev}) get flags {
-    return (dev: (name: "dev", help: null, abbr: null, negatable: false));
+  ({FlagData dev, FlagData clearCommands}) get flags {
+    return (
+      dev: (
+        name: "dev",
+        help: "Dev mode for the bot.",
+        abbr: null,
+        negatable: false,
+      ),
+      clearCommands: (
+        name: "clear",
+        help: "Clear all commands.",
+        abbr: null,
+        negatable: false,
+      ),
+    );
   }
 
   /// All options as a type-safe record,
@@ -223,6 +250,9 @@ final class MainTerminalCommandData {
             throw ParseException(null, object, object.usage);
           case 'dev':
             object.dev = true;
+            break;
+          case 'clear':
+            object.clearCommands = true;
             break;
 
           case 'dev-guild':

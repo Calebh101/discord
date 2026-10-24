@@ -10,6 +10,106 @@ extension on TestCommands {
   List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
+        name: "react",
+        function: react,
+        builder: .subCommand(
+          name: "react",
+          description: "React to a message.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .string,
+                name: "message",
+                description: "The message to react to.",
+                isRequired: true,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: 17,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "emoji",
+                description: "The emoji to react with.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<Message>(
+              name: "message",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .string,
+                  name: "message",
+                  description: "The message to react to.",
+                  isRequired: true,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: 17,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => MessageAutocompleteHandler(),
+              converter: (context, value) async {
+                final channel = context.channel;
+
+                try {
+                  return await channel.messages.get(.parse(value));
+                } catch (e) {
+                  Logger.warn("Messages", "Unable to get message $value: $e");
+                  throw CommandParseError("Invalid message ID.");
+                }
+              },
+            );
+          }(),
+          () {
+            return OptionData<Emoji>(
+              name: "emoji",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "emoji",
+                  description: "The emoji to react with.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(0),
+        needsGuild: false,
+        otherPerms: null,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "channels",
         function: channels,
         builder: .subCommand(

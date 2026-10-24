@@ -86,7 +86,27 @@ abstract class DiscordBot {
     commands.commands = results;
     commands.buildRegistry();
 
-    Logger.print("Commands", "Generated ${results.length} top-level commands!");
+    int totalCommands = 0;
+
+    for (final command in results) {
+      if (command.commandType != .chatInput) continue;
+      final groups = command.builder.options?.where((x) => x.type == .subCommand || x.type == .subCommandGroup);
+
+      if (groups?.isNotEmpty ?? false) {
+        for (final group in groups!) {
+          if (group.type == .subCommandGroup) {
+            final subcommands = command.builder.options?.where((x) => x.type == .subCommand);
+            totalCommands += subcommands?.length ?? 0;
+          } else {
+            totalCommands++;
+          }
+        }
+      } else {
+        totalCommands++;
+      }
+    }
+
+    Logger.print("Commands", "Generated ${results.where((x) => x.commandType == .chatInput).length} top-level slash commands and $totalCommands total commands!");
 
     await clients.loadWithTokens(tokenFilePath);
     await clients.createClients(onCreateClient);

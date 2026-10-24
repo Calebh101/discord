@@ -11,6 +11,21 @@ final class TestCommands extends SubcommandGroupCommand {
     return buildCommand(commandOptions(bot));
   }
 
+  @Subcommand("react", "React to a message.")
+  void react(
+    DiscordContext context,
+    @MessageOption("message", "The message to react to.") Message message,
+    @StringOption("emoji", "The emoji to react with.") Emoji emoji,
+  ) async {
+    try {
+      await message.react(.fromEmoji(emoji));
+      await context.respond(.new(content: "Reacted."));
+    } catch (e) {
+      Logger.warn("Test", "Unable to react to message ${message.id} with emoji $emoji: $e");
+      await context.respond(.new(content: "Unable to react."));
+    }
+  }
+
   @Subcommand("channels", "Test channel parameters.")
   void channels(
     DiscordContext context,

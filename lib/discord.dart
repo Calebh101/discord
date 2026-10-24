@@ -5,6 +5,7 @@ export 'src/constants/constants.dart';
 export 'src/constants/annotations.dart';
 export 'src/constants/enums.dart';
 export 'src/constants/colors.dart';
+export 'src/constants/builtin_converters.dart';
 export 'src/constants/generated_constants.dart';
 
 export 'src/core/bot.dart';
@@ -34,6 +35,7 @@ export 'src/autocomplete/base.dart';
 export 'src/autocomplete/extras.dart';
 
 export 'package:nyxx/nyxx.dart' hide Logger;
+export 'package:nyxx_extensions/nyxx_extensions.dart';
 export 'package:localpkg/localpkg.dart';
 
 bool isStdinLocked = false;
