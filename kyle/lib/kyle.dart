@@ -9,6 +9,7 @@ import 'package:kyle/plugins/mrbeast/mrbeast.dart';
 import 'package:kyle/plugins/quote/quote.dart';
 import 'package:kyle/plugins/reminders/reminders.dart';
 import 'package:kyle/plugins/tags/tags.dart';
+import 'package:kyle/plugins/welcome/welcome.dart';
 
 final class Kyle extends DiscordBot {
   new({super.dev});
@@ -26,6 +27,7 @@ final class Kyle extends DiscordBot {
     TagsPlugin(),
     RemindersPlugin(),
     QuotePlugin(),
+    WelcomePlugin(),
     MathPlugin(),
     JarvisPlugin(),
     MrBeastPlugin(),
