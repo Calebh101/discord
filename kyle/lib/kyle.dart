@@ -4,6 +4,7 @@ import 'package:discord/discord.dart';
 import 'package:discord/plugins.dart';
 import 'package:kyle/plugins/jarvis/jarvis.dart';
 import 'package:kyle/plugins/math/math.dart';
+import 'package:kyle/plugins/memberrole/memberrole.dart';
 import 'package:kyle/plugins/modlog_events.dart';
 import 'package:kyle/plugins/mrbeast/mrbeast.dart';
 import 'package:kyle/plugins/quote/quote.dart';
@@ -27,6 +28,7 @@ final class Kyle extends DiscordBot {
     TagsPlugin(),
     RemindersPlugin(),
     QuotePlugin(),
+    MemberRolePlugin(),
     WelcomePlugin(),
     MathPlugin(),
     JarvisPlugin(),

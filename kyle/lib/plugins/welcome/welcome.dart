@@ -18,7 +18,7 @@ final List<WelcomeTemplate> templates = [
 
 String processMessage(String message, User user, Member? member) {
   for (final template in templates) {
-    message.replaceAll(template.template, template.generate(user, member));
+    message = message.replaceAll(template.template, template.generate(user, member));
   }
 
   return message;
@@ -65,6 +65,7 @@ final class WelcomePlugin extends DiscordPlugin {
       client.onGuildMemberRemove.listen((event) async {
         if (isIgnored(bot.store, event.user.id)) return;
         final settings = WelcomeGuildSettings(bot.store, event.guildId);
+        if (settings.ignoreBots.get() && (event.user.isBot || event.user.isSystem)) return;
 
         final channelId = settings.channel.get();
         if (channelId == null) return;
@@ -74,8 +75,6 @@ final class WelcomePlugin extends DiscordPlugin {
 
         final user = event.user;
         final member = event.removedMember;
-
-        if (settings.ignoreBots.get() && (user.isBot || user.isSystem)) return;
 
         try {
           final channel = await client.channels.get(channelId) as TextChannel;
