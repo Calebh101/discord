@@ -13,6 +13,8 @@ void main(List<String> arguments) async {
   for (final entity in directory.listSync(recursive: true)) {
     if (entity is! File) continue;
     if (!entity.path.endsWith(".dart")) continue;
+    if (entity.path.endsWith(".g.dart")) continue;
+    if (entity.path.contains(".dart_tool")) continue;
 
     final text = entity.readAsStringSync().trim();
     final name = p.separator + [...arguments, entity.path.replaceFirst("${directory.path}/", "")].join(p.separator);
