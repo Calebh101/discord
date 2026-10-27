@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart';
 import 'package:discord/discord.dart';
 import 'package:discord/src/other/retry_plugin.dart';
@@ -37,6 +38,7 @@ abstract class DiscordBot {
   @mustCallSuper
   List<NyxxPlugin<NyxxGateway>> get nyxxPlugins => [
     RetryPlugin(),
+    ...plugins.map((x) => x.nyxxPlugins(this)).flattened,
   ];
 
   Future<NyxxGateway> onCreateClient(String token);

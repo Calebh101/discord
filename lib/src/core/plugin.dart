@@ -42,6 +42,11 @@ abstract class DiscordPlugin {
   /// All stores can be guaranteed to be ready when this is ran.
   List<String>? setupText(DiscordBot bot) => null;
 
+  /// This is ran when it's time to register extra [NyxxGateway] plugins.
+  ///
+  /// No stores can be guaranteed to be ready when this is ran.
+  List<NyxxPlugin<NyxxGateway>> nyxxPlugins(DiscordBot bot) => [];
+
   /// This is ran when the bot is being loaded.
   ///
   /// No stores can be guaranteed to be ready when this is ran.
