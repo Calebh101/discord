@@ -9,6 +9,7 @@ import 'package:kyle/plugins/modlog_events.dart';
 import 'package:kyle/plugins/mrbeast/mrbeast.dart';
 import 'package:kyle/plugins/quote/quote.dart';
 import 'package:kyle/plugins/reminders/reminders.dart';
+import 'package:kyle/plugins/stickyrole/stickyrole.dart';
 import 'package:kyle/plugins/tags/tags.dart';
 import 'package:kyle/plugins/welcome/welcome.dart';
 
@@ -29,6 +30,7 @@ final class Kyle extends DiscordBot {
     RemindersPlugin(),
     QuotePlugin(),
     MemberRolePlugin(),
+    StickyRolePlugin(),
     WelcomePlugin(),
     MathPlugin(),
     JarvisPlugin(),

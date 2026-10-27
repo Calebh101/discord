@@ -158,6 +158,7 @@ class GuildDiscordContext extends DiscordContext {
 
   @override PartialGuild get guild => super.guild!;
   @override Snowflake get guildId => guild.id;
+  @override Member get member => super.member!;
 }
 
 class MessageContext extends DiscordContext {

@@ -76,7 +76,7 @@ enum MemberRoleMode {
 
 final class MemberRolePlugin extends DiscordPlugin {
   @override
-  DiscordPluginInfo get info => .new("memberrole");
+  DiscordPluginInfo get info => .new("member-role");
 
   @override
   List<TopLevelCommand> commands(DiscordBot bot) {
