@@ -121,9 +121,9 @@ class CommandsStore {
         return await interaction.channel?.get() as TextChannel;
       });
 
-      Future<void> respond(String content) async {
+      Future<void> respond(String content, {bool ephemeral = true}) async {
         try {
-          await interaction.respond(.new(content: content, flags: MessageFlags.ephemeral));
+          await interaction.respond(.new(content: content, flags: ephemeral ? MessageFlags.ephemeral : null));
         } catch (e) {
           Logger.warn("Commands", "Unable to respond to user ${user?.id} and channel ${channel?.id}: $e");
         }
@@ -179,50 +179,70 @@ class CommandsStore {
         return;
       }
 
-      if (info.needsGuild && interaction.guildId == null) {
-        return await respond("This command needs to be run in a guild.");
+      final Set<CommandProcessAction> actions = {};
+
+      for (final p in bot.plugins) {
+        final x = await p.onCommandInteraction(bot, interaction, info, path, options);
+        if (x.contains(CommandProcessAction.stop)) return;
+        actions.addAll(x);
       }
 
-      switch (info.permsRequired) {
-        case .all:
-          if (info.otherPerms?.isNotEmpty ?? false) {
-            final roles = interaction.member?.roleIds;
-            final guild = interaction.guildId;
+      if (!actions.contains(CommandProcessAction.skipGuildCheck)) {
+        if (info.needsGuild && interaction.guildId == null) {
+          return await respond("This command needs to be run in a guild.");
+        }
+      }
 
-            if (roles == null || guild == null) {
-              return await respond("This command needs to be run in a guild.");
-            }
-
-            if (BotPermissions.isAdmin(bot.store, guild, user.id)) {
-              break;
-            }
-
-            for (final String perm in info.otherPerms ?? []) {
-              if (bot.permissions.hasPerm(bot.store, perm, user.id, roles)) continue;
-              return await respond("You can't execute this command, you don't have the permission `$perm`!");
-            }
+      if (!actions.contains(CommandProcessAction.skipClaimCheck)) {
+        if (interaction.guildId != null) {
+          if (GuildPermissionSettings(bot.store, interaction.guildId!).claimer.get() == null) {
+            return await respond("I haven't been claimed yet!\nClaim me with `/bot admin claim`.");
           }
+        }
+      }
 
-          break;
+      if (!actions.contains(CommandProcessAction.skipPermsCheck)) {
+        switch (info.permsRequired) {
+          case .all:
+            if (info.otherPerms?.isNotEmpty ?? false) {
+              final roles = interaction.member?.roleIds;
+              final guild = interaction.guildId;
 
-        case .owner:
-          final isOwner = BotPermissions.isOwner(bot.store, user.id);
-          if (!isOwner) return await respond("You can't execute this command, you're not a bot owner!");
-          break;
+              if (roles == null || guild == null) {
+                return await respond("This command needs to be run in a guild.");
+              }
 
-        case .claimer:
-          if (interaction.guildId == null) return await respond("This command needs to be run in a guild.");
-          final isClaimer = BotPermissions.isClaimer(bot.store, interaction.guildId!, user.id);
+              if (BotPermissions.isAdmin(bot.store, guild, user.id)) {
+                break;
+              }
 
-          if (!isClaimer) return await respond("You can't execute this command, you're not the bot claimer!");
-          break;
+              for (final String perm in info.otherPerms ?? []) {
+                if (bot.permissions.hasPerm(bot.store, perm, user.id, roles)) continue;
+                return await respond("You can't execute this command, you don't have the permission `$perm`!");
+              }
+            }
 
-        case .admin:
-          if (interaction.guildId == null) return await respond("This command needs to be run in a guild.");
-          final isAdmin = BotPermissions.isAdmin(bot.store, interaction.guildId!, user.id);
+            break;
 
-          if (!isAdmin) return await respond("You can't execute this command, you're not a bot admin!");
-          break;
+          case .owner:
+            final isOwner = BotPermissions.isOwner(bot.store, user.id);
+            if (!isOwner) return await respond("You can't execute this command, you're not a bot owner!");
+            break;
+
+          case .claimer:
+            if (interaction.guildId == null) return await respond("This command needs to be run in a guild.");
+            final isClaimer = BotPermissions.isClaimer(bot.store, interaction.guildId!, user.id);
+
+            if (!isClaimer) return await respond("You can't execute this command, you're not the bot claimer!");
+            break;
+
+          case .admin:
+            if (interaction.guildId == null) return await respond("This command needs to be run in a guild.");
+            final isAdmin = BotPermissions.isAdmin(bot.store, interaction.guildId!, user.id);
+
+            if (!isAdmin) return await respond("You can't execute this command, you're not a bot admin!");
+            break;
+        }
       }
 
       try {
@@ -237,7 +257,7 @@ class CommandsStore {
         };
 
         for (final p in bot.plugins) {
-          final x = await p.onCommand(context);
+          final x = await p.onCommandRun(data.type, context);
           if (!x) return;
         }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:discord/discord.dart';
@@ -78,8 +79,15 @@ final class CorePlugin extends DiscordPlugin {
   }
 
   @override
+  FutureOr<List<CommandProcessAction>> onCommandInteraction(DiscordBot bot, ApplicationCommandInteraction interaction, RegistryData<dynamic> data, List<String> path, List<InteractionOption>? options) {
+    return [
+      if (path.join(".") == "bot.admin.claim") .skipClaimCheck,
+    ];
+  }
+
+  @override
   void onReady(DiscordBot bot) async {
-    // Load definitions early so converters don't fail later :)
+    // Load definitions early so converters don't time out later :)
     await getEmojiDefinitions();
 
     bot.clients.run((client) {

@@ -71,7 +71,12 @@ abstract class DiscordPlugin {
   /// This is ran when the handler for a command is about to be called.
   ///
   /// If false is returned, no other handlers, including the command's handler, will be ran.
-  FutureOr<bool> onCommand(DiscordContext context) => true;
+  FutureOr<bool> onCommandRun(ApplicationCommandType type, DiscordContext context) => true;
+
+  /// This is ran when an interaction for a command is actively being processed.
+  ///
+  /// If false is returned, the command will not continue to be processed or ran after this function.
+  FutureOr<List<CommandProcessAction>> onCommandInteraction(DiscordBot bot, ApplicationCommandInteraction interaction, RegistryData data, List<String> path, List<InteractionOption>? options) => [];
 
   /// This is ran when the autocomplete handler for a command is about to be called.
   ///

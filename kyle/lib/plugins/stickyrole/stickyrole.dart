@@ -77,6 +77,13 @@ final class StickyRolePlugin extends DiscordPlugin {
   }
 
   @override
+  List<TopLevelCommand> commands(DiscordBot bot) {
+    return [
+      StickyRoleCommand(),
+    ];
+  }
+
+  @override
   void onReady(DiscordBot bot) {
     bot.clients.run((client) async {
       client.onGuildMemberAdd.listen((event) async {
@@ -132,12 +139,12 @@ final class StickyRoleCommand extends TopLevelParentCommand {
     return buildCommand(commandOptions(bot));
   }
 
-  @Subcommand("user", "Get this user's sticky roles.", needsGuild: true, otherPerms: ["stickyrole.manage"])
-  void user(
+  @Subcommand("list-member", "List a member's sticky roles.", needsGuild: true, otherPerms: ["stickyrole.manage"])
+  void forMember(
     GuildDiscordContext context,
     @MemberOption("member", "The member to list sticky roles for.") Member member,
   ) async {
-    final ids = StickyRoleMemberSettings(context.store, context.guildId, context.userId).stickyRoles.get();
+    final ids = StickyRoleMemberSettings(context.store, context.guildId, member.id).stickyRoles.get();
 
     if (ids.isEmpty) {
       return await context.respond(.new(
@@ -160,8 +167,19 @@ final class StickyRoleCommand extends TopLevelParentCommand {
     @MemberOption("user", "The member to add a sticky role to.") Member member,
     @RoleOption("role", "The sticky role to add.") Role role,
   ) async {
-    final settings = StickyRoleMemberSettings(context.store, context.guildId, context.userId);
+    final settings = StickyRoleMemberSettings(context.store, context.guildId, member.id);
     final roles = settings.stickyRoles.get();
+
+    try {
+      await context.acknowledge();
+      await member.addRole(role.id);
+    } catch (e) {
+      Logger.warn("StickyRole", "Unable to add role ${role.id} to user ${member.id} in guild ${context.guildId}: $e");
+
+      return await context.respond(.new(
+        content: "We couldn't add that role to this member. Please check that I can manage this role to this member.",
+      ), ephemeral: .ephemeral);
+    }
 
     bool madeSticky = false;
 
@@ -170,8 +188,6 @@ final class StickyRoleCommand extends TopLevelParentCommand {
       settings.stickyRoles.set(roles);
       madeSticky = true;
     }
-
-    await member.addRole(role.id);
 
     await context.respond(.new(
       content: [
@@ -188,8 +204,19 @@ final class StickyRoleCommand extends TopLevelParentCommand {
     @MemberOption("user", "The member to remove a sticky role from.") Member member,
     @RoleOption("role", "The role to remove.") Role role,
   ) async {
-    final settings = StickyRoleMemberSettings(context.store, context.guildId, context.userId);
+    final settings = StickyRoleMemberSettings(context.store, context.guildId, member.id);
     final roles = settings.stickyRoles.get();
+
+    try {
+      await context.acknowledge();
+      await member.removeRole(role.id);
+    } catch (e) {
+      Logger.warn("StickyRole", "Unable to remove role ${role.id} from user ${member.id} in guild ${context.guildId}: $e");
+
+      return await context.respond(.new(
+        content: "We couldn't remove that role from this member. Please check that I can manage this role to this member.",
+      ), ephemeral: .ephemeral);
+    }
 
     bool madeNotSticky = false;
 
@@ -198,8 +225,6 @@ final class StickyRoleCommand extends TopLevelParentCommand {
       settings.stickyRoles.set(roles);
       madeNotSticky = true;
     }
-
-    await member.removeRole(role.id);
 
     await context.respond(.new(
       content: [

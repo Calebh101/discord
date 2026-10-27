@@ -10,11 +10,11 @@ extension on StickyRoleCommand {
   List<OptionData> commandOptions(DiscordBot bot) => [
     () {
       return OptionData(
-        name: "user",
-        function: user,
+        name: "list-member",
+        function: forMember,
         builder: .subCommand(
-          name: "user",
-          description: "Get this user's sticky roles.",
+          name: "list-member",
+          description: "List a member's sticky roles.",
           options: [
             () {
               return CommandOptionBuilder(
