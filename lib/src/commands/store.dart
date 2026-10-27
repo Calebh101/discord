@@ -227,7 +227,10 @@ class CommandsStore {
 
       try {
         final context = switch (data.type) {
-          .chatInput => DiscordContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel),
+          .chatInput => info.needsGuild ?
+            GuildDiscordContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel) :
+            DiscordContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel)
+          ,
           .message => MessageContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel, targetMessage: await data.resolved!.messages![data.targetId!]!.get()),
           .user => UserContext(interaction: interaction, bot: bot, client: client, user: user, channel: channel, targetUser: await data.resolved!.users![data.targetId!]!.get(), targetMember: await data.resolved?.members?[data.targetId!]?.get()),
           _ => throw UnimplementedError("Invalid command type: ${data.type}"),

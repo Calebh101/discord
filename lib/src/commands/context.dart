@@ -153,6 +153,13 @@ class DiscordContext {
   }
 }
 
+class GuildDiscordContext extends DiscordContext {
+  new({required super.interaction, required super.bot, required super.client, required super.user, required super.channel});
+
+  @override PartialGuild get guild => super.guild!;
+  @override Snowflake get guildId => guild.id;
+}
+
 class MessageContext extends DiscordContext {
   final Message targetMessage;
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:discord/discord.dart';
 import 'package:meta/meta.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -158,6 +159,10 @@ class SettingsObject<T> {
 
   static SettingsObject<Snowflake> snowflake<T>(EntitySettings obj, String key) {
     return SettingsObject<Snowflake>(obj, key, encodeFunction: (input) => input.value, decodeFunction: (input) => input != null ? Snowflake(input) : null);
+  }
+
+  static SettingsObject<T> enumeration<T extends Enum>(EntitySettings obj, String key, List<T> values, {dynamic Function(T object)? keyFunction}) {
+    return SettingsObject<T>(obj, key, encodeFunction: (input) => keyFunction?.call(input) ?? input.index, decodeFunction: (input) => input == null ? null : values.firstWhereOrNull((x) => keyFunction?.call(x) == input));
   }
 
   static SettingsObject<DateTime> dateTime<T>(EntitySettings obj, String key) {

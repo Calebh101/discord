@@ -213,7 +213,7 @@ extension on ${element.name} {
 CommandOptionBase? parseOption(int i, FormalParameterElement param) {
   if (i == 0) {
     final checker = TypeChecker.typeNamed(DiscordContext);
-    if (!checker.isExactlyType(param.type)) throw InvalidGenerationSourceError("First command parameter must be of type DiscordContext. Got: '${param.type.getDisplayString()}'");
+    if (!checker.isExactlyType(param.type) && !checker.isSuperTypeOf(param.type)) throw InvalidGenerationSourceError("First command parameter must be of type DiscordContext. Got: '${param.type.getDisplayString()}'");
     return null;
   }
 

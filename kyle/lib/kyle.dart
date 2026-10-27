@@ -96,3 +96,41 @@ final class Kyle extends DiscordBot {
     });
   }
 }
+
+Future<List<Member>> getAllMembers(PartialGuild guild, {int limitPer = 1000}) async {
+  List<Member> result = [];
+
+  while (true) {
+    try {
+      final members = await guild.members.list(limit: limitPer, after: result.lastOrNull?.id);
+
+      if (members.isEmpty) break;
+      result.addAll(members);
+      if (members.length < limitPer) break;
+    } catch (e) {
+      Logger.warn("getAllMembers", "Error listing members for guild ${guild.id}: $e (${result.length} existing)");
+      break;
+    }
+  }
+
+  return result;
+}
+
+Future<List<UserGuild>> listAllGuilds(NyxxGateway client) async {
+  final List<UserGuild> guilds = [];
+
+  while (true) {
+    try {
+      final results = await client.listGuilds(limit: 200, after: guilds.lastOrNull?.id);
+
+      if (results.isEmpty) break;
+      guilds.addAll(results);
+      if (results.length < 200) break;
+    } catch (e) {
+      Logger.warn("Guilds", "Error listing guilds for client ${client.user.id}: $e (${guilds.length} existing)");
+      break;
+    }
+  }
+
+  return guilds;
+}

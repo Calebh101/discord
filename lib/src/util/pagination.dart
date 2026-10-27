@@ -164,22 +164,22 @@ Future<void> startPagination({
       return TextEmoji(id: Snowflake.zero, manager: client.guilds[Snowflake.zero].emojis, name: name);
     }
 
-    List<ComponentBuilder> components() {
+    List<ComponentBuilder> components({bool disabled = false}) {
       ButtonBuilder blank(int i) {
         return .secondary(label: "\u3164", customId: "blank$i", isDisabled: true);
       }
 
       return [
         ActionRowBuilder(components: [
-          ButtonBuilder.primary(emoji: emoji("\u23EA"), customId: buildId(.jumpBack), isDisabled: page == 0),
-          ButtonBuilder.primary(emoji: emoji("\u25C0\uFE0F"), customId: buildId(.back), isDisabled: page == 0),
-          ButtonBuilder.primary(emoji: emoji("\u25B6\uFE0F"), customId: buildId(.forward), isDisabled: page == builder.pages.length - 1),
-          ButtonBuilder.primary(emoji: emoji("\u23E9"), customId: buildId(.jumpForward), isDisabled: page == builder.pages.length - 1),
+          ButtonBuilder.primary(emoji: emoji("\u23EA"), customId: buildId(.jumpBack), isDisabled: disabled || page == 0),
+          ButtonBuilder.primary(emoji: emoji("\u25C0\uFE0F"), customId: buildId(.back), isDisabled: disabled || page == 0),
+          ButtonBuilder.primary(emoji: emoji("\u25B6\uFE0F"), customId: buildId(.forward), isDisabled: disabled || page == builder.pages.length - 1),
+          ButtonBuilder.primary(emoji: emoji("\u23E9"), customId: buildId(.jumpForward), isDisabled: disabled || page == builder.pages.length - 1),
         ]),
         ActionRowBuilder(components: [
           blank(0),
-          ButtonBuilder.primary(emoji: emoji("\u{1F522}"), customId: buildId(.input)),
-          ButtonBuilder.primary(emoji: emoji("\u23F9\uFE0F"), customId: buildId(.stop)),
+          ButtonBuilder.primary(emoji: emoji("\u{1F522}"), customId: buildId(.input), isDisabled: disabled),
+          ButtonBuilder.primary(emoji: emoji("\u23F9\uFE0F"), customId: buildId(.stop), isDisabled: disabled),
           blank(1),
         ]),
       ];
@@ -208,7 +208,7 @@ Future<void> startPagination({
         await onEdit(.new(
           content: null,
           embeds: [builder.build(page)],
-          components: [],
+          components: components(disabled: true),
         ));
       } catch (e) {
         Logger.warn("Pagination", "Unable to update message ${message.id} (user=$userId, page=$page): $e");
