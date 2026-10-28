@@ -285,7 +285,7 @@ class CommandsStore {
           ...args,
         ]);
       } on UnknownUserFacingException catch (e) {
-        Logger.warn("Commands", "Unknown ser-facing exception thrown on command ${path.join(".")} and user ${user.id}: $e");
+        Logger.warn("Commands", "Unknown user-facing exception thrown on command ${path.join(".")} and user ${user.id}: $e");
         await respond("There was an error running this command.\n${e.userMessage}");
       } on ExpectedUserFacingException catch (e) {
         Logger.print("Commands", "Expected user-facing exception thrown on command ${path.join(".")} and user ${user.id}: $e");
