@@ -45,7 +45,7 @@ final class CorePlugin extends DiscordPlugin {
   List<TerminalCommand> terminalCommands(DiscordBot bot) {
     return [
       .new(.from("o"), "Manage bot owners.", () {
-        final command = TerminalHandler.askForInput("To view a user's status, type 'user'. To list all active owners, type 'list'.")?.toLowerCase().trim();
+        final command = TerminalHandler.askForInput("To view a user's status, type 'user'. To list all active owners, type 'list'. To clear all owners, type 'clear'.")?.toLowerCase().trim();
 
         if (command == "user") {
           final input = TerminalHandler.askForInput("Enter a user ID.");
@@ -71,6 +71,10 @@ final class CorePlugin extends DiscordPlugin {
         } else if (command == "list") {
           final all = bot.store.getAllForKey<bool>(.user, "owner").entriesAsRecords.where((x) => x.$3);
           Logger.print("Owner", "Current owners (${all.length}): ${all.map((x) => x.$2).join(", ")}");
+        } else if (command == "clear") {
+          final count = bot.store.getAllForKey<bool>(.user, "owner").entriesAsRecords.where((x) => x.$3).length;
+          bot.store.deleteForKey(.user, "owner");
+          Logger.print("Owner", "Cleared $count owners!");
         } else {
           Logger.print("Owner", "Cancelled.");
         }

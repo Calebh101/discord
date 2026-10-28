@@ -21,7 +21,7 @@ enum BotPermissions {
   }
 
   static bool isClaimer(KVStore store, Snowflake guild, Snowflake id) {
-    final settings = GuildPermissionSettings(store, id);
+    final settings = GuildPermissionSettings(store, guild);
     return isOwner(store, id) || settings.claimer.get() == id;
   }
 

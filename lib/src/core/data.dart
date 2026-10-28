@@ -60,6 +60,13 @@ class KVStore {
     );
   }
 
+  void deleteForKey(Scope scope, String key) {
+    db.execute(
+      'DELETE FROM kv WHERE scope=? AND key=?',
+      [scope.id, key],
+    );
+  }
+
   Map<String, T> getAllForId<T>(Scope scope, String id) {
     final rows = db.select(
       'SELECT key, value FROM kv WHERE scope=? AND id=?',
