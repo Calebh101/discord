@@ -20,14 +20,17 @@ enum RSButtonStyle {
 }
 
 enum RSAction {
-  add("add"),
-  lock("lock"),
   role("role"),
-  reorder("reorder"),
+
+  add("add"),
   delete("delete"),
+  move("move"),
+
+  lock("lock"),
+  update("update"),
 
   selectDelete("select-delete"),
-  selectReorder("select-reorder"),
+  selectMove("select-move"),
   ;
 
   final String key;
@@ -60,9 +63,10 @@ final class CustomID {
 ActionRowBuilder actions() {
   return .new(components: [
     ButtonBuilder.primary(label: "Add Item", customId: CustomID(.add).build()),
-    ButtonBuilder.secondary(label: "Reorder Item", customId: CustomID(.selectReorder).build()),
+    ButtonBuilder.secondary(label: "Move Item", customId: CustomID(.selectMove).build()),
     ButtonBuilder.danger(label: "Delete Item", customId: CustomID(.selectDelete).build()),
     ButtonBuilder.success(label: "Lock", customId: CustomID(.lock).build()),
+    ButtonBuilder.secondary(label: "Update", customId: CustomID(.update).build()),
   ]);
 }
 
@@ -81,6 +85,14 @@ final class RoleSelectorPlugin extends DiscordPlugin {
   List<DiscordConverter<dynamic, dynamic>> converters(DiscordBot bot) {
     return [
       DiscordColorConverter(),
+    ];
+  }
+
+  @override
+  List<Permission> permissions(DiscordBot bot) {
+    return [
+      .new("roleselector.create", "Create role selectors."),
+      .new("roleselector.manage", "Manage all role selectors."),
     ];
   }
 
@@ -157,7 +169,7 @@ final class RoleSelectorPlugin extends DiscordPlugin {
           return;
         }
 
-        if (message.author.id != member.id && !BotPermissions.isOwner(bot.store, member.id)) {
+        if (message.author.id != member.id && !bot.permissions.hasPerm(bot.store, "roleselector.manage", member.id, member.roleIds) && !BotPermissions.isOwner(bot.store, member.id)) {
           await interaction.respond(MessageBuilder(
             content: "You can't edit this role selector!",
             flags: MessageFlags.ephemeral,
@@ -176,10 +188,11 @@ final class RoleSelectorPlugin extends DiscordPlugin {
             return;
           }
 
+          await interaction.acknowledge(isEphemeral: true);
+
           if (await update(message, locked: true) != true) {
             await interaction.respond(MessageBuilder(
               content: "Unable to update message :(",
-              flags: MessageFlags.ephemeral,
             ));
 
             return;
@@ -190,6 +203,20 @@ final class RoleSelectorPlugin extends DiscordPlugin {
           await interaction.respond(MessageBuilder(
             content: "Locked role selector!",
             flags: MessageFlags.ephemeral,
+          ));
+        } else if (id.action == .update) {
+          await interaction.acknowledge(isEphemeral: true);
+
+          if (await update(message) != true) {
+            await interaction.respond(MessageBuilder(
+              content: "Unable to update message :(",
+            ));
+
+            return;
+          }
+
+          await interaction.respond(MessageBuilder(
+            content: "Role selector updated!",
           ));
         } else if (id.action == .selectDelete) {
           if (settings.items.get().isEmpty) {
@@ -217,7 +244,7 @@ final class RoleSelectorPlugin extends DiscordPlugin {
               ),
             ],
           ));
-        } else if (id.action == .selectReorder) {
+        } else if (id.action == .selectMove) {
           if (settings.items.get().isEmpty) {
             await interaction.respond(MessageBuilder(
               content: "You have no items yet!",
@@ -228,8 +255,8 @@ final class RoleSelectorPlugin extends DiscordPlugin {
           }
 
           await interaction.respondModal(.new(
-            title: "Reorder Role",
-            customId: CustomID(.reorder, {
+            title: "Move Role",
+            customId: CustomID(.move, {
               "messageId": message.id.toString(),
               "channelId": message.channelId.toString(),
             }).build(),
@@ -237,7 +264,7 @@ final class RoleSelectorPlugin extends DiscordPlugin {
               LabelComponentBuilder(
                 label: "What to move",
                 id: 1,
-                component: SelectMenuBuilder(type: .stringSelect, customId: "item", minValues: 1, maxValues: 1, placeholder: "Choose a role to reorder...", options: settings.items.get().mapToList((item) {
+                component: SelectMenuBuilder(type: .stringSelect, customId: "item", minValues: 1, maxValues: 1, placeholder: "Choose a role to move...", options: settings.items.get().mapToList((item) {
                   return .new(label: item.name, value: item.roleId.toString());
                 })),
               ),
@@ -254,6 +281,15 @@ final class RoleSelectorPlugin extends DiscordPlugin {
             ],
           ));
         } else if (id.action == .add) {
+          if (settings.items.get().length >= 20) {
+            await interaction.respond(MessageBuilder(
+              content: "You can't have more than 20 roles, sorry...",
+              flags: MessageFlags.ephemeral,
+            ));
+
+            return;
+          }
+
           await interaction.respondModal(.new(
             title: "Add Role",
             customId: CustomID(.add, {
@@ -338,8 +374,46 @@ final class RoleSelectorPlugin extends DiscordPlugin {
           await interaction.respond(.new(
             content: "Item deleted!",
           ));
-        } else if (id.action == .reorder) {
-          // TODO
+        } else if (id.action == .move) {
+          final labels = {
+            for (final label in data.components.whereType<SubmittedLabelComponent>()) label.id: label,
+          };
+
+          final roleComponent = labels[1]!.component as SubmittedSelectMenuComponent;
+          final whereComponent = labels[2]!.component as SubmittedSelectMenuComponent;
+
+          final roleId = Snowflake.parse(roleComponent.values.first);
+          final where = whereComponent.values.first;
+
+          final items = settings.items.get();
+          final start = items.indexWhere((x) => x.roleId == roleId);
+
+          final end = switch (where) {
+            "up" => start <= 0 ? 0 : start - 1,
+            "down" => start >= items.length - 1 ? items.length - 1 : start + 1,
+            "top" => 0,
+            "bottom" => items.length - 1,
+            _ => items.length - 1,
+          };
+
+          if (start != end) {
+            items.insert(end, items.removeAt(start));
+          }
+
+          settings.items.set(items);
+
+          if (await update(message) == false) {
+            await interaction.respond(.new(
+              content: "We couldn't update the message :(\nHowever, your settings were still applied.",
+            ));
+
+            return;
+          }
+
+          await interaction.respond(.new(
+            content: "Item moved!",
+            flags: MessageFlags.ephemeral,
+          ));
         } else if (id.action == .add) {
           final labels = {
             for (final label in data.components.whereType<SubmittedLabelComponent>()) label.id: label,
@@ -394,7 +468,7 @@ final class RoleSelectorCommand extends TopLevelParentCommand {
     return buildCommand(commandOptions(bot));
   }
 
-  @Subcommand("create", "Create a new role selector.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("create", "Create a new role selector.", needsGuild: true, otherPerms: ["roleselector.create"])
   void create(
     GuildDiscordContext context,
     @StringOption("title", "The title of your role selector.") String title,
