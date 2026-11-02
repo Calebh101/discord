@@ -122,6 +122,39 @@ final class RoleSelectorPlugin extends DiscordPlugin {
       }
     }
 
+    Future<void> checkLocks() async {
+      for (final (_, k, active) in bot.store.getAllForKey<bool>(.message, "rsActive").entriesAsRecords) {
+        if (active == false) continue;
+        final id = Snowflake.parse(k);
+
+        final settings = RoleSelectorMessageSettings(bot.store, id);
+        final started = settings.started.get();
+
+        final channelId = settings.channel.get();
+        final clientId = settings.client.get();
+
+        if (started == null || channelId == null || clientId == null) {
+          Logger.warn("RoleSelector", "One or more is missing: started time, channel ID, or client ID: for ID $clientId:$channelId:$id; clearing data...");
+          settings.clear();
+          continue;
+        }
+
+        if (DateTime.now().difference(started) <= .new(hours: 1)) continue;
+        final client = bot.clients.allClients.firstWhereOrNull((x) => x.user.id == clientId);
+        if (client == null) continue;
+
+        final channel = client.channels[channelId] as PartialTextChannel;
+        final message = PartialMessage(id: id, manager: channel.messages);
+
+        Logger.print("RoleSelector", "Automatically locking role selector $clientId:$channelId:$id...");
+        await update(message, locked: true);
+        settings.clear();
+      }
+    }
+
+    Logger.print("RoleSelector", "Startup minute: ${DateTime.now().minute}");
+    Timer.periodic(.new(minutes: 30), (_) => checkLocks());
+
     bot.clients.run((client) {
       client.onMessageComponentInteraction.listen((event) async {
         final interaction = event.interaction;
@@ -146,7 +179,7 @@ final class RoleSelectorPlugin extends DiscordPlugin {
 
           try {
             await interaction.acknowledge(isEphemeral: true);
-            Logger.print("RoleSelector", "${remove ? "Removing" : "Adding"} role $roleId to/from member ${member.id} in guild ${guild.id}...");
+            Logger.print("RoleSelector", "${remove ? "Removing" : "Adding"} role $roleId to/from member ${member.id} (${user.username}) in guild ${guild.id}...");
 
             if (remove) {
               await member.removeRole(roleId, auditLogReason: "Requested via role selector.");
@@ -169,7 +202,7 @@ final class RoleSelectorPlugin extends DiscordPlugin {
           return;
         }
 
-        if (message.author.id != member.id && !bot.permissions.hasPerm(bot.store, "roleselector.manage", member.id, member.roleIds) && !BotPermissions.isOwner(bot.store, member.id)) {
+        if (settings.author.get() != member.id && !BotPermissions.isAdmin(bot.store, guild.id, member.id) && !bot.permissions.hasPerm(bot.store, "roleselector.manage", member.id, member.roleIds)) {
           await interaction.respond(MessageBuilder(
             content: "You can't edit this role selector!",
             flags: MessageFlags.ephemeral,
@@ -487,8 +520,11 @@ final class RoleSelectorCommand extends TopLevelParentCommand {
     final settings = RoleSelectorMessageSettings(context.store, message.id);
 
     settings.active.set(true);
-    settings.author.set(context.userId);
     settings.started.set(.now());
+
+    settings.author.set(context.userId);
+    settings.channel.set(context.channelId);
+    settings.client.set(context.clientId);
 
     await context.respond(.new(
       embeds: [
@@ -501,6 +537,65 @@ final class RoleSelectorCommand extends TopLevelParentCommand {
       components: [
         actions(),
       ],
+    ));
+  }
+
+  @Subcommand("edit", "Edit a role selector.", needsGuild: true)
+  void edit(
+    GuildDiscordContext context,
+    @MessageOption("message", "The message of the role selector.") Message message,
+    @StringOption("title", "The title of your role selector.") String? title,
+    @StringOption("body", "The body of your role selector.") String? body,
+    @StringOption("color", "The color of the embed.") DiscordColor? color,
+  ) async {
+    final settings = RoleSelectorMessageSettings(context.store, message.id);
+
+    if (settings.active.get() == false) {
+      return await context.respond(.new(
+        content: "This message is either not a role selector or is locked.",
+      ), ephemeral: .ephemeral);
+    }
+
+    if (!context.hasPerm("roleselector.manage") && settings.author.get() != context.userId) {
+      return await context.respond(.new(
+        content: "You can't edit this role selector!\nYou either need to be the author, or have the `roleselector.manage` permission.",
+      ), ephemeral: .ephemeral);
+    }
+
+    if ([title, body, color].every((x) => x == null)) {
+      return await context.respond(.new(
+        content: "You changed nothing!",
+      ), ephemeral: .ephemeral);
+    }
+
+    await context.acknowledge();
+    final embed = message.embeds.first;
+
+    await message.edit(.new(
+      embeds: [
+        .new(
+          title: title ?? embed.title,
+          description: body ?? embed.description,
+          color: color ?? embed.color,
+        ),
+      ],
+    ));
+
+    await context.respond(.new(
+      content: "Role selector updated!",
+    ));
+  }
+
+  @Subcommand("delete", "Delete role selector data by ID. Owner-only.", permissionsRequired: .owner)
+  void delete(
+    DiscordContext context,
+    @SnowflakeOption("id", "The ID of the role selector message.") Snowflake id,
+  ) async {
+    final settings = RoleSelectorMessageSettings(context.store, id);
+    settings.clear();
+
+    await context.respond(.new(
+      content: "Cleared role selector `$id`!",
     ));
   }
 }
@@ -529,31 +624,24 @@ final class RoleSelectorMessageSettings extends MessageSettings {
   SettingsObject<DateTime> get started => .dateTime(this, "rsStarted");
   SettingsObjectNotNull<List<RSItem>> get items => .list(this, "rsItems", encodeFunction: (x) => x.toJson(), decodeFunction: (x) => .fromJson(x));
 
+  SettingsObject<Snowflake> get channel => .snowflake(this, "rsChannel");
+  SettingsObject<Snowflake> get client => .snowflake(this, "rsClient");
+
   void clear() {
     active.delete();
     author.delete();
     started.delete();
     items.delete();
+    channel.delete();
+    client.delete();
   }
 
   List<List<RSItem>> batchItems() {
-    final List<List<RSItem>> results = [];
-    final List<RSItem> current = [];
+    final all = items.get();
 
-    for (final item in items.get()) {
-      if (current.length >= 5) {
-        results.add(current);
-        current.clear();
-      } else {
-        current.add(item);
-      }
-    }
-
-    if (current.isNotEmpty) {
-      results.add(current);
-    }
-
-    return results;
+    return [
+      for (var i = 0; i < all.length; i += 5) all.skip(i).take(5).toList(),
+    ];
   }
 }
 
