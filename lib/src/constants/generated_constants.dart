@@ -1,7 +1,7 @@
 import 'package:discord/discord.dart';
 
 // Auto-generated, do not edit!
-// Last updated: 2026-10-24T14:48:58.868051
+// Last updated: 2026-11-03T20:06:49.339004
 
 const auditLogEvents = {
   "GuildUpdate": 1,
@@ -11,6 +11,7 @@ const auditLogEvents = {
   "ChannelOverwriteCreate": 13,
   "ChannelOverwriteUpdate": 14,
   "ChannelOverwriteDelete": 15,
+  "ChannelPositionUpdate": 16,
   "MemberKick": 20,
   "MemberPrune": 21,
   "MemberBanAdd": 22,
@@ -23,6 +24,7 @@ const auditLogEvents = {
   "RoleCreate": 30,
   "RoleUpdate": 31,
   "RoleDelete": 32,
+  "RolePositionUpdate": 33,
   "InviteCreate": 40,
   "InviteUpdate": 41,
   "InviteDelete": 42,

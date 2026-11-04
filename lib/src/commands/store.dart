@@ -187,6 +187,29 @@ class CommandsStore {
         actions.addAll(x);
       }
 
+      if (!actions.contains(CommandProcessAction.skipLockdownCheck) && !BotPermissions.isOwner(bot.store, user.id)) {
+        final settings = BotPermissionSettings(bot.store);
+        final guildId = interaction.guildId;
+
+        bool lockdown = false;
+
+        if (settings.allLockdown.get()) {
+          lockdown = true;
+        } else if (guildId == null) {
+          lockdown = settings.dmLockdown.get();
+        } else {
+          if (settings.guildLockdown.get()) {
+            lockdown = true;
+          } else if (GuildPermissionSettings(bot.store, guildId).lockdown.get()) {
+            lockdown = true;
+          }
+        }
+
+        if (lockdown) {
+          return await respond("The bot is on lockdown, at least in here...");
+        }
+      }
+
       if (!actions.contains(CommandProcessAction.skipGuildCheck)) {
         if (info.needsGuild && interaction.guildId == null) {
           return await respond("This command needs to be run in a guild.");

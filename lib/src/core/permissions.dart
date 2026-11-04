@@ -31,10 +31,19 @@ enum BotPermissions {
   }
 }
 
+final class BotPermissionSettings extends BotSettings {
+  new(super.store);
+
+  SettingsObjectNotNull<bool> get dmLockdown => .new(this, "dmLockdown", () => false);
+  SettingsObjectNotNull<bool> get guildLockdown => .new(this, "guildLockdown", () => false);
+  SettingsObjectNotNull<bool> get allLockdown => .new(this, "allLockdown", () => false);
+}
+
 final class GuildPermissionSettings extends GuildSettings {
   new(super.store, super.id);
 
   SettingsObjectNotNull<bool> get blocked => .new(this, "blocked", () => false);
+  SettingsObjectNotNull<bool> get lockdown => .new(this, "lockdown", () => false);
   SettingsObject<Snowflake> get claimer => .snowflake(this, "claimer");
 }
 

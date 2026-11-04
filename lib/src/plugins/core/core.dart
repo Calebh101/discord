@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:discord/discord.dart';
 import 'package:discord/src/plugins/core/admin.dart';
+import 'package:discord/src/plugins/core/lockdown.dart';
 import 'package:discord/src/plugins/core/owner.dart';
 import 'package:discord/src/plugins/core/perms.dart';
 import 'package:discord/src/plugins/core/test.dart';
@@ -154,6 +155,8 @@ final class BotCommands extends TopLevelParentCommand {
   List<SubcommandGroupCommand> subcommandGroups(DiscordBot bot) => [
     BotAdminCommands(),
     BotOwnerCommands(),
+    BotLockdownCommands(),
+
     if (bot.permissions.isNotEmpty) PermsCommands(),
 
     if (bot.dev) ...[
