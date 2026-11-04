@@ -11,7 +11,7 @@ extension on MemberRoleCommand {
     () {
       return OptionData(
         name: "list",
-        function: list,
+        function: this.list,
         builder: .subCommand(
           name: "list",
           description: "List all member roles.",
@@ -29,7 +29,7 @@ extension on MemberRoleCommand {
     () {
       return OptionData(
         name: "set",
-        function: setRole,
+        function: this.setRole,
         builder: .subCommand(
           name: "set",
           description: "Set a member role.",
@@ -171,7 +171,7 @@ extension on MemberRoleCommand {
     () {
       return OptionData(
         name: "delete",
-        function: deleteRole,
+        function: this.deleteRole,
         builder: .subCommand(
           name: "delete",
           description: "Disable a member role and delete its settings.",
@@ -227,7 +227,7 @@ extension on MemberRoleCommand {
     () {
       return OptionData(
         name: "ignore",
-        function: ignore,
+        function: this.ignore,
         builder: .subCommand(
           name: "ignore",
           description: "Ignore a user from member role evaluation.",
@@ -355,7 +355,7 @@ extension on MemberRoleCommand {
     () {
       return OptionData(
         name: "eval",
-        function: eval,
+        function: this.eval,
         builder: .subCommand(
           name: "eval",
           description: "Evaluate a member role.",
@@ -411,7 +411,7 @@ extension on MemberRoleCommand {
     () {
       return OptionData(
         name: "not-evaluating",
-        function: notEvaluating,
+        function: this.notEvaluating,
         builder: .subCommand(
           name: "not-evaluating",
           description: "Reset the evaluating tracker for a guild. Owner-only.",

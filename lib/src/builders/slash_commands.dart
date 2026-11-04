@@ -71,7 +71,7 @@ final class SubcommandInfo extends CommandInfo {
   @override
   String build() {
     return """
-return OptionData(name: "$name", function: $functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(parseLocalizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(parseLocalizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms), needsGuild: $needsGuild, otherPerms: ${jsonEncode(otherPerms)});
+return OptionData(name: "$name", function: this.$functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(parseLocalizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(parseLocalizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms), needsGuild: $needsGuild, otherPerms: ${jsonEncode(otherPerms)});
 """.trim();
   }
 }

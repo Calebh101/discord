@@ -11,7 +11,7 @@ extension on BotAdminCommands {
     () {
       return OptionData(
         name: "ignore",
-        function: ignore,
+        function: this.ignore,
         builder: .subCommand(
           name: "ignore",
           description: "Ignore/unignore a user bot-wide.",
@@ -103,7 +103,7 @@ extension on BotAdminCommands {
     () {
       return OptionData(
         name: "admin",
-        function: admin,
+        function: this.admin,
         builder: .subCommand(
           name: "admin",
           description: "Make a user an admin of the bot.",
@@ -195,7 +195,7 @@ extension on BotAdminCommands {
     () {
       return OptionData(
         name: "list",
-        function: list,
+        function: this.list,
         builder: .subCommand(
           name: "list",
           description: "List all bot admins.",
@@ -213,7 +213,7 @@ extension on BotAdminCommands {
     () {
       return OptionData(
         name: "claim",
-        function: claim,
+        function: this.claim,
         builder: .subCommand(
           name: "claim",
           description: "Claim the bot for this guild.",

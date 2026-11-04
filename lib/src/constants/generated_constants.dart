@@ -1,7 +1,7 @@
 import 'package:discord/discord.dart';
 
 // Auto-generated, do not edit!
-// Last updated: 2026-11-03T20:06:49.339004
+// Last updated: 2026-11-04T11:06:22.554709
 
 const auditLogEvents = {
   "GuildUpdate": 1,

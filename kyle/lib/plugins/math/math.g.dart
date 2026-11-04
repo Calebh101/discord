@@ -11,7 +11,7 @@ extension on MathCommand {
     () {
       return OptionData(
         name: "channel",
-        function: getChannel,
+        function: this.getChannel,
         builder: .subCommand(
           name: "channel",
           description: "Get the math channel.",
@@ -29,7 +29,7 @@ extension on MathCommand {
     () {
       return OptionData(
         name: "set-channel",
-        function: setChannel,
+        function: this.setChannel,
         builder: .subCommand(
           name: "set-channel",
           description: "Set the math channel.",
@@ -101,7 +101,7 @@ extension on MathCommand {
     () {
       return OptionData(
         name: "calculate",
-        function: calculate,
+        function: this.calculate,
         builder: .subCommand(
           name: "calculate",
           description: "Calculate a math formula.",
@@ -157,7 +157,7 @@ extension on MathCommand {
     () {
       return OptionData(
         name: "variable",
-        function: setVariable,
+        function: this.setVariable,
         builder: .subCommand(
           name: "variable",
           description: "Set a variable.",

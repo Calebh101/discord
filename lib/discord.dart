@@ -20,6 +20,7 @@ export 'src/util/modlog.dart';
 export 'src/util/alert.dart';
 export 'src/util/pagination.dart';
 export 'src/util/colors.dart';
+export 'src/util/misc.dart';
 
 export 'src/clients/store.dart';
 export 'src/clients/tokens.dart';

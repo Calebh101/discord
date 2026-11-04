@@ -11,7 +11,7 @@ extension on QuoteCommand {
     () {
       return OptionData(
         name: "info",
-        function: getInfo,
+        function: this.getInfo,
         builder: .subCommand(
           name: "info",
           description: "Get info about the quoting system!",
@@ -29,7 +29,7 @@ extension on QuoteCommand {
     () {
       return OptionData(
         name: "message",
-        function: quoteMessage,
+        function: this.quoteMessage,
         builder: .subCommand(
           name: "message",
           description: "Quote a message by ID.",
@@ -129,7 +129,7 @@ extension on QuoteCommand {
     () {
       return OptionData(
         name: "ignore",
-        function: ignoreChannel,
+        function: this.ignoreChannel,
         builder: .subCommand(
           name: "ignore",
           description: "Ignore/unignore a channel for quotes.",
@@ -237,7 +237,7 @@ extension on QuoteCommand {
     () {
       return OptionData(
         name: "test",
-        function: test,
+        function: this.test,
         builder: .subCommand(
           name: "test",
           description: "Test quotes from this channel.",
@@ -391,7 +391,7 @@ extension on QuoteRuleCommand {
     () {
       return OptionData(
         name: "list",
-        function: getRules,
+        function: this.getRules,
         builder: .subCommand(
           name: "list",
           description: "List all rules.",
@@ -409,7 +409,7 @@ extension on QuoteRuleCommand {
     () {
       return OptionData(
         name: "set",
-        function: setRule,
+        function: this.setRule,
         builder: .subCommand(
           name: "set",
           description: "Set a rule.",
@@ -697,7 +697,7 @@ extension on QuoteRuleCommand {
     () {
       return OptionData(
         name: "delete",
-        function: deleteRule,
+        function: this.deleteRule,
         builder: .subCommand(
           name: "delete",
           description: "Delete a rule.",

@@ -11,7 +11,7 @@ extension on PermsCommands {
     () {
       return OptionData(
         name: "get",
-        function: get,
+        function: this.get,
         builder: .subCommand(
           name: "get",
           description: "Get a permission by ID.",
@@ -67,7 +67,7 @@ extension on PermsCommands {
     () {
       return OptionData(
         name: "allow",
-        function: allow,
+        function: this.allow,
         builder: .subCommand(
           name: "allow",
           description: "Allow a role to use this permission.",
@@ -194,8 +194,100 @@ extension on PermsCommands {
     }(),
     () {
       return OptionData(
+        name: "everyone",
+        function: this.allowEveryone,
+        builder: .subCommand(
+          name: "everyone",
+          description: "Allow a role to use this permission.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "perm",
+                description: "The permission to allow.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(5),
+                name: "allow",
+                description: "Whether to allow this role",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<String>(
+              name: "perm",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "perm",
+                  description: "The permission to allow.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => PermsAutocomplete(),
+            );
+          }(),
+          () {
+            return OptionData<bool>(
+              name: "allow",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(5),
+                  name: "allow",
+                  description: "Whether to allow this role",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+        otherPerms: null,
+      );
+    }(),
+    () {
+      return OptionData(
         name: "allowed",
-        function: allowed,
+        function: this.allowed,
         builder: .subCommand(
           name: "allowed",
           description: "Get if a role is allowed for a certain permission.",
@@ -220,7 +312,7 @@ extension on PermsCommands {
                 type: .new(8),
                 name: "role",
                 description: "The role to allow.",
-                isRequired: true,
+                isRequired: false,
                 choices: null,
                 hasAutocomplete: false,
                 channelTypes: null,
@@ -265,7 +357,7 @@ extension on PermsCommands {
                   type: .new(8),
                   name: "role",
                   description: "The role to allow.",
-                  isRequired: true,
+                  isRequired: false,
                   choices: null,
                   hasAutocomplete: false,
                   channelTypes: null,
@@ -287,7 +379,7 @@ extension on PermsCommands {
     () {
       return OptionData(
         name: "list",
-        function: list,
+        function: this.list,
         builder: .subCommand(
           name: "list",
           description: "List all available permissions.",
@@ -305,7 +397,7 @@ extension on PermsCommands {
     () {
       return OptionData(
         name: "roles",
-        function: roles,
+        function: this.roles,
         builder: .subCommand(
           name: "roles",
           description: "Get all roles and what perms they have.",
@@ -316,7 +408,7 @@ extension on PermsCommands {
         autocomplete: null,
         options: null,
         requiredPerms: .parse(0),
-        needsGuild: false,
+        needsGuild: true,
         otherPerms: null,
       );
     }(),

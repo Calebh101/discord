@@ -11,7 +11,7 @@ extension on TagsCommand {
     () {
       return OptionData(
         name: "get",
-        function: get,
+        function: this.get,
         builder: .subCommand(
           name: "get",
           description: "Get a user or guild tag by name.",
@@ -67,7 +67,7 @@ extension on TagsCommand {
     () {
       return OptionData(
         name: "list",
-        function: list,
+        function: this.list,
         builder: .subCommand(
           name: "list",
           description: "List all tags.",
@@ -137,7 +137,7 @@ extension on TagsCommand {
     () {
       return OptionData(
         name: "set",
-        function: set,
+        function: this.set,
         builder: .subCommand(
           name: "set",
           description: "Set a tag.",
@@ -279,7 +279,7 @@ extension on TagsCommand {
     () {
       return OptionData(
         name: "delete",
-        function: delete,
+        function: this.delete,
         builder: .subCommand(
           name: "delete",
           description: "Delete a tag.",
@@ -385,7 +385,7 @@ extension on TagsCommand {
     () {
       return OptionData(
         name: "rename",
-        function: rename,
+        function: this.rename,
         builder: .subCommand(
           name: "rename",
           description: "Rename a tag.",
@@ -527,7 +527,7 @@ extension on TagsCommand {
     () {
       return OptionData(
         name: "get-prefix",
-        function: getPrefix,
+        function: this.getPrefix,
         builder: .subCommand(
           name: "get-prefix",
           description: "Get the tag prefix.",
@@ -545,7 +545,7 @@ extension on TagsCommand {
     () {
       return OptionData(
         name: "set-prefix",
-        function: setPrefix,
+        function: this.setPrefix,
         builder: .subCommand(
           name: "set-prefix",
           description: "Set the tag prefix.",
@@ -585,6 +585,62 @@ extension on TagsCommand {
                   channelTypes: null,
                   minLength: 1,
                   maxLength: 20,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+        otherPerms: null,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "header",
+        function: this.header,
+        builder: .subCommand(
+          name: "header",
+          description: "Control whether to show headers for tags.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(5),
+                name: "header",
+                description: "Whether to show headers for tags.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<bool>(
+              name: "header",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(5),
+                  name: "header",
+                  description: "Whether to show headers for tags.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
                   minValue: null,
                   maxValue: null,
                 );

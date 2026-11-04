@@ -11,7 +11,7 @@ extension on BotLockdownCommands {
     () {
       return OptionData(
         name: "status",
-        function: status,
+        function: this.status,
         builder: .subCommand(
           name: "status",
           description: "Get lockdown status.",
@@ -20,7 +20,7 @@ extension on BotLockdownCommands {
               return CommandOptionBuilder(
                 type: .new(3),
                 name: "id",
-                description: "ID of the guild to lock down.",
+                description: "ID of the guild to view status for.",
                 isRequired: false,
                 choices: null,
                 hasAutocomplete: false,
@@ -44,7 +44,7 @@ extension on BotLockdownCommands {
                 return CommandOptionBuilder(
                   type: .new(3),
                   name: "id",
-                  description: "ID of the guild to lock down.",
+                  description: "ID of the guild to view status for.",
                   isRequired: false,
                   choices: null,
                   hasAutocomplete: false,
@@ -74,7 +74,7 @@ extension on BotLockdownCommands {
     () {
       return OptionData(
         name: "all",
-        function: all,
+        function: this.all,
         builder: .subCommand(
           name: "all",
           description: "Lockdown for everywhere.",
@@ -130,7 +130,7 @@ extension on BotLockdownCommands {
     () {
       return OptionData(
         name: "guilds",
-        function: allGuilds,
+        function: this.allGuilds,
         builder: .subCommand(
           name: "guilds",
           description: "Lockdown for all guilds.",
@@ -186,7 +186,7 @@ extension on BotLockdownCommands {
     () {
       return OptionData(
         name: "dms",
-        function: allDms,
+        function: this.allDms,
         builder: .subCommand(
           name: "dms",
           description: "Lockdown for all DMs.",
@@ -242,7 +242,7 @@ extension on BotLockdownCommands {
     () {
       return OptionData(
         name: "guild",
-        function: forGuild,
+        function: this.forGuild,
         builder: .subCommand(
           name: "guild",
           description: "Lockdown for a guild.",

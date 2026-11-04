@@ -11,7 +11,7 @@ extension on TestCommands {
     () {
       return OptionData(
         name: "react",
-        function: react,
+        function: this.react,
         builder: .subCommand(
           name: "react",
           description: "React to a message.",
@@ -111,7 +111,7 @@ extension on TestCommands {
     () {
       return OptionData(
         name: "channels",
-        function: channels,
+        function: this.channels,
         builder: .subCommand(
           name: "channels",
           description: "Test channel parameters.",

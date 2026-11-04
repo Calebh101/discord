@@ -11,7 +11,7 @@ extension on StickyRoleCommand {
     () {
       return OptionData(
         name: "list-member",
-        function: forMember,
+        function: this.forMember,
         builder: .subCommand(
           name: "list-member",
           description: "List a member's sticky roles.",
@@ -63,7 +63,7 @@ extension on StickyRoleCommand {
     () {
       return OptionData(
         name: "add",
-        function: add,
+        function: this.add,
         builder: .subCommand(
           name: "add",
           description: "Add a sticky role to a user.",
@@ -151,7 +151,7 @@ extension on StickyRoleCommand {
     () {
       return OptionData(
         name: "remove",
-        function: remove,
+        function: this.remove,
         builder: .subCommand(
           name: "remove",
           description: "Remove a sticky role from a user.",
@@ -239,7 +239,7 @@ extension on StickyRoleCommand {
     () {
       return OptionData(
         name: "eval-all",
-        function: evalAllMembers,
+        function: this.evalAllMembers,
         builder: .subCommand(
           name: "eval-all",
           description: "Evaluate all members for all sticky roles.",
@@ -257,7 +257,7 @@ extension on StickyRoleCommand {
     () {
       return OptionData(
         name: "eval-member",
-        function: evalAMember,
+        function: this.evalAMember,
         builder: .subCommand(
           name: "eval-member",
           description: "Evaluate a members for all sticky roles.",

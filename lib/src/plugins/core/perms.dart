@@ -70,22 +70,75 @@ final class PermsCommands extends SubcommandGroupCommand {
     }
   }
 
-  @Subcommand("allowed", "Get if a role is allowed for a certain permission.", needsGuild: true)
-  void allowed(
-    DiscordContext context,
+  @Subcommand("everyone", "Allow a role to use this permission.", permissionsRequired: .admin, needsGuild: true)
+  void allowEveryone(
+    GuildDiscordContext context,
     @StringOption("perm", "The permission to allow.", autocomplete: Autocomplete<PermsAutocomplete>()) String id,
-    @RoleOption("role", "The role to allow.") Role role,
+    @BoolOption("allow", "Whether to allow this role") bool allow,
   ) async {
     final perm = context.bot.permissions.lookup(id);
     if (perm == null) return await context.respond(.new(content: "No permission found by ID `$id`."), ephemeral: .ephemeral);
 
-    final settings = RolePermissionSettings(context.store, role.id);
-    final allowed = settings.allowedPerms.get().contains(id);
+    final settings = GuildPermissionSettings(context.store, context.guildId);
+    final current = settings.allowedEveryonePerms.get();
 
-    await context.respond(.new(
-      content: "Role ${role.toMention()} ${allowed ? "**is**" : "is **not**"} allowed for permission `$id`.",
-      allowedMentions: .new(),
-    ));
+    if (current.contains(id)) {
+      if (allow) {
+        await context.respond(.new(
+          content: "Everyone is already allowed for permission `$id``.",
+        ), ephemeral: .ephemeral);
+      } else {
+        current.remove(id);
+        settings.allowedEveryonePerms.set(current);
+
+        await context.respond(.new(
+          content: "**Everyone** is not allowed for permission `$id` anymore.",
+          allowedMentions: .new(),
+        ));
+      }
+    } else {
+      if (allow) {
+        current.add(id);
+        settings.allowedEveryonePerms.set(current);
+
+        await context.respond(.new(
+          content: "**Everyone** allowed permission `$id`!",
+          allowedMentions: .new(),
+        ));
+      } else {
+        await context.respond(.new(
+          content: "Everyone is already not allowed for permission `$id``.",
+        ), ephemeral: .ephemeral);
+      }
+    }
+  }
+
+  @Subcommand("allowed", "Get if a role is allowed for a certain permission.", needsGuild: true)
+  void allowed(
+    GuildDiscordContext context,
+    @StringOption("perm", "The permission to allow.", autocomplete: Autocomplete<PermsAutocomplete>()) String id,
+    @RoleOption("role", "The role to allow.") Role? role,
+  ) async {
+    final perm = context.bot.permissions.lookup(id);
+    if (perm == null) return await context.respond(.new(content: "No permission found by ID `$id`."), ephemeral: .ephemeral);
+
+    if (role != null) {
+      final settings = RolePermissionSettings(context.store, role.id);
+      final allowed = settings.allowedPerms.get().contains(id);
+
+      await context.respond(.new(
+        content: "Role ${role.toMention()} ${allowed ? "**is**" : "is **not**"} allowed for permission `$id`.",
+        allowedMentions: .new(),
+      ));
+    } else {
+      final settings = GuildPermissionSettings(context.store, context.guildId);
+      final allowed = settings.allowedEveryonePerms.get().contains(id);
+
+      await context.respond(.new(
+        content: "Everyone ${allowed ? "**is**" : "is **not**"} allowed for permission `$id`.",
+        allowedMentions: .new(),
+      ));
+    }
   }
 
   @Subcommand("list", "List all available permissions.")
@@ -102,10 +155,11 @@ final class PermsCommands extends SubcommandGroupCommand {
     ));
   }
 
-  @Subcommand("roles", "Get all roles and what perms they have.")
-  void roles(DiscordContext context) async {
-    final roles = await context.guild!.roles.list();
+  @Subcommand("roles", "Get all roles and what perms they have.", needsGuild: true)
+  void roles(GuildDiscordContext context) async {
+    final roles = await context.guild.roles.list();
     final candidates = roles.map((x) => (x, RolePermissionSettings(context.store, x.id).allowedPerms.get())).where((x) => x.$2.isNotEmpty);
+    final everyone = GuildPermissionSettings(context.store, context.guildId).allowedEveryonePerms.get();
 
     if (candidates.isEmpty) {
       return await context.respond(.new(
@@ -115,11 +169,14 @@ final class PermsCommands extends SubcommandGroupCommand {
 
     await context.respondWithPagination(.new(
       title: "All Roles",
-      pages: EmbedPage.fromItems(candidates.mapToList((x) {
-        final (role, perms) = x;
+      pages: EmbedPage.fromItems([
+        ...candidates.map((x) {
+          final (role, perms) = x;
 
-        return "${role.toMention()}: ${perms.map((x) => x.toDiscordCodeString()).join(", ")}";
-      })),
+          return "${role.toMention()}: ${perms.map((x) => x.toDiscordCodeString()).join(", ")}";
+        }),
+        if (everyone.isNotEmpty) "Everyone: ${everyone.map((x) => x.toDiscordCodeString()).join(", ")}"
+      ]),
     ));
   }
 }

@@ -155,6 +155,9 @@ final class QuotePlugin extends DiscordPlugin {
         final rules = guildSettings.rules.get();
         final emoji = EmojiData.fromEmoji(event.emoji);
 
+        if (rules.isEmpty) return;
+        if (rules.map((x) => x.channel).contains(event.channelId)) return;
+
         rules.removeWhere((x) {
           if (x.emoji != emoji) return true;
 
@@ -187,7 +190,6 @@ final class QuotePlugin extends DiscordPlugin {
 
         rules.removeWhere((x) {
           if (quoted.contains(x.name)) return true;
-          if (event.channelId == x.channel) return true;
           return exclude.contains(x.name);
         });
 

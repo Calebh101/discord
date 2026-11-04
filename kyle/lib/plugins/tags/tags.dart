@@ -4,19 +4,24 @@ import 'package:discord/discord.dart';
 
 part 'tags.g.dart';
 
+final allowed = RegExp(r'^[\p{L}\p{N}\-!_+,.:;=? ]+$', unicode: true);
+const allowedText = "Only letters, numbers, underscores, spaces, and specific symbols are allowed.";
+
 enum TagType {
   user,
   guild,
   ;
 }
 
-MessageBuilder getBuilder(String key, String value, {required User user, Snowflake? reply}) {
-  return .new(
-    content: """
-Tag `$key` invoked by ${user.toMention()}:
+MessageBuilder getBuilder(String key, String value, {required DiscordBot bot, required User user, required PartialGuild? guild, Snowflake? reply}) {
+  final settings = guild != null ? TagsGuildSettings(bot.store, guild.id) : null;
+  final header = settings?.header.get() ?? true;
 
-${value.maxLength(1900, ellipsis: true)}
-    """.trim(),
+  return .new(
+    content: [
+      if (header) "Tag `$key` invoked by ${user.toMention()}:",
+      value.maxLength(1900, ellipsis: true),
+    ].join("\n\n"),
     allowedMentions: .new(),
     referencedMessage: reply != null ? .reply(messageId: reply) : null,
   );
@@ -82,6 +87,8 @@ final class TagsPlugin extends DiscordPlugin {
         await event.message.channel.sendMessage(getBuilder(
           key, value,
           user: user,
+          bot: bot,
+          guild: guild,
           reply: event.message.reference?.messageId ?? message.id,
         ));
       });
@@ -121,7 +128,9 @@ final class TagsCommand extends TopLevelParentCommand {
 
     await context.respond(getBuilder(
       name, tag,
+      bot: context.bot,
       user: context.user,
+      guild: context.guild,
     ));
   }
 
@@ -176,6 +185,12 @@ final class TagsCommand extends TopLevelParentCommand {
           content: "You aren't allowed to manage guild tags!\nYou need the `tags.manage` permission.",
         ), ephemeral: .ephemeral);
       }
+    }
+
+    if (!allowed.hasMatch(name)) {
+      return await context.respond(.new(
+        content: "Invalid tag name. Keep it simple :)\n$allowedText",
+      ), ephemeral: .ephemeral);
     }
 
     final setting = switch (type) {
@@ -285,6 +300,12 @@ final class TagsCommand extends TopLevelParentCommand {
       }
     }
 
+    if (!allowed.hasMatch(target)) {
+      return await context.respond(.new(
+        content: "Invalid tag name. Keep it simple :)\n$allowedText",
+      ), ephemeral: .ephemeral);
+    }
+
     final setting = switch (type) {
       .user => TagsUserSettings(context.store, context.userId).tags,
       .guild => TagsGuildSettings(context.store, context.guildId!).tags,
@@ -364,12 +385,33 @@ final class TagsCommand extends TopLevelParentCommand {
       content: "Prefix set to:\n${prefix.toDiscordCodeBlock()}",
     ));
   }
+
+  @Subcommand("header", "Control whether to show headers for tags.", needsGuild: true, permissionsRequired: .admin)
+  void header(
+    GuildDiscordContext context,
+    @BoolOption("header", "Whether to show headers for tags.") bool header,
+  ) async {
+    final settings = TagsGuildSettings(context.store, context.guildId);
+
+    if (settings.header.get() == header) {
+      return await context.respond(.new(
+        content: "Tag header is already **${header ? "enabled" : "disabled"}**.",
+      ));
+    }
+
+    settings.header.set(header);
+
+    await context.respond(.new(
+      content: "Tag header **${header ? "enabled" : "disabled"}**.",
+    ));
+  }
 }
 
 final class TagsGuildSettings extends GuildSettings {
   new(super.store, super.id);
 
   SettingsObjectNotNull<Map<String, String>> get tags => .map(this, "tags");
+  SettingsObjectNotNull<bool> get header => .new(this, "tagsHeader", () => true);
   SettingsObject<String> get prefix => .new(this, "tagsPrefix");
 }
 

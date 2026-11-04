@@ -34,9 +34,9 @@ enum BotPermissions {
 final class BotPermissionSettings extends BotSettings {
   new(super.store);
 
+  SettingsObjectNotNull<bool> get allLockdown => .new(this, "allLockdown", () => false);
   SettingsObjectNotNull<bool> get dmLockdown => .new(this, "dmLockdown", () => false);
   SettingsObjectNotNull<bool> get guildLockdown => .new(this, "guildLockdown", () => false);
-  SettingsObjectNotNull<bool> get allLockdown => .new(this, "allLockdown", () => false);
 }
 
 final class GuildPermissionSettings extends GuildSettings {
@@ -45,6 +45,8 @@ final class GuildPermissionSettings extends GuildSettings {
   SettingsObjectNotNull<bool> get blocked => .new(this, "blocked", () => false);
   SettingsObjectNotNull<bool> get lockdown => .new(this, "lockdown", () => false);
   SettingsObject<Snowflake> get claimer => .snowflake(this, "claimer");
+
+  SettingsObjectNotNull<List<String>> get allowedEveryonePerms => .list(this, "allowedEveryonePerms");
 }
 
 final class UserPermissionSettings extends UserSettings {
@@ -81,7 +83,11 @@ final class PermissionsStore {
     return permissions.values.flattened;
   }
 
-  bool hasPerm(KVStore store, String id, Snowflake userId, List<Snowflake> roleIds) {
+  bool hasPerm(KVStore store, String id, Snowflake userId, Snowflake guildId, List<Snowflake> roleIds) {
+    if (GuildPermissionSettings(store, guildId).allowedEveryonePerms.get().contains(id)) {
+      return true;
+    }
+
     for (final role in roleIds) {
       final settings = RolePermissionSettings(store, role);
       if (settings.allowedPerms.get().contains(id)) return true;

@@ -165,7 +165,7 @@ class CommandsStore {
       final info = lookup(data.type, path);
       final function = info?.function;
 
-      Logger.print("Commands", "Handling command $path (${data.type.value}) (${[info?.permsRequired.name, ...?info?.otherPerms].join(",")}) for user ${user.id} (${user.username}) (interaction: ${interaction.guildId}) (channel: ${interaction.channelId})...");
+      Logger.print("Commands", "Handling command $path (${data.type.value}) (${[info?.permsRequired.name, ...?info?.otherPerms].join(",")}) for user ${user.id} (${user.username}) (interaction: ${interaction.guildId}) (channel: ${interaction.channelId}) (function: ${function.runtimeType})...");
 
       if (info == null) {
         Logger.warn("Commands", "Invalid command: $path");
@@ -240,7 +240,7 @@ class CommandsStore {
               }
 
               for (final String perm in info.otherPerms ?? []) {
-                if (bot.permissions.hasPerm(bot.store, perm, user.id, roles)) continue;
+                if (bot.permissions.hasPerm(bot.store, perm, user.id, guild, roles)) continue;
                 return await respond("You can't execute this command, you don't have the permission `$perm`!");
               }
             }

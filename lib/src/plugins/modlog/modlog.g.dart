@@ -11,7 +11,7 @@ extension on ModlogCommands {
     () {
       return OptionData(
         name: "info",
-        function: getInfo,
+        function: this.getInfo,
         builder: .subCommand(
           name: "info",
           description: "Get settings of the modlog system.",
@@ -29,7 +29,7 @@ extension on ModlogCommands {
     () {
       return OptionData(
         name: "test",
-        function: test,
+        function: this.test,
         builder: .subCommand(
           name: "test",
           description: "Send a test modlog.",
@@ -85,7 +85,7 @@ extension on ModlogCommands {
     () {
       return OptionData(
         name: "channel",
-        function: setChannel,
+        function: this.setChannel,
         builder: .subCommand(
           name: "channel",
           description: "Set the channel to send modlogs in.",
@@ -141,7 +141,7 @@ extension on ModlogCommands {
     () {
       return OptionData(
         name: "set",
-        function: setGroup,
+        function: this.setGroup,
         builder: .subCommand(
           name: "set",
           description: "Set modlog scopes by group.",
@@ -197,7 +197,7 @@ extension on ModlogCommands {
     () {
       return OptionData(
         name: "save",
-        function: save,
+        function: this.save,
         builder: .subCommand(
           name: "save",
           description: "Send a file with all enabled modlog scopes.",
@@ -215,7 +215,7 @@ extension on ModlogCommands {
     () {
       return OptionData(
         name: "load",
-        function: load,
+        function: this.load,
         builder: .subCommand(
           name: "load",
           description: "Load modlog scopes from an input.",
@@ -271,7 +271,7 @@ extension on ModlogCommands {
     () {
       return OptionData(
         name: "allscopes",
-        function: allScopes,
+        function: this.allScopes,
         builder: .subCommand(
           name: "allscopes",
           description: "Send a file with all possible modlog scopes.",
@@ -289,7 +289,7 @@ extension on ModlogCommands {
     () {
       return OptionData(
         name: "clear",
-        function: clear,
+        function: this.clear,
         builder: .subCommand(
           name: "clear",
           description: "Clear all modlog scopes.",

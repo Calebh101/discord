@@ -11,7 +11,7 @@ extension on WelcomeCommand {
     () {
       return OptionData(
         name: "info",
-        function: getInfo,
+        function: this.getInfo,
         builder: .subCommand(
           name: "info",
           description: "Get info and settings of the welcome system.",
@@ -29,7 +29,7 @@ extension on WelcomeCommand {
     () {
       return OptionData(
         name: "ignore-bots",
-        function: ignoreBots,
+        function: this.ignoreBots,
         builder: .subCommand(
           name: "ignore-bots",
           description: "Whether to ignore bots for welcome/goodbye messages.",
@@ -87,7 +87,7 @@ extension on WelcomeCommand {
     () {
       return OptionData(
         name: "set-channel",
-        function: setChannel,
+        function: this.setChannel,
         builder: .subCommand(
           name: "set-channel",
           description: "Set the channel for welcome/goodbye messages.",
@@ -169,7 +169,7 @@ extension on WelcomeMessageCommand {
     () {
       return OptionData(
         name: "info",
-        function: getInfo,
+        function: this.getInfo,
         builder: .subCommand(
           name: "info",
           description: "Get info about messages.",
@@ -187,7 +187,7 @@ extension on WelcomeMessageCommand {
     () {
       return OptionData(
         name: "get",
-        function: get,
+        function: this.get,
         builder: .subCommand(
           name: "get",
           description: "Get messages.",
@@ -205,7 +205,7 @@ extension on WelcomeMessageCommand {
     () {
       return OptionData(
         name: "welcome",
-        function: setWelcome,
+        function: this.setWelcome,
         builder: .subCommand(
           name: "welcome",
           description: "Set the welcome message.",
@@ -261,7 +261,7 @@ extension on WelcomeMessageCommand {
     () {
       return OptionData(
         name: "goodbye",
-        function: setGoodbye,
+        function: this.setGoodbye,
         builder: .subCommand(
           name: "goodbye",
           description: "Set the goodbye message.",

@@ -11,7 +11,7 @@ extension on RoleSelectorCommand {
     () {
       return OptionData(
         name: "create",
-        function: create,
+        function: this.create,
         builder: .subCommand(
           name: "create",
           description: "Create a new role selector.",
@@ -139,7 +139,7 @@ extension on RoleSelectorCommand {
     () {
       return OptionData(
         name: "edit",
-        function: edit,
+        function: this.edit,
         builder: .subCommand(
           name: "edit",
           description: "Edit a role selector.",
@@ -311,7 +311,7 @@ extension on RoleSelectorCommand {
     () {
       return OptionData(
         name: "delete",
-        function: delete,
+        function: this.delete,
         builder: .subCommand(
           name: "delete",
           description: "Delete role selector data by ID. Owner-only.",

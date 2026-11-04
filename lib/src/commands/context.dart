@@ -58,10 +58,13 @@ class DiscordContext {
   }
 
   bool hasPerm(String id) {
+    if (guildId == null) return false;
     if (isAdmin) return true;
+
     final roles = member?.roleIds;
     if (roles == null) return false;
-    return bot.permissions.hasPerm(store, id, userId, roles);
+
+    return bot.permissions.hasPerm(store, id, userId, guildId!, roles);
   }
 
   bool getEphemeral(ResponseEphemeralMode mode) {

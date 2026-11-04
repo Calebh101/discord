@@ -11,7 +11,7 @@ extension on BotOwnerCommands {
     () {
       return OptionData(
         name: "leave",
-        function: leaveGuild,
+        function: this.leaveGuild,
         builder: .subCommand(
           name: "leave",
           description: "Leave a guild.",
@@ -74,7 +74,7 @@ extension on BotOwnerCommands {
     () {
       return OptionData(
         name: "listguilds",
-        function: listGuilds,
+        function: this.listGuilds,
         builder: .subCommand(
           name: "listguilds",
           description: "List all guilds the bot is in.",

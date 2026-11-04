@@ -202,7 +202,7 @@ final class RoleSelectorPlugin extends DiscordPlugin {
           return;
         }
 
-        if (settings.author.get() != member.id && !BotPermissions.isAdmin(bot.store, guild.id, member.id) && !bot.permissions.hasPerm(bot.store, "roleselector.manage", member.id, member.roleIds)) {
+        if (settings.author.get() != member.id && !BotPermissions.isAdmin(bot.store, guild.id, member.id) && !bot.permissions.hasPerm(bot.store, "roleselector.manage", member.id, guild.id, member.roleIds)) {
           await interaction.respond(MessageBuilder(
             content: "You can't edit this role selector!",
             flags: MessageFlags.ephemeral,

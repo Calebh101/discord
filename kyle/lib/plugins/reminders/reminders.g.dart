@@ -36,7 +36,7 @@ extension on RemindersCommand {
     () {
       return OptionData(
         name: "list",
-        function: list,
+        function: this.list,
         builder: .subCommand(
           name: "list",
           description: "List all of your reminders.",
@@ -54,7 +54,7 @@ extension on RemindersCommand {
     () {
       return OptionData(
         name: "create",
-        function: create,
+        function: this.create,
         builder: .subCommand(
           name: "create",
           description: "Make a new reminder.",
@@ -146,7 +146,7 @@ extension on RemindersCommand {
     () {
       return OptionData(
         name: "delete",
-        function: delete,
+        function: this.delete,
         builder: .subCommand(
           name: "delete",
           description: "Delete a reminder.",

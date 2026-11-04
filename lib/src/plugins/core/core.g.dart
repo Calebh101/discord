@@ -11,7 +11,7 @@ extension on BotCommands {
     () {
       return OptionData(
         name: "ping",
-        function: ping,
+        function: this.ping,
         builder: .subCommand(
           name: "ping",
           description: "Pong!",
@@ -29,7 +29,7 @@ extension on BotCommands {
     () {
       return OptionData(
         name: "setup",
-        function: setup,
+        function: this.setup,
         builder: .subCommand(
           name: "setup",
           description: "Helpful tips for setting up the bot for your guild!",
@@ -47,7 +47,7 @@ extension on BotCommands {
     () {
       return OptionData(
         name: "attributes",
-        function: attributes,
+        function: this.attributes,
         builder: .subCommand(
           name: "attributes",
           description: "List attributes for a user.",
@@ -103,7 +103,7 @@ extension on BotCommands {
     () {
       return OptionData(
         name: "plugins",
-        function: plugins,
+        function: this.plugins,
         builder: .subCommand(
           name: "plugins",
           description: "List all plugins.",
@@ -121,7 +121,7 @@ extension on BotCommands {
     () {
       return OptionData(
         name: "update",
-        function: update,
+        function: this.update,
         builder: .subCommand(
           name: "update",
           description: "Update the bot.",
@@ -213,7 +213,7 @@ extension on BotCommands {
     () {
       return OptionData(
         name: "kill",
-        function: kill,
+        function: this.kill,
         builder: .subCommand(
           name: "kill",
           description: "Kill (or restart) the bot.",
@@ -269,7 +269,7 @@ extension on BotCommands {
     () {
       return OptionData(
         name: "status",
-        function: status,
+        function: this.status,
         builder: .subCommand(
           name: "status",
           description: "Get the machine status of the bot.",
