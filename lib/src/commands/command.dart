@@ -132,7 +132,7 @@ final class TopLevelCommandInfo extends BaseCommandInfo {
   final List<ApplicationIntegrationType>? integrationTypes;
   final List<InteractionContextType>? contexts;
 
-  new({required super.name, required this.description, super.nameLocalizations, this.descriptionLocalizations, super.otherPerms, this.defaultMemberPermissions, this.isNsfw, this.integrationTypes, this.contexts}) : type = .chatInput;
+  new({required super.name, required this.description, super.nameLocalizations, this.descriptionLocalizations, super.otherPerms, super.needsGuild, this.defaultMemberPermissions, this.isNsfw, this.integrationTypes, this.contexts}) : type = .chatInput;
 }
 
 final class ContextMenuCommandInfo extends BaseCommandInfo {

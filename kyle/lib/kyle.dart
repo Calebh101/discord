@@ -7,6 +7,7 @@ import 'package:kyle/plugins/math/math.dart';
 import 'package:kyle/plugins/memberrole/memberrole.dart';
 import 'package:kyle/plugins/modlog_events.dart';
 import 'package:kyle/plugins/mrbeast/mrbeast.dart';
+import 'package:kyle/plugins/purge/purge.dart';
 import 'package:kyle/plugins/quote/quote.dart';
 import 'package:kyle/plugins/reminders/reminders.dart';
 import 'package:kyle/plugins/roleselector/roleselector.dart';
@@ -27,6 +28,7 @@ final class Kyle extends DiscordBot {
     StatusPlugin(),
 
     ModlogEventsPlugin(),
+    PurgePlugin(),
     TagsPlugin(),
     RemindersPlugin(),
     QuotePlugin(),
@@ -102,13 +104,13 @@ final class Kyle extends DiscordBot {
 }
 
 Future<List<Member>> getAllMembers(PartialGuild guild, {int limitPer = 1000}) async {
-  List<Member> result = [];
+  final List<Member> result = [];
 
   while (true) {
     try {
       final members = await guild.members.list(limit: limitPer, after: result.lastOrNull?.id);
-
       if (members.isEmpty) break;
+
       result.addAll(members);
       if (members.length < limitPer) break;
     } catch (e) {
@@ -126,8 +128,8 @@ Future<List<UserGuild>> listAllGuilds(NyxxGateway client) async {
   while (true) {
     try {
       final results = await client.listGuilds(limit: 200, after: guilds.lastOrNull?.id);
-
       if (results.isEmpty) break;
+
       guilds.addAll(results);
       if (results.length < 200) break;
     } catch (e) {
@@ -137,4 +139,25 @@ Future<List<UserGuild>> listAllGuilds(NyxxGateway client) async {
   }
 
   return guilds;
+}
+
+Future<List<Message>> getAllMessages(PartialTextChannel guild, {required int limit, int limitPer = 100}) async {
+  final List<Message> result = [];
+
+  while (true) {
+    try {
+      final messages = await guild.messages.fetchMany(limit: limitPer, after: result.lastOrNull?.id);
+      if (messages.isEmpty) break;
+      result.addAll(messages);
+
+      if (messages.length < limitPer) break;
+      if (result.length >= limit) break;
+    } catch (e) {
+      Logger.warn("getAllMessages", "Error listing members for guild ${guild.id}: $e (${result.length} existing)");
+      break;
+    }
+  }
+
+  if (result.length > limit) return result.sublist(0, limit);
+  return result;
 }
