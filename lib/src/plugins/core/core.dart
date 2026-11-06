@@ -147,8 +147,8 @@ final class BotCommands extends TopLevelParentCommand {
   );
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @override

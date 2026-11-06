@@ -9,8 +9,8 @@ final class BotOwnerCommands extends SubcommandGroupCommand {
   CommandInfo get info => .new(name: "owner", description: "Bot owner utilities.");
 
   @override
-  OptionData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  OptionData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("leave", "Leave a guild.", permissionsRequired: .owner)

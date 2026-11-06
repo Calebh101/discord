@@ -101,8 +101,8 @@ final class TagsCommand extends TopLevelParentCommand {
   TopLevelCommandInfo get info => .new(name: "tags", description: "Stuff about tags.");
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("get", "Get a user or guild tag by name.")
@@ -220,7 +220,7 @@ final class TagsCommand extends TopLevelParentCommand {
     setting.set(current);
 
     await context.respond(.new(
-      content: "${type == .guild ? "Guild" : "User"} tag set!",
+      content: "${type == .guild ? "Guild" : "User"} tag `$name` set!\n${value.maxLength(200, ellipsis: true).toDiscordQuote()}",
     ));
   }
 

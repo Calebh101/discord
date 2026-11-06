@@ -7,8 +7,8 @@ final class TestCommands extends SubcommandGroupCommand {
   CommandInfo get info => .new(name: "test", description: "Testing...");
 
   @override
-  OptionData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  OptionData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("react", "React to a message.")

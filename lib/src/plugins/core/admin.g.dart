@@ -7,7 +7,7 @@ part of 'admin.dart';
 // **************************************************************************
 
 extension on BotAdminCommands {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "ignore",
@@ -71,6 +71,7 @@ extension on BotAdminCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -92,12 +93,14 @@ extension on BotAdminCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -163,6 +166,7 @@ extension on BotAdminCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -184,12 +188,14 @@ extension on BotAdminCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(3),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -208,6 +214,7 @@ extension on BotAdminCommands {
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -258,12 +265,14 @@ extension on BotAdminCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
   ];

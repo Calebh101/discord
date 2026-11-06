@@ -7,7 +7,7 @@ part of 'purge.dart';
 // **************************************************************************
 
 extension on PurgeCommand {
-  List<OptionData>? commandOptions(DiscordBot bot) => [
+  List<OptionData>? commandOptions(BuildContext context) => [
     () {
       return OptionData<TextChannel>(
         name: "channel",
@@ -35,6 +35,7 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -56,6 +57,7 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -85,6 +87,7 @@ extension on PurgeCommand {
         converter: (_, value) {
           return AuthorType.values.firstWhere((x) => x.name == value);
         },
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -106,6 +109,7 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -115,7 +119,7 @@ extension on PurgeCommand {
           return CommandOptionBuilder(
             type: .new(5),
             name: "has-embed",
-            description: "True to only delete messages with embeds, false to skip messages with embeds. This includes images, videos, etcetera.",
+            description: "True to only delete messages with embeds, false to skip messages with embeds.",
             isRequired: false,
             choices: null,
             hasAutocomplete: false,
@@ -127,6 +131,7 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -148,6 +153,7 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -169,6 +175,7 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -190,6 +197,7 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -211,6 +219,7 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -220,7 +229,7 @@ extension on PurgeCommand {
           return CommandOptionBuilder(
             type: .new(3),
             name: "user-ids",
-            description: "Comma- or space- separated list of user IDs. If provided, will only delete messages from these users.",
+            description: "Comma-/space-separated list of user IDs. If provided, will only delete messages from these users.",
             isRequired: false,
             choices: null,
             hasAutocomplete: false,
@@ -232,6 +241,7 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -241,7 +251,7 @@ extension on PurgeCommand {
           return CommandOptionBuilder(
             type: .new(5),
             name: "negate-user-ids",
-            description: "Whether to negate the provided list of user IDs. This means that only messages not from these users will be deleted.",
+            description: "Whether to negate the provided user IDs (only messages not from these users will be deleted).",
             isRequired: false,
             choices: null,
             hasAutocomplete: false,
@@ -253,6 +263,51 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
+      );
+    }(),
+    () {
+      return OptionData<DateTime>(
+        name: "before",
+        builder: () {
+          return CommandOptionBuilder(
+            type: .new(3),
+            name: "before",
+            description: "Before this date, as a UTC ISO 8601 timestamp.",
+            isRequired: false,
+            choices: null,
+            hasAutocomplete: false,
+            channelTypes: null,
+            minLength: null,
+            maxLength: null,
+            minValue: null,
+            maxValue: null,
+          );
+        }(),
+        autocomplete: null,
+        plugin: context.plugin,
+      );
+    }(),
+    () {
+      return OptionData<DateTime>(
+        name: "after",
+        builder: () {
+          return CommandOptionBuilder(
+            type: .new(3),
+            name: "after",
+            description: "After this date, as a UTC ISO 8601 timestamp.",
+            isRequired: false,
+            choices: null,
+            hasAutocomplete: false,
+            channelTypes: null,
+            minLength: null,
+            maxLength: null,
+            minValue: null,
+            maxValue: null,
+          );
+        }(),
+        autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
   ];

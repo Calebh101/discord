@@ -84,7 +84,7 @@ final class EnumCommandOptionInfo extends CommandOptionBase {
     return """
 return OptionData<$resultType>(name: "$name", builder: () {${buildBuilder()}}(), converter: (_, value) {
   return $enumName.values.firstWhere((x) => x.$valueField == value);
-});
+}, plugin: context.plugin);
 """.trim();
   }
 
@@ -139,7 +139,7 @@ return OptionData<$resultType>(name: "$name", builder: () {${buildBuilder()}}(),
     Logger.warn("Member", "Invalid member from ID \$id (\${id.runtimeType}) and guild \${context.guildId}: \$e");
     throw CommandParseError("We couldn't find that member.");
   }
-});
+}, plugin: context.plugin);
 """.trim();
   }
 
@@ -194,7 +194,7 @@ return OptionData<$resultType>(name: "$name", builder: () {${buildBuilder()}}(),
     Logger.warn("Messages", "Unable to get message \$value: \$e");
     throw CommandParseError("Invalid message ID.");
   }
-});
+}, plugin: context.plugin);
 """.trim();
   }
 

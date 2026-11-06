@@ -45,7 +45,7 @@ class CommandsStore {
     return .parse(value);
   }
 
-  Future<dynamic> _convert(DiscordContext context, InteractionOption? option, OptionData? data, ResolvedData? resolved) async {
+  Future<dynamic> _convert(DiscordContext context, RegistryData command, InteractionOption? option, OptionData? data, ResolvedData? resolved) async {
     if (option == null || data == null) return null;
     var value = option.value;
 
@@ -78,8 +78,8 @@ class CommandsStore {
     }
   }
 
-  Future<T?> convert<T>(DiscordContext context, InteractionOption? option, OptionData data, ResolvedData? resolved) async {
-    final value = await _convert(context, option, data, resolved);
+  Future<T?> convert<T>(DiscordContext context, RegistryData command, InteractionOption? option, OptionData data, ResolvedData? resolved) async {
+    final value = await _convert(context, command, option, data, resolved);
     if (value == null) return value;
 
     final initialType = value.runtimeType;
@@ -89,7 +89,7 @@ class CommandsStore {
     if (value is T) return value;
 
     // Look up a converter for these types.
-    final converter = context.bot.converters.lookup(value, initialType, resultType);
+    final converter = context.bot.converters.lookup(command.plugin, value, initialType, resultType);
 
     if (converter == null) {
       Logger.warn("Commands", "Couldn't find converter to convert type $initialType to $resultType ($T) for user ${context.userId} and option '${data.name}'.");
@@ -165,7 +165,7 @@ class CommandsStore {
       final info = lookup(data.type, path);
       final function = info?.function;
 
-      Logger.print("Commands", "Handling command $path (${data.type.value}) (${[info?.permsRequired.name, ...?info?.otherPerms].join(",")}) for user ${user.id} (${user.username}) (interaction: ${interaction.guildId}) (channel: ${interaction.channelId}) (function: ${function.runtimeType})...");
+      Logger.print("Commands", "Handling command $path (${data.type.value}) (${info?.plugin}) (${[info?.permsRequired.name, ...?info?.otherPerms].join(",")}) for user ${user.id} (${user.username}) (interaction: ${interaction.guildId}) (channel: ${interaction.channelId}) (function: ${function.runtimeType})...");
 
       if (info == null) {
         Logger.warn("Commands", "Invalid command: $path");
@@ -291,7 +291,7 @@ class CommandsStore {
           final value = await expected.runWithType(<T>() async {
             try {
               final given = options?.firstWhereOrNull((x) => x.name == expected.name);
-              return await convert<T>(context, given, expected, data.resolved);
+              return await convert<T>(context, info, given, expected, data.resolved);
             } on CommandParseError catch (e) {
               await respond("We couldn't parse argument `${expected.name}`.\n${e.message}");
               failed = true;

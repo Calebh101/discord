@@ -7,7 +7,7 @@ part of 'perms.dart';
 // **************************************************************************
 
 extension on PermsCommands {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "get",
@@ -56,12 +56,14 @@ extension on PermsCommands {
                 );
               }(),
               autocomplete: () => PermsAutocomplete(),
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -142,6 +144,7 @@ extension on PermsCommands {
                 );
               }(),
               autocomplete: () => PermsAutocomplete(),
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -163,6 +166,7 @@ extension on PermsCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -184,12 +188,14 @@ extension on PermsCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -255,6 +261,7 @@ extension on PermsCommands {
                 );
               }(),
               autocomplete: () => PermsAutocomplete(),
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -276,12 +283,14 @@ extension on PermsCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -347,6 +356,7 @@ extension on PermsCommands {
                 );
               }(),
               autocomplete: () => PermsAutocomplete(),
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -368,12 +378,14 @@ extension on PermsCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -392,6 +404,7 @@ extension on PermsCommands {
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -410,6 +423,7 @@ extension on PermsCommands {
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
   ];

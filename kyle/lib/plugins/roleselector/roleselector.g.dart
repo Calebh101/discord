@@ -7,7 +7,7 @@ part of 'roleselector.dart';
 // **************************************************************************
 
 extension on RoleSelectorCommand {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "create",
@@ -86,6 +86,7 @@ extension on RoleSelectorCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -107,6 +108,7 @@ extension on RoleSelectorCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -128,12 +130,14 @@ extension on RoleSelectorCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: ["roleselector.create"],
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -237,6 +241,7 @@ extension on RoleSelectorCommand {
                   throw CommandParseError("Invalid message ID.");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -258,6 +263,7 @@ extension on RoleSelectorCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -279,6 +285,7 @@ extension on RoleSelectorCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -300,12 +307,14 @@ extension on RoleSelectorCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -363,14 +372,16 @@ extension on RoleSelectorCommand {
                   throw CommandParseError("Invalid snowflake (ID).");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
-    ...subcommandGroups(bot).map((x) => x.build(bot)),
+    ...subcommandGroups(context.bot).map((x) => x.build(context)),
   ];
 }

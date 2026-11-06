@@ -7,7 +7,7 @@ part of 'mrbeast.dart';
 // **************************************************************************
 
 extension on MrBeastCommand {
-  List<OptionData>? commandOptions(DiscordBot bot) => [
+  List<OptionData>? commandOptions(BuildContext context) => [
     () {
       return OptionData<Uri>(
         name: "url",
@@ -27,6 +27,7 @@ extension on MrBeastCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -48,6 +49,7 @@ extension on MrBeastCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -78,6 +80,7 @@ extension on MrBeastCommand {
             throw CommandParseError("Invalid message ID.");
           }
         },
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -99,6 +102,7 @@ extension on MrBeastCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
   ];

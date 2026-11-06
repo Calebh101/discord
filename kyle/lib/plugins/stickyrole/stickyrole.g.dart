@@ -7,7 +7,7 @@ part of 'stickyrole.dart';
 // **************************************************************************
 
 extension on StickyRoleCommand {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "list-member",
@@ -52,12 +52,14 @@ extension on StickyRoleCommand {
                   throw CommandParseError("We couldn't find that member.");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: ["stickyrole.manage"],
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -119,6 +121,7 @@ extension on StickyRoleCommand {
                   throw CommandParseError("We couldn't find that member.");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -140,12 +143,14 @@ extension on StickyRoleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: ["stickyrole.manage"],
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -207,6 +212,7 @@ extension on StickyRoleCommand {
                   throw CommandParseError("We couldn't find that member.");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -228,12 +234,14 @@ extension on StickyRoleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: ["stickyrole.manage"],
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -252,6 +260,7 @@ extension on StickyRoleCommand {
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: ["stickyrole.manage"],
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -298,14 +307,16 @@ extension on StickyRoleCommand {
                   throw CommandParseError("We couldn't find that member.");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: ["stickyrole.manage"],
+        plugin: context.plugin,
       );
     }(),
-    ...subcommandGroups(bot).map((x) => x.build(bot)),
+    ...subcommandGroups(context.bot).map((x) => x.build(context)),
   ];
 }

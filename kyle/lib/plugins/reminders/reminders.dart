@@ -271,8 +271,8 @@ final class RemindersCommand extends TopLevelParentCommand {
   TopLevelCommandInfo get info => .new(name: "reminders", description: "Reminders!");
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("list", "List all of your reminders.")
@@ -349,7 +349,7 @@ final class RemindersCommand extends TopLevelParentCommand {
     settings.saveReminder(timestamp, reminder);
 
     await context.respond(.new(
-      content: "Reminder set for ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you in DMs :)\nReminder **#${reminder.id}**",
+      content: "Reminder set for ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you in DMs :)\nReminder **#${reminder.id}**\n${text.toDiscordQuote()}",
     ));
   }
 

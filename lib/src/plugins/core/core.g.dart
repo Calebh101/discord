@@ -7,7 +7,7 @@ part of 'core.dart';
 // **************************************************************************
 
 extension on BotCommands {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "ping",
@@ -24,6 +24,7 @@ extension on BotCommands {
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -42,6 +43,7 @@ extension on BotCommands {
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -92,12 +94,14 @@ extension on BotCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -116,6 +120,7 @@ extension on BotCommands {
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -181,6 +186,7 @@ extension on BotCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -202,12 +208,14 @@ extension on BotCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -258,12 +266,14 @@ extension on BotCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -282,8 +292,9 @@ extension on BotCommands {
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
-    ...subcommandGroups(bot).map((x) => x.build(bot)),
+    ...subcommandGroups(context.bot).map((x) => x.build(context)),
   ];
 }

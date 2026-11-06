@@ -51,8 +51,8 @@ final class MrBeastCommand extends TopLevelSingleCommand {
   Image? template;
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot), entryPoint);
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions, entryPoint);
   }
 
   @CommandEntryPoint()

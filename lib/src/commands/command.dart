@@ -7,15 +7,15 @@ sealed class CommandEntity<T> {
   /// For `TopLevelParentCommand` or `SubcommandGroupCommand`:
   ///
   /// ```dart
-  /// return buildCommand(commandOptions(bot));
+  /// return buildCommand(context, commandOptions);
   /// ```
   ///
   /// For `TopLevelSingleCommand`:
   ///
   /// ```dart
-  /// return buildCommand(commandOptions(bot), entryPoint);
+  /// return buildCommand(context, commandOptions, entryPoint);
   /// ```
-  T build(DiscordBot bot);
+  T build(BuildContext context);
 }
 
 sealed class TopLevelCommand extends CommandEntity<CommandData> {}
@@ -30,11 +30,12 @@ abstract class TopLevelSingleCommand extends TopLevelSlashCommand {
 
   @protected
   @nonVirtual
-  CommandData buildCommand(List<OptionData>? commandOptions, Function entryPoint) {
+  CommandData buildCommand(BuildContext context, List<OptionData>? Function(BuildContext context) commandOptions, Function entryPoint) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
+    final options = commandOptions(context);
 
-    return .new(commandType: .chatInput, builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: entryPoint, requiredPerms: requiredPermissions, needsGuild: info.needsGuild, otherPerms: info.otherPerms);
+    return .new(commandType: .chatInput, builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: options, function: entryPoint, requiredPerms: requiredPermissions, needsGuild: info.needsGuild, otherPerms: info.otherPerms, plugin: context.plugin);
   }
 }
 
@@ -43,11 +44,12 @@ abstract class TopLevelParentCommand extends TopLevelSlashCommand {
 
   @protected
   @nonVirtual
-  CommandData buildCommand(List<OptionData>? commandOptions) {
+  CommandData buildCommand(BuildContext context, List<OptionData>? Function(BuildContext context) commandOptions) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
+    final options = commandOptions(context);
 
-    return .new(commandType: .chatInput, builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: commandOptions, function: null, requiredPerms: .all, needsGuild: info.needsGuild, otherPerms: info.otherPerms);
+    return .new(commandType: .chatInput, builder: .new(name: info.name, type: info.type, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options?.mapToList((x) => x.builder), defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), options: options, function: null, requiredPerms: .all, needsGuild: info.needsGuild, otherPerms: info.otherPerms, plugin: context.plugin);
   }
 }
 
@@ -58,17 +60,17 @@ abstract class MessageCommand extends TopLevelCommand {
   void onRun(MessageContext context);
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand();
+  CommandData build(BuildContext context) {
+    return buildCommand(context);
   }
 
   @protected
   @nonVirtual
-  CommandData buildCommand() {
+  CommandData buildCommand(BuildContext context) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(commandType: .message, builder: .message(name: info.name, nameLocalizations: info.nameLocalizations, defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), function: onRun, requiredPerms: .all, needsGuild: info.needsGuild, otherPerms: info.otherPerms, options: []);
+    return .new(commandType: .message, builder: .message(name: info.name, nameLocalizations: info.nameLocalizations, defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), function: onRun, requiredPerms: .all, needsGuild: info.needsGuild, otherPerms: info.otherPerms, options: [], plugin: context.plugin);
   }
 }
 
@@ -79,17 +81,17 @@ abstract class UserCommand extends TopLevelCommand {
   void onRun(UserContext context);
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand();
+  CommandData build(BuildContext context) {
+    return buildCommand(context);
   }
 
   @protected
   @nonVirtual
-  CommandData buildCommand() {
+  CommandData buildCommand(BuildContext context) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
 
-    return .new(commandType: .user, builder: .user(name: info.name, nameLocalizations: info.nameLocalizations, defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), function: onRun, requiredPerms: .all, needsGuild: info.needsGuild, otherPerms: info.otherPerms, options: []);
+    return .new(commandType: .user, builder: .user(name: info.name, nameLocalizations: info.nameLocalizations, defaultMemberPermissions: info.defaultMemberPermissions, isNsfw: info.isNsfw, integrationTypes: info.integrationTypes, contexts: info.contexts), function: onRun, requiredPerms: .all, needsGuild: info.needsGuild, otherPerms: info.otherPerms, options: [], plugin: context.plugin);
   }
 }
 
@@ -99,11 +101,12 @@ abstract class SubcommandGroupCommand extends CommandEntity<OptionData> {
 
   @protected
   @nonVirtual
-  OptionData buildCommand(List<OptionData> commandOptions) {
+  OptionData buildCommand(BuildContext context, List<OptionData> Function(BuildContext context) commandOptions) {
     // Assign to a variable to avoid re-running the same getter over and over
     final info = this.info;
+    final options = commandOptions(context);
 
-    return .new(name: info.name, builder: .subCommandGroup(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: commandOptions.mapToList((x) => x.builder)), autocomplete: null, function: null, options: commandOptions, requiredPerms: .all, needsGuild: info.needsGuild);
+    return .new(name: info.name, builder: .subCommandGroup(name: info.name, description: info.description, nameLocalizations: info.nameLocalizations, descriptionLocalizations: info.descriptionLocalizations, options: options.mapToList((x) => x.builder)), autocomplete: null, function: null, options: options, requiredPerms: .all, needsGuild: info.needsGuild, plugin: context.plugin);
   }
 }
 

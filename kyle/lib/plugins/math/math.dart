@@ -132,8 +132,8 @@ final class MathCommand extends TopLevelParentCommand {
   TopLevelCommandInfo get info => .new(name: "math", description: "Math");
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("channel", "Get the math channel.", needsGuild: true)

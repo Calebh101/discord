@@ -7,7 +7,7 @@ part of 'memberrole.dart';
 // **************************************************************************
 
 extension on MemberRoleCommand {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "list",
@@ -24,6 +24,7 @@ extension on MemberRoleCommand {
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -110,6 +111,7 @@ extension on MemberRoleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -139,6 +141,7 @@ extension on MemberRoleCommand {
               converter: (_, value) {
                 return MemberRoleMode.values.firstWhere((x) => x.name == value);
               },
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -160,12 +163,14 @@ extension on MemberRoleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -216,12 +221,14 @@ extension on MemberRoleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -302,6 +309,7 @@ extension on MemberRoleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -323,6 +331,7 @@ extension on MemberRoleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -344,12 +353,14 @@ extension on MemberRoleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -400,12 +411,14 @@ extension on MemberRoleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -463,14 +476,16 @@ extension on MemberRoleCommand {
                   throw CommandParseError("Invalid snowflake (ID).");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
-    ...subcommandGroups(bot).map((x) => x.build(bot)),
+    ...subcommandGroups(context.bot).map((x) => x.build(context)),
   ];
 }

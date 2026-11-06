@@ -219,8 +219,8 @@ final class MemberRoleCommand extends TopLevelParentCommand {
   TopLevelCommandInfo get info => .new(name: "member-role", description: "Manage member roles.");
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("list", "List all member roles.", permissionsRequired: .admin, needsGuild: true)

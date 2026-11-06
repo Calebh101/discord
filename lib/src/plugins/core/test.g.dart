@@ -7,7 +7,7 @@ part of 'test.dart';
 // **************************************************************************
 
 extension on TestCommands {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "react",
@@ -79,6 +79,7 @@ extension on TestCommands {
                   throw CommandParseError("Invalid message ID.");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -100,12 +101,14 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -368,6 +371,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -397,6 +401,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -427,6 +432,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -448,6 +454,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -469,6 +476,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -490,6 +498,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -511,6 +520,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -532,6 +542,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -553,6 +564,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -574,6 +586,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -595,6 +608,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -616,6 +630,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -637,6 +652,7 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -658,12 +674,14 @@ extension on TestCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
   ];

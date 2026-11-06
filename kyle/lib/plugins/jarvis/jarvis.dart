@@ -21,8 +21,8 @@ final class JarvisCommand extends TopLevelSingleCommand {
   TopLevelCommandInfo get info => .new(name: "jarvis", description: "Generate a Jarvis photo.");
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot), entryPoint);
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions, entryPoint);
   }
 
   static const padding = 20;

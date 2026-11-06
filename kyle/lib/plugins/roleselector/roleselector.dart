@@ -497,8 +497,8 @@ final class RoleSelectorCommand extends TopLevelParentCommand {
   TopLevelCommandInfo get info => .new(name: "role-selector", description: "Role selector!");
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("create", "Create a new role selector.", needsGuild: true, otherPerms: ["roleselector.create"])

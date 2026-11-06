@@ -32,7 +32,7 @@ Map<String, dynamic> _$ReminderDataToJson(ReminderData instance) =>
 // **************************************************************************
 
 extension on RemindersCommand {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "list",
@@ -49,6 +49,7 @@ extension on RemindersCommand {
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -114,6 +115,7 @@ extension on RemindersCommand {
                 );
               }(),
               autocomplete: () => RemindersAutocomplete(),
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -135,12 +137,14 @@ extension on RemindersCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -191,14 +195,16 @@ extension on RemindersCommand {
                 );
               }(),
               autocomplete: () => RemindersIDAutocomplete(),
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
-    ...subcommandGroups(bot).map((x) => x.build(bot)),
+    ...subcommandGroups(context.bot).map((x) => x.build(context)),
   ];
 }

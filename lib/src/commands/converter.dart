@@ -4,16 +4,20 @@ import 'package:collection/collection.dart';
 import 'package:discord/discord.dart';
 
 final class ConvertersStore {
-  final List<DiscordConverter> converters = [];
+  final Map<String, List<DiscordConverter>> converters = {};
 
   new();
 
-  void register(DiscordConverter converter) {
-    converters.add(converter);
+  void register(String plugin, DiscordConverter converter) {
+    if (converters.containsKey(plugin)) {
+      converters[plugin]!.add(converter);
+    } else {
+      converters[plugin] = [converter];
+    }
   }
 
-  DiscordConverter? lookup(Object? object, Type initialType, Type resultType) {
-    return converters.firstWhereOrNull((x) {
+  DiscordConverter? lookup(String plugin, Object? object, Type initialType, Type resultType) {
+    return converters[plugin]?.firstWhereOrNull((x) {
       return x.isInitialType(object) && x.resultType == resultType && !x.isResultType(object);
     });
   }

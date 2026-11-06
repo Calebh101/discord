@@ -9,8 +9,8 @@ final class PermsCommands extends SubcommandGroupCommand {
   CommandInfo get info => .new(name: "perms", description: "Manage custom permissions.");
 
   @override
-  OptionData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  OptionData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("get", "Get a permission by ID.")

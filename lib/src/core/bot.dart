@@ -15,7 +15,7 @@ final class DiscordBotSettings extends BotSettings {
 
 abstract class DiscordBot {
   final bool dev;
-  final List<TopLevelCommand> commandData = [];
+  final Map<TopLevelCommand, String> commandData = {};
 
   late final KVStore store;
   late final TerminalHandler terminal;
@@ -68,20 +68,21 @@ abstract class DiscordBot {
 
     for (final p in plugins) {
       for (final c in p.converters(this)) {
-        converters.register(c);
+        converters.register(p.info.id, c);
       }
     }
 
     for (final p in plugins) {
-      addCommands(p.commands(this));
+      final c = p.commands(this);
+      addCommands(p.info.id, c);
     }
 
     await onAboutToLoad();
     permissions.buildRegistry();
     final List<CommandData> results = [];
 
-    for (final c in commandData) {
-      final data = c.build(this);
+    for (final (_, c, p) in commandData.entriesAsRecords) {
+      final data = c.build(.new(bot: this, plugin: p));
       results.add(data);
     }
 
@@ -161,13 +162,15 @@ abstract class DiscordBot {
   }
 
   @nonVirtual
-  void addCommand(TopLevelCommand command) {
-    commandData.add(command);
+  void addCommand(String plugin, TopLevelCommand command) {
+    commandData[command] = plugin;
   }
 
   @nonVirtual
-  void addCommands(List<TopLevelCommand> commands) {
-    commandData.addAll(commands);
+  void addCommands(String plugin, List<TopLevelCommand> commands) {
+    for (final command in commands) {
+      addCommand(plugin, command);
+    }
   }
 
   @nonVirtual

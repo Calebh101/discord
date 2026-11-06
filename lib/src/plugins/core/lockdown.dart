@@ -7,8 +7,8 @@ final class BotLockdownCommands extends SubcommandGroupCommand {
   CommandInfo get info => .new(name: "lockdown", description: "Lockdown stuff.");
 
   @override
-  OptionData<dynamic> build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  OptionData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("status", "Get lockdown status.", permissionsRequired: .owner)

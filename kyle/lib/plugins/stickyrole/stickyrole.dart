@@ -135,8 +135,8 @@ final class StickyRoleCommand extends TopLevelParentCommand {
   TopLevelCommandInfo get info => .new(name: "sticky-role", description: "Sticky role stuff.");
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("list-member", "List a member's sticky roles.", needsGuild: true, otherPerms: ["stickyrole.manage"])

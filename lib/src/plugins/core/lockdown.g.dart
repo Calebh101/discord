@@ -7,7 +7,7 @@ part of 'lockdown.dart';
 // **************************************************************************
 
 extension on BotLockdownCommands {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "status",
@@ -63,12 +63,14 @@ extension on BotLockdownCommands {
                   throw CommandParseError("Invalid snowflake (ID).");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -119,12 +121,14 @@ extension on BotLockdownCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -175,12 +179,14 @@ extension on BotLockdownCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -231,12 +237,14 @@ extension on BotLockdownCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -309,6 +317,7 @@ extension on BotLockdownCommands {
                   throw CommandParseError("Invalid snowflake (ID).");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -330,12 +339,14 @@ extension on BotLockdownCommands {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(1),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
   ];

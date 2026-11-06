@@ -7,7 +7,7 @@ part of 'quote.dart';
 // **************************************************************************
 
 extension on QuoteCommand {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "info",
@@ -24,6 +24,7 @@ extension on QuoteCommand {
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -88,6 +89,7 @@ extension on QuoteCommand {
                 );
               }(),
               autocomplete: () => QuoteRulesAutocompleteName(),
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -118,12 +120,14 @@ extension on QuoteCommand {
                   throw CommandParseError("Invalid message ID.");
                 }
               },
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -205,6 +209,7 @@ extension on QuoteCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -226,12 +231,14 @@ extension on QuoteCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -320,6 +327,7 @@ extension on QuoteCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -341,6 +349,7 @@ extension on QuoteCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -370,15 +379,17 @@ extension on QuoteCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
-    ...subcommandGroups(bot).map((x) => x.build(bot)),
+    ...subcommandGroups(context.bot).map((x) => x.build(context)),
   ];
 }
 
@@ -387,7 +398,7 @@ extension on QuoteCommand {
 // **************************************************************************
 
 extension on QuoteRuleCommand {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     () {
       return OptionData(
         name: "list",
@@ -404,6 +415,7 @@ extension on QuoteRuleCommand {
         requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -552,6 +564,7 @@ extension on QuoteRuleCommand {
                 );
               }(),
               autocomplete: () => QuoteRulesAutocompleteName(),
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -573,6 +586,7 @@ extension on QuoteRuleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -594,6 +608,7 @@ extension on QuoteRuleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -623,6 +638,7 @@ extension on QuoteRuleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -644,6 +660,7 @@ extension on QuoteRuleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -665,6 +682,7 @@ extension on QuoteRuleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
           () {
@@ -686,12 +704,14 @@ extension on QuoteRuleCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
     () {
@@ -742,12 +762,14 @@ extension on QuoteRuleCommand {
                 );
               }(),
               autocomplete: () => QuoteRulesAutocompleteId(),
+              plugin: context.plugin,
             );
           }(),
         ],
         requiredPerms: .parse(2),
         needsGuild: true,
         otherPerms: null,
+        plugin: context.plugin,
       );
     }(),
   ];

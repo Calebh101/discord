@@ -99,8 +99,8 @@ final class WelcomeCommand extends TopLevelParentCommand {
   }
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("info", "Get info and settings of the welcome system.")
@@ -178,8 +178,8 @@ final class WelcomeMessageCommand extends SubcommandGroupCommand {
   CommandInfo get info => .new(name: "message", description: "Welcome message stuff.");
 
   @override
-  OptionData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  OptionData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("info", "Get info about messages.")

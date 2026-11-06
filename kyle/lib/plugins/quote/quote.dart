@@ -252,8 +252,8 @@ final class QuoteCommand extends TopLevelParentCommand {
   TopLevelCommandInfo get info => .new(name: "quote", description: "Quote stuff.");
 
   @override
-  CommandData build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  CommandData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @override
@@ -417,8 +417,8 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
   CommandInfo get info => .new(name: "rule", description: "Manage quoting rules.");
 
   @override
-  OptionData<dynamic> build(DiscordBot bot) {
-    return buildCommand(commandOptions(bot));
+  OptionData build(BuildContext context) {
+    return buildCommand(context, commandOptions);
   }
 
   @Subcommand("list", "List all rules.", needsGuild: true)

@@ -7,7 +7,7 @@ part of 'jarvis.dart';
 // **************************************************************************
 
 extension on JarvisCommand {
-  List<OptionData>? commandOptions(DiscordBot bot) => [
+  List<OptionData>? commandOptions(BuildContext context) => [
     () {
       return OptionData<String>(
         name: "body",
@@ -27,6 +27,7 @@ extension on JarvisCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
       );
     }(),
   ];

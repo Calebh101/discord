@@ -71,7 +71,7 @@ final class SubcommandInfo extends CommandInfo {
   @override
   String build() {
     return """
-return OptionData(name: "$name", function: this.$functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(parseLocalizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(parseLocalizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms), needsGuild: $needsGuild, otherPerms: ${jsonEncode(otherPerms)});
+return OptionData(name: "$name", function: this.$functionName, builder: .subCommand(name: "$name", description: "$description", options: ${options != null ? '[${options?.map((x) => '() {${x.buildBuilder()}}()').join(", ")}]' : '[]'}, nameLocalizations: ${jsonEncode(parseLocalizations(nameLocalizations))}, descriptionLocalizations: ${jsonEncode(parseLocalizations(descriptionLocalizations))}), autocomplete: null, options: ${options != null ? '[${options?.map((x) => '() {${x.build()}}()').join(", ")}]' : null}, requiredPerms: .parse($perms), needsGuild: $needsGuild, otherPerms: ${jsonEncode(otherPerms)}, plugin: context.plugin);
 """.trim();
   }
 }
@@ -109,7 +109,7 @@ final class CommandOptionInfo<T> extends CommandOptionBase {
   @override
   String build() {
     return """
-return OptionData<$resultType>(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}${converterText != null ? ", converter: $converterText": ""});
+return OptionData<$resultType>(name: "$name", builder: () {${buildBuilder()}}(), autocomplete: ${autocompleteName != null ? '() => $autocompleteName()' : null}${converterText != null ? ", converter: $converterText": ""}, plugin: context.plugin);
 """.trim();
   }
 
@@ -198,12 +198,12 @@ String? generateForParent(ClassElement element, BuildStep buildStep, bool topLev
 
   return """
 extension on ${element.name} {
-  List<OptionData> commandOptions(DiscordBot bot) => [
+  List<OptionData> commandOptions(BuildContext context) => [
     ${[
       ...commands.map((x) {
         return "() {${x.build()}}()";
       }),
-      if (topLevel) '...subcommandGroups(bot).map((x) => x.build(bot))',
+      if (topLevel) '...subcommandGroups(context.bot).map((x) => x.build(context))',
     ].join(", ")}
   ];
 }
@@ -376,7 +376,7 @@ final class SingleSlashCommandGenerator extends GeneratorForSuperclass<TopLevelS
 
     return """
 extension on ${element.name} {
-  List<OptionData>? commandOptions(DiscordBot bot) => ${options != null ? """
+  List<OptionData>? commandOptions(BuildContext context) => ${options != null ? """
     [
       ${options?.map((x) {
         return "() {${x.build()}}()";
