@@ -10,6 +10,7 @@ final class ExitCode {
 
   static const int success = 0;
   static const int restart = 101;
+  static const int error = 1;
 }
 
 final class TerminalCommand {

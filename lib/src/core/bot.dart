@@ -7,8 +7,8 @@ import 'package:discord/discord.dart';
 import 'package:discord/src/other/retry_plugin.dart';
 import 'package:meta/meta.dart';
 
-final class DiscordBotSettings extends BotSettings {
-  new(super.store);
+final class CommandsClientSettings extends ClientSettings {
+  new(super.store, super.id);
 
   SettingsObject<String> get commandsHash => .new(this, "commandsHash");
 }
@@ -115,7 +115,8 @@ abstract class DiscordBot {
     await clients.createClients(onCreateClient);
 
     if (clients.clients.isEmpty) {
-      throw Exception("No clients loaded. Please make sure you created a proper tokens.json.");
+      Logger.warn("Clients", "No clients loaded. Please make sure you created a proper tokens.json.");
+      return await terminal.close(ExitCode.error);
     }
 
     final List<ApplicationCommandBuilder> builders = clearCommands ? [] : commands.commands.mapToList((command) {
@@ -133,26 +134,24 @@ abstract class DiscordBot {
     }
 
     final commandsHash = [sha256.convert(utf8.encode(jsonEncode(canonical(builders.mapToList((x) => x.build()))))).toString(), devGuild ?? 0].join("-");
-    final settings = DiscordBotSettings(store);
-    final lastHash = settings.commandsHash.get();
 
-    if (lastHash == commandsHash) {
-      Logger.print("Commands", "Last hash ($lastHash) matched new hash ($commandsHash); registration skipped.");
-    } else {
-      for (final client in clients.allClients) {
+    for (final client in clients.allClients) {
+      final settings = CommandsClientSettings(store, client.id);
+      final lastHash = settings.commandsHash.get();
+
+      if (lastHash == commandsHash) {
+        Logger.print("Commands", "Last hash ($lastHash) matched new hash ($commandsHash) for client ${client.id}; registration skipped.");
+      } else {
         if (devGuild != null) {
           await client.guilds[devGuild].commands.bulkOverride(builders);
         } else {
           await client.commands.bulkOverride(builders);
         }
 
-        Logger.print("Commands", "Registered ${builders.length} commands for client ${client.user.id} and guild $devGuild! Hash: $commandsHash");
+        Logger.print("Commands", "Registered ${builders.length} commands for client ${client.id} and guild $devGuild! Hash: $commandsHash");
       }
 
       settings.commandsHash.set(commandsHash);
-    }
-
-    for (final client in clients.allClients) {
       commands.listen(client, this);
     }
 

@@ -51,7 +51,7 @@ final class PurgeCommand extends TopLevelSingleCommand {
   @CommandEntryPoint()
   void purge(
     GuildDiscordContext context,
-    @TextChannelOption("channel", "How many messages to choose from.") TextChannel channel,
+    @TextChannelOption("channel", "The channel to purge messages from.") TextChannel channel,
     @IntOption("count", "How many messages to choose from.") int limit,
     @EnumOption<AuthorType>("author", "Author type.") AuthorType? authorType,
 
@@ -68,11 +68,6 @@ final class PurgeCommand extends TopLevelSingleCommand {
 
     @StringOption("before", "Before this date, as a UTC ISO 8601 timestamp.") DateTime? before,
     @StringOption("after", "After this date, as a UTC ISO 8601 timestamp.") DateTime? after,
-
-    // TODO:
-    // in the last X time
-    // before (date)
-    // after (date)
   ) async {
     await context.acknowledge(ephemeral: .ephemeral);
     final messages = await getAllMessages(channel, limit: limit);
@@ -89,33 +84,29 @@ final class PurgeCommand extends TopLevelSingleCommand {
       messages.removeWhere((x) {
         final user = x.author;
 
-        if (authorType == .botsOnly) {
-          return user is User && (user.isBot || user.isSystem);
-        } else if (authorType == .usersOnly) {
-          return user is User && !user.isBot && !user.isSystem;
-        } else if (authorType == .webhooksOnly) {
-          return user is WebhookAuthor;
-        }
-
-        return false;
+        return switch (authorType) {
+          .botsOnly => !(user is User && (user.isBot || user.isSystem)),
+          .usersOnly => !(user is User && !user.isBot && !user.isSystem),
+          .webhooksOnly => user is! WebhookAuthor,
+        };
       });
     }
 
     if (pinned != null) {
       messages.removeWhere((x) {
-        return x.isPinned == pinned;
+        return x.isPinned != pinned;
       });
     }
 
     if (embeds != null) {
       messages.removeWhere((x) {
-        return x.embeds.isNotEmpty == embeds;
+        return x.embeds.isNotEmpty != embeds;
       });
     }
 
     if (attachments != null) {
       messages.removeWhere((x) {
-        return x.attachments.isNotEmpty == attachments;
+        return x.attachments.isNotEmpty != attachments;
       });
     }
 
@@ -137,8 +128,20 @@ final class PurgeCommand extends TopLevelSingleCommand {
       });
     }
 
+    if (before != null) {
+      messages.removeWhere((x) {
+        return !x.timestamp.isBefore(before);
+      });
+    }
+
+    if (after != null) {
+      messages.removeWhere((x) {
+        return !x.timestamp.isAfter(after);
+      });
+    }
+
     if (idsRaw != null) {
-      final ids = idsRaw.split(RegExp("[ ,/.]")).map((x) {
+      final ids = idsRaw.split(RegExp(r"[\s,]+")).where((x) => x.isNotEmpty).map((x) {
         try {
           return Snowflake.parse(x);
         } catch (_) {
@@ -153,6 +156,12 @@ final class PurgeCommand extends TopLevelSingleCommand {
           return !ids.contains(x.author.id);
         }
       });
+    }
+
+    if (messages.isEmpty) {
+      return await context.respond(.new(
+        content: "No messages matched those filters...",
+      ));
     }
 
     try {
