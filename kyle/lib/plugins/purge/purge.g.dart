@@ -15,7 +15,7 @@ extension on PurgeCommand {
           return CommandOptionBuilder(
             type: .new(7),
             name: "channel",
-            description: "How many messages to choose from.",
+            description: "The channel to purge messages from.",
             isRequired: true,
             choices: null,
             hasAutocomplete: false,
@@ -307,6 +307,37 @@ extension on PurgeCommand {
           );
         }(),
         autocomplete: null,
+        plugin: context.plugin,
+      );
+    }(),
+    () {
+      return OptionData<DateTime>(
+        name: "back-through",
+        builder: () {
+          return CommandOptionBuilder(
+            type: .string,
+            name: "back-through",
+            description: "Message to go back through.",
+            isRequired: false,
+            hasAutocomplete: true,
+            channelTypes: null,
+            minLength: 17,
+            maxLength: null,
+            minValue: null,
+            maxValue: null,
+          );
+        }(),
+        autocomplete: () => MessageAutocompleteHandler(),
+        converter: (context, value) async {
+          final channel = context.channel;
+
+          try {
+            return await channel.messages.get(.parse(value));
+          } catch (e) {
+            Logger.warn("Messages", "Unable to get message $value: $e");
+            throw CommandParseError("Invalid message ID.");
+          }
+        },
         plugin: context.plugin,
       );
     }(),

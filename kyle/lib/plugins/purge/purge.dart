@@ -28,6 +28,7 @@ final class PurgePlugin extends DiscordPlugin {
   List<DiscordConverter<dynamic, dynamic>> converters(DiscordBot bot) {
     return [
       ISODateTimeConverter(),
+      MessageTimestampConverter(),
     ];
   }
 }
@@ -36,6 +37,13 @@ final class ISODateTimeConverter extends DiscordConverter<String, DateTime> {
   @override
   FutureOr<DateTime> convert(DiscordContext context, ResolvedData? resolved, String value) {
     return .tryParse(value)?.toUtc() ?? (throw ExpectedUserFacingException("Invalid date. Make sure it's a valid ISO 8601 string."));
+  }
+}
+
+final class MessageTimestampConverter extends DiscordConverter<Message, DateTime> {
+  @override
+  FutureOr<DateTime> convert(DiscordContext context, ResolvedData? resolved, Message value) {
+    return value.timestamp;
   }
 }
 
@@ -68,6 +76,8 @@ final class PurgeCommand extends TopLevelSingleCommand {
 
     @StringOption("before", "Before this date, as a UTC ISO 8601 timestamp.") DateTime? before,
     @StringOption("after", "After this date, as a UTC ISO 8601 timestamp.") DateTime? after,
+
+    @MessageOption("back-through", "Message to go back through.") DateTime? backThrough,
   ) async {
     await context.acknowledge(ephemeral: .ephemeral);
     final messages = await getAllMessages(channel, limit: limit);
@@ -137,6 +147,12 @@ final class PurgeCommand extends TopLevelSingleCommand {
     if (after != null) {
       messages.removeWhere((x) {
         return !x.timestamp.isAfter(after);
+      });
+    }
+
+    if (backThrough != null) {
+      messages.removeWhere((x) {
+        return x.timestamp.isBefore(backThrough);
       });
     }
 

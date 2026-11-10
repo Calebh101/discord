@@ -48,30 +48,31 @@ abstract class DiscordBot {
 
   @nonVirtual
   Future<void> start({Snowflake? devGuild, bool clearCommands = false}) async {
-    bool errored = false;
+    bool alerted = false;
 
     await runZonedGuarded(() async {
       return await _start(devGuild: devGuild, clearCommands: clearCommands);
     }, (e, s) async {
-      if (errored) return;
-      errored = true;
-
       Logger.error("Bot", "Critical error: $e\n\n$s");
       final client = clients.allClients.firstOrNull;
 
-      if (client != null) {
-        await alertOwners(client, store, .new(
-          color: Colors.red,
-          title: "Critical Error",
-          fields: [
-            .new(name: "Type", value: e.runtimeType.toDiscordCodeString(), isInline: true),
-            .new(name: "Time", value: DateTime.now().toUtc().toDiscordTimestamp(.shortDateTime), isInline: true),
-            .new(name: "Error", value: e.toString().maxLength(1018, ellipsis: true).toDiscordCodeBlock(), isInline: false),
-            .new(name: "Stack Trace", value: s.format().maxLength(1018, ellipsis: true).toDiscordCodeBlock(), isInline: false),
-          ],
-        ));
-      } else {
-        Logger.warn("Bot", "Unable to log error; no clients found.");
+      if (!alerted) {
+        if (client != null) {
+          alerted = true;
+
+          await alertOwners(client, store, .new(
+            color: Colors.red,
+            title: "Critical Error",
+            fields: [
+              .new(name: "Type", value: e.runtimeType.toDiscordCodeString(), isInline: true),
+              .new(name: "Time", value: DateTime.now().toUtc().toDiscordTimestamp(.shortDateTime), isInline: true),
+              .new(name: "Error", value: e.toString().maxLength(1018, ellipsis: true).toDiscordCodeBlock(), isInline: false),
+              .new(name: "Stack Trace", value: s.format().maxLength(1018, ellipsis: true).toDiscordCodeBlock(), isInline: false),
+            ],
+          ));
+        } else {
+          Logger.warn("Bot", "Unable to log error; no clients found.");
+        }
       }
 
       for (final p in plugins) {
