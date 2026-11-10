@@ -88,10 +88,10 @@ final class TerminalHandler {
       }
 
       try {
-        Logger.print("Close", "Closing client...");
+        Logger.print("Close", "Closing clients...");
         await Future.wait(bot.clients.run((client) => client.close()));
       } catch (e) {
-        Logger.warn("Close", "Unable to close client: $e");
+        Logger.warn("Close", "Unable to close clients: $e");
       }
 
       for (final x in subscriptions) {

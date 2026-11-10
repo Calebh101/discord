@@ -58,6 +58,12 @@ abstract class DiscordPlugin {
   /// Errors do not call this function.
   FutureOr<void> onClose(DiscordBot bot, int code) {}
 
+  /// This is ran when the bot is being closed after a critical error.
+  ///
+  /// Because of current limitations, this is only called during an expected close.
+  /// Errors do not call this function.
+  FutureOr<void> onError(DiscordBot bot, Object e, StackTrace trace) {}
+
   /// This is ran when the bot is ready.
   ///
   /// Stores that will be ready at the time this is ran:

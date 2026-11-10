@@ -1,5 +1,4 @@
 import 'package:discord/discord.dart';
-import 'package:path/path.dart';
 
 extension ToMentionInt on int {
   String toUserMention() {
@@ -95,7 +94,7 @@ extension ToDiscordCodeBlock on Object? {
   }
 
   String toDiscordQuote() {
-    return split("\n").map((x) => "> $x").join("\n");
+    return toString().split("\n").map((x) => "> $x").join("\n");
   }
 }
 
