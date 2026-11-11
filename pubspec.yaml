@@ -12,7 +12,11 @@ dependencies:
       url: https://github.com/Calebh101/localpkg-dart
       ref: main
 
-  nyxx: ^6.9.1
+  nyxx:
+    git:
+      url: https://github.com/vinicioshenriques/nyxx
+      ref: fix/unknown-channel-types
+
   analyzer: ^14.4.0
   build: ^4.0.11
   collection: ^1.19.1
@@ -37,3 +41,9 @@ dev_dependencies:
     git:
       url: https://github.com/Calebh101/dart-recursive-caster.git
       ref: main
+
+dependency_overrides:
+  nyxx:
+    git:
+      url: https://github.com/vinicioshenriques/nyxx
+      ref: fix/unknown-channel-types

@@ -8,13 +8,13 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
+  discord:
+    path: ..
+
   any_date: ^1.2.2
   chrono_dart: ^2.0.2
   collection: ^1.19.1
   commanded: ^0.1.0
-  discord:
-    path: ..
-
   http: ^1.6.0
   image: ^4.12.0
   intl: ^0.20.3
@@ -27,3 +27,9 @@ dev_dependencies:
   json_serializable: ^6.14.1
   lints: ^6.0.0
   test: ^1.25.6
+
+dependency_overrides:
+  nyxx:
+    git:
+      url: https://github.com/vinicioshenriques/nyxx
+      ref: fix/unknown-channel-types
