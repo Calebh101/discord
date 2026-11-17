@@ -524,21 +524,6 @@ extension on QuoteRuleCommand {
                 maxValue: null,
               );
             }(),
-            () {
-              return CommandOptionBuilder(
-                type: .new(3),
-                name: "channels",
-                description: "The channels this rule applies to.",
-                isRequired: false,
-                choices: null,
-                hasAutocomplete: false,
-                channelTypes: null,
-                minLength: null,
-                maxLength: null,
-                minValue: null,
-                maxValue: null,
-              );
-            }(),
           ],
           nameLocalizations: null,
           descriptionLocalizations: null,
@@ -685,6 +670,152 @@ extension on QuoteRuleCommand {
               plugin: context.plugin,
             );
           }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+        otherPerms: null,
+        plugin: context.plugin,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "delete",
+        function: this.deleteRule,
+        builder: .subCommand(
+          name: "delete",
+          description: "Delete a rule.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(4),
+                name: "id",
+                description: "Rule ID.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<int>(
+              name: "id",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(4),
+                  name: "id",
+                  description: "Rule ID.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => QuoteRulesAutocompleteId(),
+              plugin: context.plugin,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+        otherPerms: null,
+        plugin: context.plugin,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "add-channel",
+        function: this.addChannel,
+        builder: .subCommand(
+          name: "add-channel",
+          description: "Add channels to a rule.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(4),
+                name: "id",
+                description: "Rule ID.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "channels",
+                description: "Channels, separated by spaces or commas.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(7),
+                name: "category",
+                description: "Add an entire category.",
+                isRequired: false,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: [.new(4)],
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<int>(
+              name: "id",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(4),
+                  name: "id",
+                  description: "Rule ID.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => QuoteRulesAutocompleteId(),
+              plugin: context.plugin,
+            );
+          }(),
           () {
             return OptionData<List<PartialTextChannel>>(
               name: "channels",
@@ -692,11 +823,33 @@ extension on QuoteRuleCommand {
                 return CommandOptionBuilder(
                   type: .new(3),
                   name: "channels",
-                  description: "The channels this rule applies to.",
+                  description: "Channels, separated by spaces or commas.",
                   isRequired: false,
                   choices: null,
                   hasAutocomplete: false,
                   channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              plugin: context.plugin,
+            );
+          }(),
+          () {
+            return OptionData<GuildCategory>(
+              name: "category",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(7),
+                  name: "category",
+                  description: "Add an entire category.",
+                  isRequired: false,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: [.new(4)],
                   minLength: null,
                   maxLength: null,
                   minValue: null,
@@ -716,11 +869,113 @@ extension on QuoteRuleCommand {
     }(),
     () {
       return OptionData(
-        name: "delete",
-        function: this.deleteRule,
+        name: "remove-channel",
+        function: this.removeChannel,
         builder: .subCommand(
-          name: "delete",
-          description: "Delete a rule.",
+          name: "remove-channel",
+          description: "Remove a channel from a rule.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(4),
+                name: "id",
+                description: "Rule ID.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "channel-id",
+                description: "Channel or category ID to remove.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: 17,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<int>(
+              name: "id",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(4),
+                  name: "id",
+                  description: "Rule ID.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => QuoteRulesAutocompleteId(),
+              plugin: context.plugin,
+            );
+          }(),
+          () {
+            return OptionData<Snowflake>(
+              name: "channel-id",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "channel-id",
+                  description: "Channel or category ID to remove.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: 17,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              converter: (_, value) {
+                try {
+                  return Snowflake.parse(value);
+                } catch (_) {
+                  throw CommandParseError("Invalid snowflake (ID).");
+                }
+              },
+              plugin: context.plugin,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(2),
+        needsGuild: true,
+        otherPerms: null,
+        plugin: context.plugin,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "clear-channels",
+        function: this.clearChannels,
+        builder: .subCommand(
+          name: "clear-channels",
+          description: "Remove all channels from a rule.",
           options: [
             () {
               return CommandOptionBuilder(

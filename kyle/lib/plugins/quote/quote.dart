@@ -158,11 +158,14 @@ final class QuotePlugin extends DiscordPlugin {
         if (rules.isEmpty) return;
         if (rules.map((x) => x.channel).contains(event.channelId)) return;
 
+        final channel = await event.channel.get();
+        if (channel is! GuildChannel) return;
+
         rules.removeWhere((x) {
           if (x.emoji != emoji) return true;
 
-          if (x.channels != null) {
-            if (!x.channels!.contains(event.channelId)) return true;
+          if (x.channels.isNotEmpty) {
+            if (!x.channels.contains(channel.id) && !x.channels.any((x) => x == channel.parentId)) return true;
           }
 
           return false;
@@ -212,6 +215,22 @@ final class QuotePlugin extends DiscordPlugin {
   }
 }
 
+final class TextChannelListConverter extends DiscordConverter<String, List<PartialTextChannel>> {
+  @override
+  FutureOr<List<PartialTextChannel>> convert(DiscordContext context, ResolvedData? resolved, String value) {
+    final List<PartialTextChannel> channels = [];
+
+    for (final raw in value.split(RegExp(r"[\s,/]")).where((x) => !x.isEmptyTrimmed).map((x) => x.trim())) {
+      final match = RegExp("<#([0-9]+)>").firstMatch(raw);
+      if (match == null) throw ExpectedUserFacingException("We couldn't parse channel `$raw`.");
+      final id = Snowflake.parse(match.group(1)!);
+      channels.add(context.client.channels[id] as PartialTextChannel);
+    }
+
+    return channels;
+  }
+}
+
 Future<List<User>> fetchAllReactions(Message message, ReactionBuilder emoji, {bool Function(User)? where, int? stopAt}) async {
   final List<User> results = [];
   Snowflake? after;
@@ -229,22 +248,6 @@ Future<List<User>> fetchAllReactions(Message message, ReactionBuilder emoji, {bo
   }
 
   return results;
-}
-
-final class TextChannelListConverter extends DiscordConverter<String, List<PartialTextChannel>> {
-  @override
-  FutureOr<List<PartialTextChannel>> convert(DiscordContext context, ResolvedData? resolved, String value) {
-    final List<PartialTextChannel> channels = [];
-
-    for (final raw in value.split(RegExp(r"[\s,/]")).where((x) => !x.isEmptyTrimmed).map((x) => x.trim())) {
-      final match = RegExp("<#([0-9]+)>").firstMatch(raw);
-      if (match == null) throw ExpectedUserFacingException("We couldn't parse channel `$raw`.");
-      final id = Snowflake.parse(match.group(1)!);
-      channels.add(context.client.channels[id] as PartialTextChannel);
-    }
-
-    return channels;
-  }
 }
 
 final class QuoteCommand extends TopLevelParentCommand {
@@ -377,7 +380,9 @@ To get started creating a rule, use `/quote set-rule`!
     @TextChannelOption("channel", "The channel to test with.") TextChannel? channel,
   ) async {
     channel ??= context.channel;
+
     if (QuoteChannelSettings(context.store, channel.id).ignored.get()) return await context.respond(.new(content: "This channel is ignored."), ephemeral: .ephemeral);
+    if (channel is! GuildChannel) return await context.respond(.new(content: "This channel is not a guild channel."), ephemeral: .ephemeral);
 
     final settings = QuoteGuildSettings(context.store, context.guildId!);
     final rules = settings.rules.get();
@@ -386,8 +391,8 @@ To get started creating a rule, use `/quote set-rule`!
     rules.removeWhere((x) {
       if (x.emoji != data) return true;
 
-      if (x.channels != null) {
-        if (!x.channels!.contains(channel!.id)) return true;
+      if (x.channels.isNotEmpty) {
+        if (!x.channels.contains(channel!.id) && !x.channels.any((x) => x == (channel as GuildChannel).parentId)) return true;
       }
 
       return x.count > count;
@@ -435,7 +440,7 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
           "Channel: ${rule.channel.toChannelMention()}",
           if (rule.pingRole != null) "Role ping: ${rule.pingRole?.toRoleMention()}",
           if (rule.exclude?.isNotEmpty ?? false) "Excluded rules: ${rule.exclude?.map((x) => x.toDiscordCodeString()).join(", ")}",
-          if (rule.channels?.isNotEmpty ?? false) "Channels: ${rule.channels?.map((x) => x.toChannelMention()).join(", ")}"
+          if (rule.channels.isNotEmpty) "Channels: ${rule.channels.map((x) => x.toChannelMention()).join(", ")}"
         ].map((x) => "- $x").join("\n").maxLength(1024, ellipsis: true), isInline: false);
       })),
     ));
@@ -450,7 +455,6 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
     @TextChannelOption("channel", "The channel to post quotes for this rule in.") TextChannel channel,
     @StringOption("exclude", "Rules to exclude here, separated by commas.") String? excludeRaw,
     @RoleOption("ping", "The role to ping on new quotes.") Role? ping,
-    @StringOption("channels", "The channels this rule applies to.") List<PartialTextChannel>? channels,
   ) async {
     final settings = QuoteGuildSettings(context.store, context.guildId!);
     final rules = settings.rules.get();
@@ -468,7 +472,7 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
       name: name,
       count: count,
       emoji: e,
-      channels: channels?.mapToList((x) => x.id),
+      channels: [],
       channel: channel.id,
       exclude: exclude,
       pingRole: ping?.id,
@@ -504,6 +508,92 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
 
     await context.respond(.new(
       content: "Deleted rule `$id`.",
+    ));
+  }
+
+  @Subcommand("add-channel", "Add channels to a rule.", needsGuild: true, permissionsRequired: .admin)
+  void addChannel(
+    GuildDiscordContext context,
+    @IntOption("id", "Rule ID.", autocomplete: Autocomplete<QuoteRulesAutocompleteId>()) int id,
+    @StringOption("channels", "Channels, separated by spaces or commas.") List<PartialTextChannel>? channels,
+    @GuildCategoryOption("category", "Add an entire category.") GuildCategory? category,
+  ) async {
+    final settings = QuoteGuildSettings(context.store, context.guildId);
+    final rules = settings.rules.get();
+    final rule = rules.firstWhereOrNull((x) => x.id == id);
+
+    if (rule == null) {
+      return await context.respond(.new(
+        content: "Invalid rule ID: `$id`",
+      ), ephemeral: .ephemeral);
+    }
+
+    final all = [...?channels?.map((x) => x.id), ?category?.id];
+
+    if (all.isEmpty) {
+      return await context.respond(.new(
+        content: "No channels passed.",
+      ), ephemeral: .ephemeral);
+    }
+
+    rule.channels.addAll(all);
+    settings.rules.set(rules);
+
+    await context.respond(.new(
+      content: "Added **${all.length}** channels/categories to rule `${rule.name}`!",
+    ));
+  }
+
+  @Subcommand("remove-channel", "Remove a channel from a rule.", needsGuild: true, permissionsRequired: .admin)
+  void removeChannel(
+    GuildDiscordContext context,
+    @IntOption("id", "Rule ID.", autocomplete: Autocomplete<QuoteRulesAutocompleteId>()) int id,
+    @SnowflakeOption("channel-id", "Channel or category ID to remove.") Snowflake channelId,
+  ) async {
+    final settings = QuoteGuildSettings(context.store, context.guildId);
+    final rules = settings.rules.get();
+    final rule = rules.firstWhereOrNull((x) => x.id == id);
+
+    if (rule == null) {
+      return await context.respond(.new(
+        content: "Invalid rule ID: `$id`",
+      ), ephemeral: .ephemeral);
+    }
+
+    if (!rule.channels.contains(channelId)) {
+      return await context.respond(.new(
+        content: "This channel or category is not included in this rule.",
+      ), ephemeral: .ephemeral);
+    }
+
+    rule.channels.remove(channelId);
+    settings.rules.set(rules);
+
+    await context.respond(.new(
+      content: "Removed ID `$channelId` (${channelId.toChannelMention()}) from rule `${rule.name}`!",
+    ));
+  }
+
+  @Subcommand("clear-channels", "Remove all channels from a rule.", needsGuild: true, permissionsRequired: .admin)
+  void clearChannels(
+    GuildDiscordContext context,
+    @IntOption("id", "Rule ID.", autocomplete: Autocomplete<QuoteRulesAutocompleteId>()) int id,
+  ) async {
+    final settings = QuoteGuildSettings(context.store, context.guildId);
+    final rules = settings.rules.get();
+    final rule = rules.firstWhereOrNull((x) => x.id == id);
+
+    if (rule == null) {
+      return await context.respond(.new(
+        content: "Invalid rule ID: `$id`",
+      ), ephemeral: .ephemeral);
+    }
+
+    rule.channels.clear();
+    settings.rules.set(rules);
+
+    await context.respond(.new(
+      content: "Removed all channels from rule `${rule.name}`! This rule will now apply to all channels.",
     ));
   }
 }
@@ -573,7 +663,7 @@ final class QuoteRule({
   required final String name,
   required final int count,
   required final EmojiData emoji,
-  required final List<Snowflake>? channels,
+  required final List<Snowflake> channels,
   required final Snowflake channel,
   required final List<String>? exclude,
   required final Snowflake? pingRole,
@@ -581,7 +671,7 @@ final class QuoteRule({
   factory fromJson(Map data) {
     return .new(id: data["id"], name: data["name"], count: data["count"], emoji: .fromJson(data["emoji"]), channels: (data["channels"] as List?)?.mapToList((x) {
       return .parse(x);
-    }), channel: .new(data["channel"]), exclude: (data["exclude"] as List?)?.whereTypeToList<String>(), pingRole: data["pingRole"] is int ? .new(data["pingRole"]) : null);
+    }) ?? [], channel: .new(data["channel"]), exclude: (data["exclude"] as List?)?.whereTypeToList<String>(), pingRole: data["pingRole"] is int ? .new(data["pingRole"]) : null);
   }
 
   Map<String, Object?> toJson() => {
@@ -589,7 +679,7 @@ final class QuoteRule({
     "name": name,
     "count": count,
     "emoji": emoji.toJson(),
-    "channels": ?channels?.mapToList((x) => x.value),
+    "channels": channels.mapToList((x) => x.value),
     "channel": channel.value,
     "exclude": ?exclude,
     "pingRole": ?pingRole?.value,

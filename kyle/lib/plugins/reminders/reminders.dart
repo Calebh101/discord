@@ -132,48 +132,51 @@ final class RemindersPlugin extends DiscordPlugin {
           return;
         }
 
-        final reminders = data.entries.where((x) {
+        final all = data.entries.where((x) {
           return x.key <= .now();
-        }).map((x) => x.value).flattened;
+        });
 
-        if (reminders.isNotEmpty) {
-          Logger.print("Reminders", "Handling ${reminders.length} reminders");
+        if (all.isNotEmpty) {
+          Logger.print("Reminders", "Handling ${all.length} reminder data entries");
         }
 
-        for (final reminder in reminders) {
-          final url = Uri.parse("https://discord.com/channels/${[
-            reminder.messageGuildId ?? "@me",
-            reminder.messageChannelId,
-            reminder.messageId,
-          ].join("/")}");
-
-          try {
-            if (isIgnored(bot.store, .parse(reminder.userId))) continue;
-
-            final userId = Snowflake.parse(reminder.userId);
-            final channelId = reminder.targetChannelId != null ? Snowflake.parse(reminder.targetChannelId!) : null;
-
-            final channel = channelId != null ? await client.channels.get(channelId) as TextChannel : await client.users.createDm(userId);
-
-            await channel.sendMessage(.new(embeds: [
-              .new(
-                title: "You asked me to remind you...",
-                description: reminder.name,
-                url: url,
-                footer: .new(text: "Reminder #${reminder.id}"),
-              ),
-            ]));
-          } catch (e) {
-            Logger.warn("Reminders", "Unable to send reminder ${reminder.id} for user ${reminder.userId} in channel ${reminder.targetChannelId}: $e");
+        for (final MapEntry(key: timestamp, value: reminders) in all) {
+          for (final reminder in reminders) {
+            final url = Uri.parse("https://discord.com/channels/${[
+              reminder.messageGuildId ?? "@me",
+              reminder.messageChannelId,
+              reminder.messageId,
+            ].join("/")}");
 
             try {
-              final channel = await client.users.createDm(.parse(reminder.userId));
+              if (isIgnored(bot.store, .parse(reminder.userId))) continue;
 
-              await channel.sendMessage(.new(
-                content: "You asked me to remind you in ${reminder.targetChannelId?.toChannelMention() ?? "**here**"}...\n${reminder.name.toDiscordCodeBlock()}\n**Where**: $url\n-# This is a fallback message. Your reminder was not able to be successfully delivered first try.",
-              ));
+              final userId = Snowflake.parse(reminder.userId);
+              final channelId = reminder.targetChannelId != null ? Snowflake.parse(reminder.targetChannelId!) : null;
+
+              final channel = channelId != null ? await client.channels.get(channelId) as TextChannel : await client.users.createDm(userId);
+
+              await channel.sendMessage(.new(embeds: [
+                .new(
+                  title: "You asked me to remind you...",
+                  description: reminder.name,
+                  url: url,
+                  footer: .new(text: "Reminder #${reminder.id}"),
+                  timestamp: timestamp.toDateTime().toUtc(),
+                ),
+              ]));
             } catch (e) {
-              Logger.warn("Reminders", "Unable to send backup message for reminder ${reminder.userId}, aborting: $e");
+              Logger.warn("Reminders", "Unable to send reminder ${reminder.id} for user ${reminder.userId} in channel ${reminder.targetChannelId}: $e");
+
+              try {
+                final channel = await client.users.createDm(.parse(reminder.userId));
+
+                await channel.sendMessage(.new(
+                  content: "You asked me to remind you in ${reminder.targetChannelId?.toChannelMention() ?? "**here**"}...\n${reminder.name.toDiscordCodeBlock()}\n**Where**: $url\n-# This is a fallback message. Your reminder was not able to be successfully delivered first try.",
+                ));
+              } catch (e) {
+                Logger.warn("Reminders", "Unable to send backup message for reminder ${reminder.userId}, aborting: $e");
+              }
             }
           }
         }
