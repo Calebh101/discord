@@ -204,7 +204,7 @@ extension on PermsCommands {
         function: this.allowEveryone,
         builder: .subCommand(
           name: "everyone",
-          description: "Allow a role to use this permission.",
+          description: "Allow everyone to use this permission.",
           options: [
             () {
               return CommandOptionBuilder(

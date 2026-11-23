@@ -70,7 +70,7 @@ final class PermsCommands extends SubcommandGroupCommand {
     }
   }
 
-  @Subcommand("everyone", "Allow a role to use this permission.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("everyone", "Allow everyone to use this permission.", permissionsRequired: .admin, needsGuild: true)
   void allowEveryone(
     GuildDiscordContext context,
     @StringOption("perm", "The permission to allow.", autocomplete: Autocomplete<PermsAutocomplete>()) String id,

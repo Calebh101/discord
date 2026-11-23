@@ -501,7 +501,7 @@ final class RoleSelectorCommand extends TopLevelParentCommand {
     return buildCommand(context, commandOptions);
   }
 
-  @Subcommand("create", "Create a new role selector.", needsGuild: true, otherPerms: ["roleselector.create"])
+  @Subcommand("create", "Create a new role selector.", needsGuild: true, perms: ["roleselector.create"])
   void create(
     GuildDiscordContext context,
     @StringOption("title", "The title of your role selector.") String title,

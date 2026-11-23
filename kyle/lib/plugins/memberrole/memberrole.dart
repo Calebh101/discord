@@ -96,6 +96,15 @@ final class MemberRolePlugin extends DiscordPlugin {
   }
 
   @override
+  List<Permission> permissions(DiscordBot bot) {
+    return [
+      .new("memberrole.manage", "Manage member roles."),
+      .new("memberrole.mod", "Ignore/unignore users."),
+      .new("memberrole.eval", "Evaluate member roles (expensive)."),
+    ];
+  }
+
+  @override
   void onReady(DiscordBot bot) {
     bot.clients.run((client) async {
       client.onGuildMemberAdd.listen((event) async {
@@ -223,7 +232,7 @@ final class MemberRoleCommand extends TopLevelParentCommand {
     return buildCommand(context, commandOptions);
   }
 
-  @Subcommand("list", "List all member roles.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("list", "List all member roles.", needsGuild: true)
   void list(DiscordContext context) async {
     final ids = MemberRoleGuildSettings(context.store, context.guildId!).enabled.get();
     final roles = await Future.wait(ids.map((x) => context.guild!.roles.get(x)));
@@ -250,7 +259,7 @@ Auto apply on startup: ${settings.autoApplyOnStartup.get() ? "yes" : "no"}
     ));
   }
 
-  @Subcommand("set", "Set a member role.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("set", "Set a member role.", perms: ["memberrole.manage"], needsGuild: true)
   void setRole(
     DiscordContext context,
     @RoleOption("role", "The role to set.") Role role,
@@ -279,7 +288,7 @@ Auto apply on startup: ${settings.autoApplyOnStartup.get() ? "yes" : "no"}
     ));
   }
 
-  @Subcommand("delete", "Disable a member role and delete its settings.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("delete", "Disable a member role and delete its settings.", perms: ["memberrole.manage"], needsGuild: true)
   void deleteRole(
     DiscordContext context,
     @RoleOption("role", "The role to disable.") Role role,
@@ -302,7 +311,7 @@ Auto apply on startup: ${settings.autoApplyOnStartup.get() ? "yes" : "no"}
     ));
   }
 
-  @Subcommand("ignore", "Ignore a user from member role evaluation.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("ignore", "Ignore a user from member role evaluation.", perms: ["memberrole.mod"], needsGuild: true)
   void ignore(
     GuildDiscordContext context,
     @RoleOption("role", "The role to ignore/unignore this person from.") Role role,
@@ -338,7 +347,7 @@ Auto apply on startup: ${settings.autoApplyOnStartup.get() ? "yes" : "no"}
     ));
   }
 
-  @Subcommand("eval", "Evaluate a member role.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("eval", "Evaluate a member role.", perms: ["memberrole.eval"], needsGuild: true)
   void eval(
     GuildDiscordContext context,
     @RoleOption("role", "The role to evaluate.") Role role,

@@ -30,6 +30,13 @@ final class MathPlugin extends DiscordPlugin {
   }
 
   @override
+  List<Permission> permissions(DiscordBot bot) {
+    return [
+      .new("math.admin", "Manage math."),
+    ];
+  }
+
+  @override
   void onReady(DiscordBot bot) {
     bot.clients.run((client) {
       client.onMessageCreate.listen((event) async {
@@ -152,7 +159,7 @@ final class MathCommand extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("set-channel", "Set the math channel.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("set-channel", "Set the math channel.", perms: ["math.admin"], needsGuild: true)
   void setChannel(
     DiscordContext context,
     @TextChannelOption("channel", "Channel to set it to.") TextChannel? channel,

@@ -21,7 +21,7 @@ extension on ModlogCommands {
         ),
         autocomplete: null,
         options: null,
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -79,7 +79,7 @@ extension on ModlogCommands {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -137,7 +137,7 @@ extension on ModlogCommands {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -195,7 +195,7 @@ extension on ModlogCommands {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -214,7 +214,7 @@ extension on ModlogCommands {
         ),
         autocomplete: null,
         options: null,
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -272,7 +272,7 @@ extension on ModlogCommands {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -349,7 +349,7 @@ extension on ModlogCommands {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,

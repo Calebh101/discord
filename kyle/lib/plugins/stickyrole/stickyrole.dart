@@ -139,7 +139,7 @@ final class StickyRoleCommand extends TopLevelParentCommand {
     return buildCommand(context, commandOptions);
   }
 
-  @Subcommand("list-member", "List a member's sticky roles.", needsGuild: true, otherPerms: ["stickyrole.manage"])
+  @Subcommand("list-member", "List a member's sticky roles.", needsGuild: true, perms: ["stickyrole.manage"])
   void forMember(
     GuildDiscordContext context,
     @MemberOption("member", "The member to list sticky roles for.") Member member,
@@ -161,7 +161,7 @@ final class StickyRoleCommand extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("add", "Add a sticky role to a user.", needsGuild: true, otherPerms: ["stickyrole.manage"])
+  @Subcommand("add", "Add a sticky role to a user.", needsGuild: true, perms: ["stickyrole.manage"])
   void add(
     GuildDiscordContext context,
     @MemberOption("user", "The member to add a sticky role to.") Member member,
@@ -198,7 +198,7 @@ final class StickyRoleCommand extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("remove", "Remove a sticky role from a user.", needsGuild: true, otherPerms: ["stickyrole.manage"])
+  @Subcommand("remove", "Remove a sticky role from a user.", needsGuild: true, perms: ["stickyrole.manage"])
   void remove(
     GuildDiscordContext context,
     @MemberOption("user", "The member to remove a sticky role from.") Member member,
@@ -235,7 +235,7 @@ final class StickyRoleCommand extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("eval-all", "Evaluate all members for all sticky roles.", needsGuild: true, otherPerms: ["stickyrole.manage"])
+  @Subcommand("eval-all", "Evaluate all members for all sticky roles.", needsGuild: true, perms: ["stickyrole.manage"])
   void evalAllMembers(GuildDiscordContext context) async {
     await context.acknowledge();
     final total = await eval(context.bot, context.client, context.guild);
@@ -251,7 +251,7 @@ final class StickyRoleCommand extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("eval-member", "Evaluate a members for all sticky roles.", needsGuild: true, otherPerms: ["stickyrole.manage"])
+  @Subcommand("eval-member", "Evaluate a members for all sticky roles.", needsGuild: true, perms: ["stickyrole.manage"])
   void evalAMember(
     GuildDiscordContext context,
     @MemberOption("member", "The member to evaluate.") Member member,

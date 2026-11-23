@@ -136,7 +136,7 @@ extension on RoleSelectorCommand {
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
-        otherPerms: ["roleselector.create"],
+        otherPerms: null,
         plugin: context.plugin,
       );
     }(),

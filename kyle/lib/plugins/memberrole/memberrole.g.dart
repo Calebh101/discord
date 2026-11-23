@@ -21,7 +21,7 @@ extension on MemberRoleCommand {
         ),
         autocomplete: null,
         options: null,
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -167,7 +167,7 @@ extension on MemberRoleCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -225,7 +225,7 @@ extension on MemberRoleCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -357,7 +357,7 @@ extension on MemberRoleCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -415,7 +415,7 @@ extension on MemberRoleCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,

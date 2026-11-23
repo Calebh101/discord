@@ -124,7 +124,7 @@ extension on QuoteCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -383,7 +383,7 @@ extension on QuoteCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -671,7 +671,7 @@ extension on QuoteRuleCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -729,7 +729,7 @@ extension on QuoteRuleCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -737,10 +737,10 @@ extension on QuoteRuleCommand {
     }(),
     () {
       return OptionData(
-        name: "add-channel",
+        name: "add-channels",
         function: this.addChannel,
         builder: .subCommand(
-          name: "add-channel",
+          name: "add-channels",
           description: "Add channels to a rule.",
           options: [
             () {
@@ -861,7 +861,7 @@ extension on QuoteRuleCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -869,10 +869,10 @@ extension on QuoteRuleCommand {
     }(),
     () {
       return OptionData(
-        name: "remove-channel",
+        name: "remove-channels",
         function: this.removeChannel,
         builder: .subCommand(
-          name: "remove-channel",
+          name: "remove-channels",
           description: "Remove a channel from a rule.",
           options: [
             () {
@@ -963,7 +963,7 @@ extension on QuoteRuleCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -1021,7 +1021,7 @@ extension on QuoteRuleCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,

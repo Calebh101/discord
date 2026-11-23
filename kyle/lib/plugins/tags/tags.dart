@@ -35,6 +35,7 @@ final class TagsPlugin extends DiscordPlugin {
   List<Permission> permissions(DiscordBot bot) {
     return [
       .new("tags.manage", "Create, edit, and delete guild tags."),
+      .new("tags.settings", "Manage some settings."),
     ];
   }
 
@@ -364,7 +365,7 @@ final class TagsCommand extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("set-prefix", "Set the tag prefix.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("set-prefix", "Set the tag prefix.", needsGuild: true, perms: ["tags.settings"])
   void setPrefix(
     DiscordContext context,
     @StringOption("prefix", "The prefix to use.", minLength: 1, maxLength: 20) String? prefix,
@@ -386,7 +387,7 @@ final class TagsCommand extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("header", "Control whether to show headers for tags.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("header", "Control whether to show headers for tags.", needsGuild: true, perms: ["tags.settings"])
   void header(
     GuildDiscordContext context,
     @BoolOption("header", "Whether to show headers for tags.") bool header,

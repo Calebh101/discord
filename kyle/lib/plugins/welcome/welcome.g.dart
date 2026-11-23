@@ -81,7 +81,7 @@ extension on WelcomeCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -155,7 +155,7 @@ extension on WelcomeCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -321,6 +321,101 @@ extension on WelcomeMessageCommand {
         ],
         requiredPerms: .parse(0),
         needsGuild: false,
+        otherPerms: null,
+        plugin: context.plugin,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "ignore",
+        function: this.ignore,
+        builder: .subCommand(
+          name: "ignore",
+          description: "Ignore a user.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(6),
+                name: "user",
+                description: "The user to ignore.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(5),
+                name: "ignore",
+                description: "Whether to ignore this user.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: false,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<User>(
+              name: "user",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(6),
+                  name: "user",
+                  description: "The user to ignore.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              plugin: context.plugin,
+            );
+          }(),
+          () {
+            return OptionData<bool>(
+              name: "ignore",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(5),
+                  name: "ignore",
+                  description: "Whether to ignore this user.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: false,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: null,
+              plugin: context.plugin,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(0),
+        needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
       );

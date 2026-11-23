@@ -28,6 +28,15 @@ final class ModlogPlugin extends DiscordPlugin {
   }
 
   @override
+  List<Permission> permissions(DiscordBot bot) {
+    return [
+      .new("modlog.test", "Send test modlogs."),
+      .new("modlog.settings", "Manage some settings."),
+      .new("modlog.manage", "Manage modlog scopes."),
+    ];
+  }
+
+  @override
   FutureOr<void> onReady(DiscordBot bot) {
     bot.clients.run((client) {
       client.onModalSubmitInteraction.listen((event) async {
@@ -118,7 +127,7 @@ final class ModlogCommands extends TopLevelParentCommand {
     return buildCommand(context, commandOptions);
   }
 
-  @Subcommand("info", "Get settings of the modlog system.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("info", "Get settings of the modlog system.", needsGuild: true)
   void getInfo(DiscordContext context) async {
     final settings = ModlogSettings(context.store, context.guildId!);
     final scopes = settings.scopes.get() + context.bot.modlog.allRequiredString;
@@ -142,7 +151,7 @@ final class ModlogCommands extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("test", "Send a test modlog.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("test", "Send a test modlog.", needsGuild: true, perms: ["modlog.test"])
   void test(
     DiscordContext context,
     @StringOption("body", "The body of the test modlog.") String? body,
@@ -163,7 +172,7 @@ final class ModlogCommands extends TopLevelParentCommand {
     }
   }
 
-  @Subcommand("channel", "Set the channel to send modlogs in.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("channel", "Set the channel to send modlogs in.", needsGuild: true, perms: ["modlog.settings"])
   void setChannel(
     DiscordContext context,
     @GuildTextChannelOption("channel", "The channel to send modlogs in.") GuildTextChannel? channel,
@@ -176,7 +185,7 @@ final class ModlogCommands extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("set", "Set modlog scopes by group.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("set", "Set modlog scopes by group.", perms: ["modlog.manage"], needsGuild: true)
   void setGroup(
     DiscordContext context,
     @StringOption("group", "Modlog group name.", autocomplete: Autocomplete<ModlogGroupAutocomplete>()) String groupName,
@@ -230,7 +239,7 @@ final class ModlogCommands extends TopLevelParentCommand {
     ]));
   }
 
-  @Subcommand("save", "Send a file with all enabled modlog scopes.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("save", "Send a file with all enabled modlog scopes.", perms: ["modlog.manage"], needsGuild: true)
   void save(DiscordContext context) async {
     final settings = ModlogSettings(context.store, context.guildId!);
     final scopes = settings.scopes.get();
@@ -245,7 +254,7 @@ final class ModlogCommands extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("load", "Load modlog scopes from an input.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("load", "Load modlog scopes from an input.", perms: ["modlog.manage"], needsGuild: true)
   void load(
     DiscordContext context,
     @AttachmentOption("scopes", "String of all enabled scopes.") String data,
@@ -281,7 +290,7 @@ final class ModlogCommands extends TopLevelParentCommand {
     ));
   }
 
-  @Subcommand("clear", "Clear all modlog scopes.", permissionsRequired: .admin, needsGuild: true)
+  @Subcommand("clear", "Clear all modlog scopes.", perms: ["modlog.manage"], needsGuild: true)
   void clear(
     DiscordContext context,
     @StringOption("group", "Modlog group name.", autocomplete: Autocomplete<ModlogGroupAutocomplete>()) String? groupName,

@@ -36,6 +36,15 @@ final class WelcomePlugin extends DiscordPlugin {
   }
 
   @override
+  List<Permission> permissions(DiscordBot bot) {
+    return [
+      .new("welcome.message", "Manage welcome/goodbye messages."),
+      .new("welcome.mod", "Ignore/unignore users."),
+      .new("welcome.admin", "Manage welcome settings."),
+    ];
+  }
+
+  @override
   void onReady(DiscordBot bot) {
     bot.clients.run((client) {
       client.onGuildMemberAdd.listen((event) async {
@@ -116,7 +125,7 @@ Not that much to explain :)
     """.trim()));
   }
 
-  @Subcommand("ignore-bots", "Whether to ignore bots for welcome/goodbye messages.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("ignore-bots", "Whether to ignore bots for welcome/goodbye messages.", needsGuild: true, perms: ["welcome.admin"])
   void ignoreBots(
     DiscordContext context,
     @BoolOption("ignore", "Whether to ignore bots in welcome/goodbye messages.") bool ignore,
@@ -150,7 +159,7 @@ Not that much to explain :)
     }
   }
 
-  @Subcommand("set-channel", "Set the channel for welcome/goodbye messages.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("set-channel", "Set the channel for welcome/goodbye messages.", needsGuild: true, perms: ["welcome.admin"])
   void setChannel(
     DiscordContext context,
     @TextChannelOption("channel", "The channel.") TextChannel? channel,
@@ -229,7 +238,7 @@ ${templates.map((template) {
     ));
   }
 
-  @Subcommand("welcome", "Set the welcome message.")
+  @Subcommand("welcome", "Set the welcome message.", perms: ["welcome.message"])
   void setWelcome(
     DiscordContext context,
     @StringOption("message", "The message.", maxLength: 900) String? message,
@@ -251,7 +260,7 @@ ${templates.map((template) {
     ));
   }
 
-  @Subcommand("goodbye", "Set the goodbye message.")
+  @Subcommand("goodbye", "Set the goodbye message.", perms: ["welcome.message"])
   void setGoodbye(
     DiscordContext context,
     @StringOption("message", "The message.", maxLength: 900) String? message,
@@ -272,6 +281,27 @@ ${templates.map((template) {
       content: "Goodbye message **set**.",
     ));
   }
+
+  @Subcommand("ignore", "Ignore a user.", needsGuild: true, perms: ["welcome.mod"])
+  void ignore(
+    GuildDiscordContext context,
+    @UserOption("user", "The user to ignore.") User user,
+    @BoolOption("ignore", "Whether to ignore this user.") bool ignore,
+  ) async {
+    final settings = WelcomeMemberSettings(context.store, context.guildId, context.userId);
+
+    if (settings.ignored.get() == ignore) {
+      return await context.respond(.new(
+        content: "This user is already ${ignore ? "ignored" : "not ignored"}.",
+      ), ephemeral: .ephemeral);
+    }
+
+    settings.ignored.set(ignore);
+
+    await context.respond(.new(
+      content: "User **${ignore ? "ignored" : "unignored"}**!",
+    ));
+  }
 }
 
 final class WelcomeGuildSettings extends GuildSettings {
@@ -282,4 +312,10 @@ final class WelcomeGuildSettings extends GuildSettings {
 
   SettingsObject<String> get welcome => .new(this, "welcomeMessage");
   SettingsObject<String> get goodbye => .new(this, "welcomeGoodbyeMessage");
+}
+
+final class WelcomeMemberSettings extends UserPerGuildSettings {
+  new(super.store, super.guild, super.user);
+
+  SettingsObjectNotNull<bool> get ignored => .new(this, "welcomeIgnore", () => false);
 }

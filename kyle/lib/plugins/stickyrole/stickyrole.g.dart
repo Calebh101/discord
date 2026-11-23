@@ -58,7 +58,7 @@ extension on StickyRoleCommand {
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
-        otherPerms: ["stickyrole.manage"],
+        otherPerms: null,
         plugin: context.plugin,
       );
     }(),
@@ -149,7 +149,7 @@ extension on StickyRoleCommand {
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
-        otherPerms: ["stickyrole.manage"],
+        otherPerms: null,
         plugin: context.plugin,
       );
     }(),
@@ -240,7 +240,7 @@ extension on StickyRoleCommand {
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
-        otherPerms: ["stickyrole.manage"],
+        otherPerms: null,
         plugin: context.plugin,
       );
     }(),
@@ -259,7 +259,7 @@ extension on StickyRoleCommand {
         options: null,
         requiredPerms: .parse(0),
         needsGuild: true,
-        otherPerms: ["stickyrole.manage"],
+        otherPerms: null,
         plugin: context.plugin,
       );
     }(),
@@ -313,7 +313,7 @@ extension on StickyRoleCommand {
         ],
         requiredPerms: .parse(0),
         needsGuild: true,
-        otherPerms: ["stickyrole.manage"],
+        otherPerms: null,
         plugin: context.plugin,
       );
     }(),

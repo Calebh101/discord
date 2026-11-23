@@ -117,6 +117,8 @@ final class QuotePlugin extends DiscordPlugin {
   List<Permission> permissions(DiscordBot bot) {
     return [
       .new("quote", "Quote messages."),
+      .new("quote.test", "Test quoting."),
+      .new("quote.manage", "Manage rules."),
     ];
   }
 
@@ -308,7 +310,7 @@ To get started creating a rule, use `/quote set-rule`!
     """.trim().split("\n"))));
   }
 
-  @Subcommand("message", "Quote a message by ID.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("message", "Quote a message by ID.", needsGuild: true, perms: ["quote"])
   void quoteMessage(
     DiscordContext context,
     @StringOption("rule", "Name of your rule.", autocomplete: Autocomplete<QuoteRulesAutocompleteName>()) String name,
@@ -372,7 +374,7 @@ To get started creating a rule, use `/quote set-rule`!
     }
   }
 
-  @Subcommand("test", "Test quotes from this channel.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("test", "Test quotes from this channel.", needsGuild: true, perms: ["quote.test"])
   void test(
     DiscordContext context,
     @IntOption("count", "How many reactions to test with.") int count,
@@ -446,7 +448,7 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
     ));
   }
 
-  @Subcommand("set", "Set a rule.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("set", "Set a rule.", needsGuild: true, perms: ["quote.manage"])
   void setRule(
     DiscordContext context,
     @StringOption("name", "Name of your rule.", maxLength: 50, autocomplete: Autocomplete<QuoteRulesAutocompleteName>()) String name,
@@ -489,7 +491,7 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
     ));
   }
 
-  @Subcommand("delete", "Delete a rule.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("delete", "Delete a rule.", needsGuild: true, perms: ["quote.manage"])
   void deleteRule(
     DiscordContext context,
     @IntOption("id", "Rule ID.", autocomplete: Autocomplete<QuoteRulesAutocompleteId>()) int id,
@@ -511,7 +513,7 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
     ));
   }
 
-  @Subcommand("add-channel", "Add channels to a rule.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("add-channels", "Add channels to a rule.", needsGuild: true, perms: ["quote.manage"])
   void addChannel(
     GuildDiscordContext context,
     @IntOption("id", "Rule ID.", autocomplete: Autocomplete<QuoteRulesAutocompleteId>()) int id,
@@ -544,7 +546,7 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
     ));
   }
 
-  @Subcommand("remove-channel", "Remove a channel from a rule.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("remove-channels", "Remove a channel from a rule.", needsGuild: true, perms: ["quote.manage"])
   void removeChannel(
     GuildDiscordContext context,
     @IntOption("id", "Rule ID.", autocomplete: Autocomplete<QuoteRulesAutocompleteId>()) int id,
@@ -574,7 +576,7 @@ final class QuoteRuleCommand extends SubcommandGroupCommand {
     ));
   }
 
-  @Subcommand("clear-channels", "Remove all channels from a rule.", needsGuild: true, permissionsRequired: .admin)
+  @Subcommand("clear-channels", "Remove all channels from a rule.", needsGuild: true, perms: ["quote.manage"])
   void clearChannels(
     GuildDiscordContext context,
     @IntOption("id", "Rule ID.", autocomplete: Autocomplete<QuoteRulesAutocompleteId>()) int id,

@@ -610,7 +610,7 @@ extension on TagsCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
@@ -668,7 +668,7 @@ extension on TagsCommand {
             );
           }(),
         ],
-        requiredPerms: .parse(2),
+        requiredPerms: .parse(0),
         needsGuild: true,
         otherPerms: null,
         plugin: context.plugin,
