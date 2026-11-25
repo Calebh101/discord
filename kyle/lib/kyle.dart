@@ -86,7 +86,22 @@ final class Kyle extends DiscordBot {
         } catch (_) {}
       });
 
+      final Map<String, ActivityType> statuses = {
+        "Holding down the server": .game,
+        "Watching for misbehavior": .watching,
+        "On my best behavior": .game,
+        "Having a good day :)": .game,
+        "Looking out for invaders": .listening,
+        "Having fun with Dart": .game,
+        "Finding secret channels": .watching,
+        "Hoping to see some cool channels": .watching,
+        "Fighting against the bad guys": .competing,
+        "Playing Discord bot simulator": .game,
+      };
+
       Timer.periodic(.new(hours: 1), (_) async {
+        final status = statuses.entries.random();
+
         client.updatePresence(.new(
           since: .now(),
           status: .online,
@@ -94,24 +109,10 @@ final class Kyle extends DiscordBot {
           activities: [
             .new(
               name: [
-                [
-                  "Holding down the server",
-                  "Watching for misbehavior",
-                  "On my best behavior",
-                  "Having a good day :)",
-                  "Looking out for invaders",
-                  "Having fun with Dart",
-                  "Finding secret channels",
-                  "Hoping to see some cool channels",
-                ].random(),
+                status.key,
                 if (dev) "(dev)",
               ].join(" "),
-              type: [
-                ActivityType.game,
-                ActivityType.listening,
-                ActivityType.watching,
-                ActivityType.competing,
-              ].random(),
+              type: status.value,
             ),
           ],
         ));
