@@ -121,6 +121,9 @@ final class Kyle extends DiscordBot {
       Timer.periodic(.new(hours: 1), (_) async {
         updatePresence();
       });
+
+      Logger.print("Kyle", "Setting initial presence...");
+      updatePresence();
     });
   }
 }
