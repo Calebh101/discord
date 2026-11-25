@@ -15,6 +15,19 @@ import 'package:kyle/plugins/stickyrole/stickyrole.dart';
 import 'package:kyle/plugins/tags/tags.dart';
 import 'package:kyle/plugins/welcome/welcome.dart';
 
+final Map<String, ActivityType> statuses = {
+  "Holding down the server": .game,
+  "Watching for misbehavior": .watching,
+  "On my best behavior": .game,
+  "Having a good day :)": .game,
+  "Looking out for invaders": .listening,
+  "Having fun with Dart": .game,
+  "Finding secret channels": .watching,
+  "Hoping to see some cool channels": .watching,
+  "Fighting against the bad guys": .competing,
+  "Playing Discord bot simulator": .game,
+};
+
 final class Kyle extends DiscordBot {
   new({super.dev});
 
@@ -86,20 +99,7 @@ final class Kyle extends DiscordBot {
         } catch (_) {}
       });
 
-      final Map<String, ActivityType> statuses = {
-        "Holding down the server": .game,
-        "Watching for misbehavior": .watching,
-        "On my best behavior": .game,
-        "Having a good day :)": .game,
-        "Looking out for invaders": .listening,
-        "Having fun with Dart": .game,
-        "Finding secret channels": .watching,
-        "Hoping to see some cool channels": .watching,
-        "Fighting against the bad guys": .competing,
-        "Playing Discord bot simulator": .game,
-      };
-
-      Timer.periodic(.new(hours: 1), (_) async {
+      void updatePresence() {
         final status = statuses.entries.random();
 
         client.updatePresence(.new(
@@ -116,6 +116,10 @@ final class Kyle extends DiscordBot {
             ),
           ],
         ));
+      }
+
+      Timer.periodic(.new(hours: 1), (_) async {
+        updatePresence();
       });
     });
   }
