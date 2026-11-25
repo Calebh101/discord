@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:discord/discord.dart';
 
-final class ConvertersStore {
+final class ConverterStore {
   final Map<String, List<DiscordConverter>> converters = {};
 
   new();

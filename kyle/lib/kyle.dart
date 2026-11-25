@@ -90,6 +90,12 @@ final class Kyle extends DiscordBot {
                 "Hey there!",
                 "Hi!",
                 "Ow",
+                "Pong!",
+                "Whoa",
+                "Who goes there??",
+                "Hmmm?",
+                "You called?",
+                "AGHGHGHGHGHGHGHHG",
               ].random()}\n-# Latency: ${formatLatency(latency)} / ${formatLatency(realLatency)}",
               referencedMessage: .reply(messageId: message.id),
             ));
@@ -101,6 +107,7 @@ final class Kyle extends DiscordBot {
 
       void updatePresence() {
         final status = statuses.entries.random();
+        Logger.print("Presence", "Setting presence to: ${status.key} (${status.value.value})");
 
         client.updatePresence(.new(
           since: .now(),
@@ -122,7 +129,6 @@ final class Kyle extends DiscordBot {
         updatePresence();
       });
 
-      Logger.print("Kyle", "Setting initial presence...");
       updatePresence();
     });
   }

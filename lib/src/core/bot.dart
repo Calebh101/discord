@@ -21,7 +21,7 @@ abstract class DiscordBot {
   late final TerminalHandler terminal;
 
   final commands = CommandsStore();
-  final converters = ConvertersStore();
+  final converters = ConverterStore();
   final clients = ClientStore<NyxxGateway>();
   final modlog = ModlogStore();
   final permissions = PermissionsStore();
