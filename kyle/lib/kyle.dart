@@ -66,12 +66,8 @@ final class Kyle extends DiscordBot {
         if (author is! User) return;
         if (author.id == client.user.id) return;
 
-        if (message.content.trim() == client.user.toMention()) {
-          try {
-            await message.react(.new(name: "👍", id: null));
-          } catch (_) {}
-        } else if (message.content.contains(client.user.toMention())) {
-          try {
+        try {
+          if (message.content.trim() == client.user.toMention()) {
             final latency = client.httpHandler.latency;
             final realLatency = client.httpHandler.realLatency;
 
@@ -84,21 +80,42 @@ final class Kyle extends DiscordBot {
               ].random()}\n-# Latency: ${formatLatency(latency)} / ${formatLatency(realLatency)}",
               referencedMessage: .reply(messageId: message.id),
             ));
-          } catch (_) {}
-        }
+          } else if (message.content.contains(client.user.toMention())) {
+            await message.react(.new(name: "👍", id: null));
+          }
+        } catch (_) {}
       });
 
-      client.updatePresence(.new(
-        since: .now(),
-        status: .online,
-        isAfk: false,
-        activities: [
-          .new(name: [
-            "Holding down the server",
-            if (dev) "(dev)",
-          ].join(" "), type: .game),
-        ],
-      ));
+      Timer.periodic(.new(hours: 1), (_) async {
+        client.updatePresence(.new(
+          since: .now(),
+          status: .online,
+          isAfk: false,
+          activities: [
+            .new(
+              name: [
+                [
+                  "Holding down the server",
+                  "Watching for misbehavior",
+                  "On my best behavior",
+                  "Having a good day :)",
+                  "Looking out for invaders",
+                  "Having fun with Dart",
+                  "Finding secret channels",
+                  "Hoping to see some cool channels",
+                ].random(),
+                if (dev) "(dev)",
+              ].join(" "),
+              type: [
+                ActivityType.game,
+                ActivityType.listening,
+                ActivityType.watching,
+                ActivityType.competing,
+              ].random(),
+            ),
+          ],
+        ));
+      });
     });
   }
 }
