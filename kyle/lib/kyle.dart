@@ -26,6 +26,8 @@ final Map<String, ActivityType> statuses = {
   "Hoping to see some cool channels": .watching,
   "Fighting against the bad guys": .competing,
   "Playing Discord bot simulator": .game,
+  "Racing for those Black Friday deals": .competing,
+  if (DateTime.now().isBefore(.new(2026, 12, 6))) "Getting the Pirate Token": .competing,
 };
 
 final class Kyle extends DiscordBot {
@@ -71,7 +73,7 @@ final class Kyle extends DiscordBot {
 
   @override
   FutureOr<void> onReady() {
-    clients.run((client) {
+    clients.run((client) async {
       client.onMessageCreate.listen((event) async {
         final message = event.message;
         final author = message.author;
@@ -130,6 +132,12 @@ final class Kyle extends DiscordBot {
       });
 
       updatePresence();
+
+      await alertOwners(client, store, .new(
+        title: "I'm back alive!",
+        description: "You'll never escape me...",
+        color: Colors.green,
+      ));
     });
   }
 }
