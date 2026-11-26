@@ -146,15 +146,15 @@ final class RemindersPlugin extends DiscordPlugin {
         }
 
         final all = data.entries.where((x) {
-          return x.key <= Timestamp.now() - Duration(days: 1);
+          return x.key <= .now();
         });
 
-        if (all.isNotEmpty) {
+        if (bot.dev && all.isNotEmpty) {
           Logger.print("Reminders", "Handling ${all.length} reminder data entries");
         }
 
         for (final MapEntry(key: timestamp, value: reminders) in all) {
-          for (final reminder in reminders) {
+          for (final reminder in reminders.where((x) => !x.fired)) {
             final url = Uri.parse("https://discord.com/channels/${[
               reminder.messageGuildId ?? "@me",
               reminder.messageChannelId,
@@ -186,7 +186,7 @@ final class RemindersPlugin extends DiscordPlugin {
                     title: "You asked me to remind you...",
                     description: reminder.name,
                     fields: [
-                      .new(name: "Snooze", value: "In order to snooze, either use the `/snooze` command or click a button below!", isInline: false),
+                      .new(name: "Snooze", value: "In order to snooze, either use the `/reminders snooze` command or click a button below!", isInline: false),
                     ],
                     url: url,
                     footer: .new(text: "Reminder #${reminder.id}"),
@@ -200,10 +200,12 @@ final class RemindersPlugin extends DiscordPlugin {
                     snooze("1h", .new(hours: 1)),
                     snooze("3h", .new(hours: 3)),
                     snooze("8h", .new(hours: 8)),
-                    snooze("24h", .new(hours: 24)),
+                    ButtonBuilder.success(customId: "reminders.resolve", label: "Done :)"),
                   ]),
                 ],
               ));
+
+              reminder.fired = true;
             } catch (e) {
               Logger.warn("Reminders", "Unable to send reminder ${reminder.id} for user ${reminder.userId} in channel ${reminder.targetChannelId}: $e");
 
@@ -211,8 +213,10 @@ final class RemindersPlugin extends DiscordPlugin {
                 final channel = await client.users.createDm(.parse(reminder.userId));
 
                 await channel.sendMessage(.new(
-                  content: "You asked me to remind you in ${reminder.targetChannelId?.toChannelMention() ?? "**here**"}...\n${reminder.name.toDiscordCodeBlock()}\n**Where**: $url\nUse the `/snooze` command to snooze this reminder!\n-# This is a fallback message. Your reminder was not able to be successfully delivered first try.",
+                  content: "You asked me to remind you in ${reminder.targetChannelId?.toChannelMention() ?? "**here**"}...\n${reminder.name.toDiscordCodeBlock()}\n**Where**: $url\nUse the `/reminders snooze` command to snooze this reminder!\n-# This is a fallback message. Your reminder was not able to be successfully delivered first try.",
                 ));
+
+                reminder.fired = true;
               } catch (e) {
                 Logger.warn("Reminders", "Unable to send backup message for reminder ${reminder.userId}, aborting: $e");
               }
@@ -236,6 +240,14 @@ final class RemindersPlugin extends DiscordPlugin {
 
         if (user == null) return;
         if (isIgnored(bot.store, user.id)) return;
+
+        if (data.customId == "reminders.resolve") {
+          await interaction.message?.edit(.new(
+            components: [],
+          ));
+
+          return;
+        }
 
         final elements = data.customId.split("-");
         if (elements.firstOrNull != "reminders.snooze") return;
@@ -265,11 +277,12 @@ final class RemindersPlugin extends DiscordPlugin {
           return;
         }
 
+        reminder.data.fired = false;
         settings.changeTimestamp(old, timestamp, reminder.data);
         final date = timestamp.toDateTime();
 
         await interaction.respond(MessageBuilder(
-          content: "Reminder snoozed until ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you right here :)\nReminder **#$id**\n${reminder.data.name.toDiscordQuote()}",
+          content: "Reminder snoozed until ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you in DMs :)\nReminder **#$id**\n${reminder.data.name.toDiscordQuote()}",
         ));
       });
     });
@@ -433,6 +446,7 @@ final class RemindersCommand extends TopLevelParentCommand {
       messageChannelId: message.channelId.value,
       messageGuildId: context.guildId?.value,
       targetChannelId: null,
+      fired: false,
     );
 
     settings.saveReminder(timestamp, reminder);
@@ -475,16 +489,17 @@ final class RemindersCommand extends TopLevelParentCommand {
       ), ephemeral: .ephemeral);
     }
 
-    if (reminder.timestamp.toDateTime().isBefore(date)) {
+    if (!reminder.data.fired) {
       return await context.respond(.new(
         content: "This reminder is set to occur *after* the time you set to snooze it too!",
       ), ephemeral: .ephemeral);
     }
 
+    reminder.data.fired = false;
     settings.changeTimestamp(reminder.timestamp, timestamp, reminder.data);
 
     await context.respond(.new(
-      content: "Reminder snoozed until ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you right here :)\nReminder **#$id**\n${reminder.data.name.toDiscordQuote()}",
+      content: "Reminder snoozed until ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you in DMs :)\nReminder **#$id**\n${reminder.data.name.toDiscordQuote()}",
     ));
   }
 
@@ -602,7 +617,10 @@ final class ReminderData {
   final int? messageGuildId;
   final int? targetChannelId;
 
-  const new({
+  @JsonKey(defaultValue: false)
+  bool fired = false;
+
+  new({
     required this.id,
     required this.name,
     required this.userId,
@@ -610,6 +628,7 @@ final class ReminderData {
     required this.messageChannelId,
     required this.messageGuildId,
     required this.targetChannelId,
+    required this.fired,
   });
 
   factory fromJson(Map input) => _$ReminderDataFromJson(input);

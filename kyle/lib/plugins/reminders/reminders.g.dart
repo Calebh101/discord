@@ -14,6 +14,7 @@ ReminderData _$ReminderDataFromJson(Map json) => ReminderData(
   messageChannelId: (json['messageChannelId'] as num).toInt(),
   messageGuildId: (json['messageGuildId'] as num?)?.toInt(),
   targetChannelId: (json['targetChannelId'] as num?)?.toInt(),
+  fired: json['fired'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ReminderDataToJson(ReminderData instance) =>
@@ -25,6 +26,7 @@ Map<String, dynamic> _$ReminderDataToJson(ReminderData instance) =>
       'messageChannelId': instance.messageChannelId,
       'messageGuildId': instance.messageGuildId,
       'targetChannelId': instance.targetChannelId,
+      'fired': instance.fired,
     };
 
 // **************************************************************************
@@ -137,6 +139,101 @@ extension on RemindersCommand {
                 );
               }(),
               autocomplete: null,
+              plugin: context.plugin,
+            );
+          }(),
+        ],
+        requiredPerms: .parse(0),
+        needsGuild: false,
+        otherPerms: null,
+        plugin: context.plugin,
+      );
+    }(),
+    () {
+      return OptionData(
+        name: "snooze",
+        function: this.snooze,
+        builder: .subCommand(
+          name: "snooze",
+          description: "Snooze a reminder.",
+          options: [
+            () {
+              return CommandOptionBuilder(
+                type: .new(4),
+                name: "id",
+                description: "ID of your reminder.",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+            () {
+              return CommandOptionBuilder(
+                type: .new(3),
+                name: "when",
+                description: "When your reminder should happen (again).",
+                isRequired: true,
+                choices: null,
+                hasAutocomplete: true,
+                channelTypes: null,
+                minLength: null,
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+              );
+            }(),
+          ],
+          nameLocalizations: null,
+          descriptionLocalizations: null,
+        ),
+        autocomplete: null,
+        options: [
+          () {
+            return OptionData<int>(
+              name: "id",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(4),
+                  name: "id",
+                  description: "ID of your reminder.",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => RemindersIDAutocomplete(),
+              plugin: context.plugin,
+            );
+          }(),
+          () {
+            return OptionData<String>(
+              name: "when",
+              builder: () {
+                return CommandOptionBuilder(
+                  type: .new(3),
+                  name: "when",
+                  description: "When your reminder should happen (again).",
+                  isRequired: true,
+                  choices: null,
+                  hasAutocomplete: true,
+                  channelTypes: null,
+                  minLength: null,
+                  maxLength: null,
+                  minValue: null,
+                  maxValue: null,
+                );
+              }(),
+              autocomplete: () => RemindersAutocomplete(),
               plugin: context.plugin,
             );
           }(),
