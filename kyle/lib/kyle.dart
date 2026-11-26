@@ -133,11 +133,17 @@ final class Kyle extends DiscordBot {
 
       updatePresence();
 
-      await alertOwners(client, store, .new(
-        title: "I'm back alive!",
-        description: "You'll never escape me...",
-        color: Colors.green,
-      ));
+      if (!dev) {
+        await alertOwners(client, store, .new(
+          title: "I'm back alive!",
+          description: [
+            "You'll never escape me...",
+            "Hehehe...",
+            "Well, well, well.",
+          ].random(),
+          color: Colors.green,
+        ));
+      }
     });
   }
 }

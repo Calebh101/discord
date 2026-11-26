@@ -8,10 +8,19 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'reminders.g.dart';
 
+late int startupSecond;
+
 final durationRegex = RegExp(
   r'(\d+)\s*(minutes?|mins?|min?|hours?|hrs?|hr?|days?|weeks?|[mhdw])',
   caseSensitive: false,
 );
+
+final timeHelp = """
+We couldn't parse that date...
+If using a relative timestamp (like `in a week`), please note that only en-US is supported for now.
+However, you can still use dates like `August 13, 2025`, which can change based on your locale!
+If all else fails, you can enter a raw ISO 8601 UTC timestamp.
+""".trim();
 
 DateTime? tryParseDuration(String input) {
   final matches = durationRegex.allMatches(input);
@@ -104,6 +113,9 @@ final class Timestamp implements Comparable<Timestamp> {
   bool operator <=(Timestamp other) => compareTo(other) <= 0;
   bool operator >=(Timestamp other) => compareTo(other) >= 0;
 
+  Timestamp operator +(Duration other) => .fromDateTime(toDateTime().add(other));
+  Timestamp operator -(Duration other) => .fromDateTime(toDateTime().subtract(other));
+
   @override
   int get hashCode => day ^ hour ^ minute ^ year;
 }
@@ -121,7 +133,8 @@ final class RemindersPlugin extends DiscordPlugin {
 
   @override
   void onReady(DiscordBot bot) {
-    Logger.print("Reminders", "Startup second: ${DateTime.now().second}");
+    startupSecond = DateTime.now().second;
+    Logger.print("Reminders", "Startup second: $startupSecond");
 
     Timer.periodic(.new(minutes: 1), (_) async {
       bot.clients.run((client) async {
@@ -133,7 +146,7 @@ final class RemindersPlugin extends DiscordPlugin {
         }
 
         final all = data.entries.where((x) {
-          return x.key <= .now();
+          return x.key <= Timestamp.now() - Duration(days: 1);
         });
 
         if (all.isNotEmpty) {
@@ -153,18 +166,44 @@ final class RemindersPlugin extends DiscordPlugin {
 
               final userId = Snowflake.parse(reminder.userId);
               final channelId = reminder.targetChannelId != null ? Snowflake.parse(reminder.targetChannelId!) : null;
-
               final channel = channelId != null ? await client.channels.get(channelId) as TextChannel : await client.users.createDm(userId);
 
-              await channel.sendMessage(.new(embeds: [
-                .new(
-                  title: "You asked me to remind you...",
-                  description: reminder.name,
-                  url: url,
-                  footer: .new(text: "Reminder #${reminder.id}"),
-                  timestamp: timestamp.toDateTime().toUtc(),
-                ),
-              ]));
+              ButtonBuilder snooze(String pretty, Duration duration) {
+                return .primary(
+                  customId: [
+                    "reminders.snooze",
+                    reminder.id,
+                    timestamp.serialize(),
+                    (timestamp + duration).serialize(),
+                  ].join("-"),
+                  label: "Snooze $pretty",
+                );
+              }
+
+              await channel.sendMessage(.new(
+                embeds: [
+                  .new(
+                    title: "You asked me to remind you...",
+                    description: reminder.name,
+                    fields: [
+                      .new(name: "Snooze", value: "In order to snooze, either use the `/snooze` command or click a button below!", isInline: false),
+                    ],
+                    url: url,
+                    footer: .new(text: "Reminder #${reminder.id}"),
+                    timestamp: timestamp.toDateTime().toUtc(),
+                    color: Colors.blue,
+                  ),
+                ],
+                components: [
+                  ActionRowBuilder(components: [
+                    snooze("15m", .new(minutes: 15)),
+                    snooze("1h", .new(hours: 1)),
+                    snooze("3h", .new(hours: 3)),
+                    snooze("8h", .new(hours: 8)),
+                    snooze("24h", .new(hours: 24)),
+                  ]),
+                ],
+              ));
             } catch (e) {
               Logger.warn("Reminders", "Unable to send reminder ${reminder.id} for user ${reminder.userId} in channel ${reminder.targetChannelId}: $e");
 
@@ -172,7 +211,7 @@ final class RemindersPlugin extends DiscordPlugin {
                 final channel = await client.users.createDm(.parse(reminder.userId));
 
                 await channel.sendMessage(.new(
-                  content: "You asked me to remind you in ${reminder.targetChannelId?.toChannelMention() ?? "**here**"}...\n${reminder.name.toDiscordCodeBlock()}\n**Where**: $url\n-# This is a fallback message. Your reminder was not able to be successfully delivered first try.",
+                  content: "You asked me to remind you in ${reminder.targetChannelId?.toChannelMention() ?? "**here**"}...\n${reminder.name.toDiscordCodeBlock()}\n**Where**: $url\nUse the `/snooze` command to snooze this reminder!\n-# This is a fallback message. Your reminder was not able to be successfully delivered first try.",
                 ));
               } catch (e) {
                 Logger.warn("Reminders", "Unable to send backup message for reminder ${reminder.userId}, aborting: $e");
@@ -182,10 +221,56 @@ final class RemindersPlugin extends DiscordPlugin {
         }
 
         data.removeWhere((timestamp, _) {
-          return timestamp <= .now();
+          return timestamp <= Timestamp.now() - Duration(days: 1);
         });
 
         settings.reminders.set(data);
+      });
+    });
+
+    bot.clients.run((client) async {
+      client.onMessageComponentInteraction.listen((event) async {
+        final interaction = event.interaction;
+        final data = interaction.data;
+        final user = interaction.user ?? interaction.member?.user;
+
+        if (user == null) return;
+        if (isIgnored(bot.store, user.id)) return;
+
+        final elements = data.customId.split("-");
+        if (elements.firstOrNull != "reminders.snooze") return;
+
+        final id = int.parse(elements[1]);
+        final old = Timestamp.parse(elements[2]);
+        final timestamp = Timestamp.parse(elements[3]);
+
+        final settings = RemindersClientSettings(bot.store, client.id);
+        final reminder = settings.findReminder((x) => x.data.userId == user.id.value && x.data.id == id);
+
+        if (reminder == null) {
+          await interaction.respond(MessageBuilder(
+            content: "This reminder is either deleted or is too old to be snoozed.",
+            flags: MessageFlags.ephemeral,
+          ));
+
+          return;
+        }
+
+        if (timestamp <= .now()) {
+          await interaction.respond(MessageBuilder(
+            content: "Whoops, that time has already passed...",
+            flags: MessageFlags.ephemeral,
+          ));
+
+          return;
+        }
+
+        settings.changeTimestamp(old, timestamp, reminder.data);
+        final date = timestamp.toDateTime();
+
+        await interaction.respond(MessageBuilder(
+          content: "Reminder snoozed until ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you right here :)\nReminder **#$id**\n${reminder.data.name.toDiscordQuote()}",
+        ));
       });
     });
   }
@@ -294,9 +379,10 @@ final class RemindersCommand extends TopLevelParentCommand {
       pages: EmbedPage.fromFields(reminders.mapToList((data) {
         final reminder = data.data;
         final timestamp = data.timestamp;
+        final date = timestamp.toDateTime();
 
         return .new(
-          name: "#${reminder.id}: ${timestamp.toDateTime().toDiscordTimestamp(.shortDateTime)}",
+          name: "#${reminder.id}: ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})",
           value: reminder.name.maxLength(100, ellipsis: true),
           isInline: false,
         );
@@ -316,7 +402,7 @@ final class RemindersCommand extends TopLevelParentCommand {
 
     if (date == null) {
       return await context.respond(.new(
-        content: "We couldn't parse that date...\nIf using a relative timestamp (like `in a week`), please note that only en-US is supported for now.\nHowever, you can still use dates like `August 13, 2025`, which can change based on your locale!\nIf all else fails, you can enter a raw ISO 8601 UTC timestamp.",
+        content: timeHelp,
       ), ephemeral: .ephemeral);
     }
 
@@ -353,6 +439,52 @@ final class RemindersCommand extends TopLevelParentCommand {
 
     await context.respond(.new(
       content: "Reminder set for ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you in DMs :)\nReminder **#${reminder.id}**\n${text.toDiscordQuote()}",
+    ));
+  }
+
+  @Subcommand("snooze", "Snooze a reminder.")
+  void snooze(
+    DiscordContext context,
+    @IntOption("id", "ID of your reminder.", autocomplete: Autocomplete<RemindersIDAutocomplete>()) int id,
+    @StringOption("when", "When your reminder should happen (again).", autocomplete: Autocomplete<RemindersAutocomplete>()) String raw,
+  ) async {
+    await context.acknowledge();
+    final date = DateTime.tryParse(raw.trim()) ?? parseFromLanguage(raw, context.locale);
+    Logger.print("Reminders", "Parsed string '${raw.trim()}' and locale ${context.locale?.identifier} to ${date?.toIso8601String()}");
+
+    if (date == null) {
+      return await context.respond(.new(
+        content: timeHelp,
+      ), ephemeral: .ephemeral);
+    }
+
+    final timestamp = Timestamp.fromDateTime(date);
+
+    if (timestamp <= .now()) {
+      return await context.respond(.new(
+        content: "Your date can't be in the past...",
+      ), ephemeral: .ephemeral);
+    }
+
+    final settings = RemindersClientSettings(context.store, context.clientId);
+    final reminder = settings.findReminder((x) => x.data.userId == context.userId.value && x.data.id == id);
+
+    if (reminder == null) {
+      return await context.respond(.new(
+        content: "We couldn't find reminder `$id`.",
+      ), ephemeral: .ephemeral);
+    }
+
+    if (reminder.timestamp.toDateTime().isBefore(date)) {
+      return await context.respond(.new(
+        content: "This reminder is set to occur *after* the time you set to snooze it too!",
+      ), ephemeral: .ephemeral);
+    }
+
+    settings.changeTimestamp(reminder.timestamp, timestamp, reminder.data);
+
+    await context.respond(.new(
+      content: "Reminder snoozed until ${date.toDiscordTimestamp(.shortDateTime)} (${date.toDiscordTimestamp(.relative)})!\nI'll remind you right here :)\nReminder **#$id**\n${reminder.data.name.toDiscordQuote()}",
     ));
   }
 
@@ -442,6 +574,21 @@ final class RemindersClientSettings extends ClientSettings {
 
     reminders.set(data);
     return true;
+  }
+
+  void removeRemindersWhere(bool Function(ReminderData data) condition) {
+    final data = reminders.get();
+
+    for (final reminders in data.values) {
+      reminders.removeWhere(condition);
+    }
+
+    reminders.set(data);
+  }
+
+  void changeTimestamp(Timestamp old, Timestamp timestamp, ReminderData reminder) {
+    removeRemindersWhere((x) => x.id == reminder.id);
+    saveReminder(timestamp, reminder);
   }
 }
 

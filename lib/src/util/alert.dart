@@ -1,6 +1,10 @@
 import 'package:discord/discord.dart';
 
 Future<void> alertOwners(NyxxGateway client, KVStore store, EmbedBuilder embed) async {
+  for (final field in embed.fields ?? <EmbedFieldBuilder>[]) {
+    field.value = field.value.maxLength(1024, ellipsis: true);
+  }
+
   for (final (_, key, owner) in store.getAllForKey<bool>(.user, "owner").entriesAsRecords) {
     try {
       if (!owner) continue;
